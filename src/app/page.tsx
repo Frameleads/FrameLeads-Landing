@@ -27,7 +27,7 @@ export default function Home() {
       <header className="w-full px-4 sm:px-6 py-4 flex items-center justify-between relative z-50 border-b border-white/5 bg-[#0D0D0D]/90 backdrop-blur-md">
         <div className="flex items-center gap-3">
           <Image src="/logo.png" alt="FrameLeads Logo" width={32} height={32} className="object-contain rounded-[8px]" />
-          <h1 className="font-sans font-bold text-xl sm:text-2xl tracking-wide text-white">
+          <h1 className="font-heading font-bold text-xl sm:text-2xl tracking-wide text-white">
             FrameLeads
           </h1>
         </div>
