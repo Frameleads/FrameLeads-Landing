@@ -1,8 +1,21 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Space_Grotesk, Oxanium, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const spaceGrotesk = Space_Grotesk({ 
+  subsets: ["latin"], 
+  variable: "--font-space-grotesk" 
+});
+
+const oxanium = Oxanium({ 
+  subsets: ["latin"], 
+  variable: "--font-oxanium" 
+});
+
+const jetbrainsMono = JetBrains_Mono({ 
+  subsets: ["latin"], 
+  variable: "--font-jetbrains-mono" 
+});
 
 export const metadata: Metadata = {
   title: "FrameLeads | Autonomous Acquisition Architecture",
@@ -38,8 +51,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth">
-      <body className={inter.className}>{children}</body>
+    <html lang="en" className={`scroll-smooth ${spaceGrotesk.variable} ${oxanium.variable} ${jetbrainsMono.variable}`}>
+      <body className="font-sans antialiased text-white">{children}</body>
     </html>
   );
 }

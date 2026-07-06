@@ -10,6 +10,7 @@ const config: Config = {
     extend: {
       fontFamily: {
         sans: ["var(--font-space-grotesk)", "sans-serif"],
+        heading: ["var(--font-oxanium)", "sans-serif"],
         mono: ["var(--font-jetbrains-mono)", "monospace"],
       },
     },
