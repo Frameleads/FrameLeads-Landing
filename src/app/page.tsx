@@ -180,8 +180,8 @@ export default function Home() {
                   <span className="text-[#8A8A93] text-sm font-mono ml-1">/mo</span>
                 </div>
               </div>
-              <div className="text-[#8A8A93] font-mono text-xs sm:text-sm mb-6 pb-6 border-b border-white/5">The Signal & Routing Layer</div>
-              <p className="text-[#8A8A93] text-sm leading-relaxed mb-8 flex-grow">Deploys the multi-tenant SaaS to ingest lead data, normalize signals, and triage your pipeline. You get the full Velvet Rope routing logic, but you handle the manual execution.</p>
+              <div className="text-[#8A8A93] font-mono text-xs sm:text-sm mb-6 pb-6 border-b border-white/5">Metered Acquisition Infrastructure</div>
+              <p className="text-[#8A8A93] text-sm leading-relaxed mb-8 flex-grow">Generates up to 500 AI-tailored outbound leads per month. You get the multi-channel generation engine, but the autonomous Inbox Triage module is locked. Your team must still spend human bandwidth manually handling replies and objections. Built for early-stage deal flow.</p>
               <Link href="https://whop.com/checkout/plan_MUeh0CYdRPPaJ" target="_blank" className="text-center px-4 sm:px-6 py-4 border border-white/10 text-white font-bold text-sm sm:text-base tracking-widest uppercase font-mono rounded-lg hover:bg-white hover:text-black transition-all">Deploy Core Engine</Link>
             </div>
 
@@ -195,8 +195,8 @@ export default function Home() {
                   <span className="text-[#8A8A93] text-sm font-mono ml-1">/mo</span>
                 </div>
               </div>
-              <div className="text-[#FF5A1F] font-mono text-xs sm:text-sm mb-6 pb-6 border-b border-white/5 relative z-10">Core + Cognitive Architecture</div>
-              <p className="text-[#8A8A93] text-sm leading-relaxed mb-8 flex-grow relative z-10">The complete ecosystem. Includes the Core routing infrastructure plus bespoke, autonomous AI agents engineered to execute deep objection matrices and close $10k+ deals.</p>
+              <div className="text-[#FF5A1F] font-mono text-xs sm:text-sm mb-6 pb-6 border-b border-white/5 relative z-10">Unmetered Cognitive Architecture</div>
+              <p className="text-[#8A8A93] text-sm leading-relaxed mb-8 flex-grow relative z-10">Uncapped, unlimited AI-generated acquisition bandwidth. Unlocks the autonomous Inbox Triage engine to clinically dismantle inbound objections without human intervention. Includes priority API processing for zero-latency execution. Removes the cognitive bottleneck from your pipeline entirely.</p>
               <Link href="https://whop.com/checkout/plan_vYopYzyoqunDb" target="_blank" className="relative z-10 text-center px-4 sm:px-6 py-4 bg-[#FF5A1F] text-white font-bold text-sm sm:text-base tracking-widest uppercase font-mono rounded-lg hover:bg-[#ff6b35] transition-all hover:scale-[1.02]">Deploy Full Architecture</Link>
             </div>
 
