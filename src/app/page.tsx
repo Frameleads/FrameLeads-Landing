@@ -176,7 +176,7 @@ export default function Home() {
               <div className="flex justify-between items-start mb-2">
                 <h4 className="text-xl sm:text-2xl font-bold text-white">FrameLeads Core</h4>
                 <div className="text-right mt-1 sm:mt-0">
-                  <span className="text-2xl sm:text-3xl font-bold text-white">$97</span>
+                  <span className="text-2xl sm:text-3xl font-bold text-white">$147</span>
                   <span className="text-[#8A8A93] text-sm font-mono ml-1">/mo</span>
                 </div>
               </div>
@@ -191,7 +191,7 @@ export default function Home() {
               <div className="flex justify-between items-start mb-2 relative z-10">
                 <h4 className="text-xl sm:text-2xl font-bold text-white">FrameLeads Enterprise</h4>
                 <div className="text-right mt-1 sm:mt-0">
-                  <span className="text-2xl sm:text-3xl font-bold text-[#FF5A1F]">$297</span>
+                  <span className="text-2xl sm:text-3xl font-bold text-[#FF5A1F]">$697</span>
                   <span className="text-[#8A8A93] text-sm font-mono ml-1">/mo</span>
                 </div>
               </div>
