@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "FrameLeads | Autonomous Acquisition Architecture",
     description: "The Velvet Rope Protocol for high-value deal flow.",
-    url: "https://yourdomain.com",
+    url: "https://frameleads.vercel.app",
     siteName: "FrameLeads",
     images: [
       {

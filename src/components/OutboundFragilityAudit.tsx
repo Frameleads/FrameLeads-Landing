@@ -51,7 +51,7 @@ export default function OutboundFragilityAudit() {
           // Outbound Fragility Audit
         </div>
         <div className="font-mono text-xs text-[#8A8A93]">
-          NODE 0{step} / 06
+          {step > 6 ? "DIAGNOSIS COMPLETE" : `NODE 0${step} / 06`}
         </div>
       </div>
 
@@ -168,12 +168,12 @@ export default function OutboundFragilityAudit() {
             STATUS: CRITICAL FRAGILITY DETECTED
           </div>
           <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight mb-6">
-            You are bleeding {formatCurrency(capitalDrain)} a year running a surveillance job masked as a business.
+            You are bleeding <span className="text-[#FF2A2A] drop-shadow-[0_0_15px_rgba(255,42,42,0.6)]">{formatCurrency(capitalDrain)}</span> a year running a surveillance job masked as a business.
           </h2>
           <p className="text-[#8A8A93] text-lg mb-10 font-light leading-relaxed">
             Your execution is not the issue. The architecture is. Fully autonomous AI was designed for deals where a wrong message costs a lost lead. You are in deals where a wrong message costs a lost relationship.
           </p>
-          <Link href="https://whop.com/brandflowstudio/frameleads-24/" target="_blank" className="block text-center px-8 py-5 bg-[#FF5A1F] text-white font-bold tracking-widest uppercase font-mono rounded-lg hover:bg-[#ff6b35] transition-all hover:scale-105 shadow-[0_0_40px_rgba(255,90,31,0.3)]">
+          <Link href="https://whop.com/checkout/plan_vYopYzyoqunDb" target="_blank" className="block text-center px-8 py-5 bg-[#FF5A1F] text-white font-bold tracking-widest uppercase font-mono rounded-lg hover:bg-[#ff6b35] transition-all hover:scale-105 shadow-[0_0_40px_rgba(255,90,31,0.3)]">
             Deploy Velvet Rope Protocol →
           </Link>
         </div>

@@ -61,10 +61,11 @@ export default function Home() {
       {/* Hero Section */}
       <main className="relative z-10 flex flex-col items-center justify-center pt-24 pb-16 px-4 sm:px-6 text-center max-w-5xl mx-auto">
         <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter leading-[1.1] mb-8 sm:mb-10 text-white">
-          Volume and brand safety are not a trade-off. <br className="hidden md:block" />
-          They are an{" "}
-          <span className="text-[#FF5A1F]">architecture decision.</span>
+          Your best rep just quit. Their objection logic didn't get backed up — <span className="text-[#FF5A1F] drop-shadow-[0_0_15px_rgba(255,90,31,0.6)]">it left with them.</span>
         </h2>
+        <p className="text-lg sm:text-xl md:text-2xl text-[#8A8A93] font-light leading-relaxed mb-8 sm:mb-10">
+          Volume and brand safety are not a trade-off. They are an architecture decision.
+        </p>
 
         <button onClick={() => scrollToSection('audit')} className="group relative w-full sm:w-auto inline-flex items-center justify-center rounded-xl bg-[#FF5A1F] text-white font-bold text-base sm:text-lg tracking-wider px-8 sm:px-10 py-4 sm:py-5 shadow-[0_0_35px_rgba(255,90,31,0.4)] hover:bg-[#ff6b35] hover:scale-105 transition-all">
           <span className="relative z-10 flex items-center gap-2">
@@ -72,6 +73,7 @@ export default function Home() {
             <span className="transition-transform duration-300 group-hover:translate-x-1">&rarr;</span>
           </span>
         </button>
+        <p className="mt-4 text-[10px] sm:text-xs text-[#8A8A93] font-mono tracking-widest uppercase">47 outbound audits completed this month.</p>
       </main>
 
       {/* Hero Image Mockup */}
@@ -113,8 +115,7 @@ export default function Home() {
           <div className="p-6 sm:p-8 border border-white/5 bg-[#121212] rounded-xl hover:border-[#FF5A1F]/30 transition-colors group">
             <div className="font-mono text-xs text-[#FF5A1F] mb-6 uppercase tracking-widest">// The Human SDR Failure</div>
             <h3 className="text-lg sm:text-xl text-white font-bold mb-4">The Knowledge Event</h3>
-            <p className="text-[#8A8A93] text-sm leading-relaxed mb-6">Your SDR carries your relationship history and objection logic in their head. When they leave, the pipeline leaves with them.</p>
-            <div className="font-mono text-xs text-[#8A8A93] p-4 bg-black/50 border-l-2 border-[#FF5A1F]">"That is not a personnel event. That is a total institutional knowledge loss event."</div>
+            <p className="text-[#8A8A93] text-sm leading-relaxed mb-6">An SDR isn't a hire. It's a rental. When they quit, your institutional knowledge and pipeline relationship context leaves with them — and you find out mid-deal.</p>
           </div>
           <div className="p-6 sm:p-8 border border-white/5 bg-[#121212] rounded-xl hover:border-[#FF5A1F]/30 transition-colors group">
             <div className="font-mono text-xs text-[#FF5A1F] mb-6 uppercase tracking-widest">// The DIY Stack Failure</div>
@@ -159,7 +160,7 @@ export default function Home() {
             <div className="absolute top-0 left-0 w-full h-1 bg-[#FF5A1F]" />
             <div className="mb-6 relative z-10"><span className="font-mono text-[10px] sm:text-xs text-[#FF5A1F] border border-[#FF5A1F]/20 bg-[#FF5A1F]/10 px-3 py-1 rounded">FRAMELEADS ENTERPRISE</span></div>
             <h3 className="text-lg sm:text-xl text-white font-bold mb-4 relative z-10">Phase 03: The Execution Engine</h3>
-            <p className="text-[#8A8A93] text-sm leading-relaxed flex-grow relative z-10">The ultimate conversion layer for $10k+ deals. We deploy bespoke, autonomous AI agents engineered specifically for your deal flow. It handles deep objection matrices allowing you to scale with zero human bottleneck.</p>
+            <p className="text-[#8A8A93] text-sm leading-relaxed flex-grow relative z-10">The ultimate conversion layer for $10k+ deals. Unlocks pre-configured, autonomous AI agents aligned to your deal flow. It handles deep objection matrices allowing you to scale with zero human bottleneck.</p>
           </div>
         </div>
 
@@ -185,19 +186,34 @@ export default function Home() {
               <Link href="https://whop.com/checkout/plan_MUeh0CYdRPPaJ" target="_blank" className="text-center px-4 sm:px-6 py-4 border border-white/10 text-white font-bold text-sm sm:text-base tracking-widest uppercase font-mono rounded-lg hover:bg-white hover:text-black transition-all">Deploy Core Engine</Link>
             </div>
 
-            {/* Enterprise */}
-            <div className="p-6 sm:p-8 border border-[#FF5A1F]/30 bg-[#FF5A1F]/5 rounded-xl hover:border-[#FF5A1F]/60 transition-all shadow-[0_0_30px_rgba(255,90,31,0.05)] flex flex-col relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-48 sm:w-64 h-48 sm:h-64 bg-[#FF5A1F]/10 blur-3xl pointer-events-none" />
-              <div className="flex justify-between items-start mb-2 relative z-10">
-                <h4 className="text-xl sm:text-2xl font-bold text-white">FrameLeads Enterprise</h4>
-                <div className="text-right mt-1 sm:mt-0">
-                  <span className="text-2xl sm:text-3xl font-bold text-[#FF5A1F]">$697</span>
-                  <span className="text-[#8A8A93] text-sm font-mono ml-1">/mo</span>
+            {/* Enterprise Wrapper */}
+            <div className="relative flex flex-col h-full w-full">
+              {/* External Annotation - Desktop Only */}
+              <div className="hidden lg:flex absolute top-10 -right-[270px] w-[250px] items-center gap-4 z-20 pointer-events-none">
+                <div className="h-px w-12 bg-[#333333]"></div>
+                <div className="text-[#888888] text-xs font-mono leading-tight text-left">
+                  $697/mo — less than 2% of a single closed deal in your pipeline.
                 </div>
               </div>
-              <div className="text-[#FF5A1F] font-mono text-xs sm:text-sm mb-6 pb-6 border-b border-white/5 relative z-10">Unmetered Cognitive Architecture</div>
-              <p className="text-[#8A8A93] text-sm leading-relaxed mb-8 flex-grow relative z-10">Uncapped, unlimited AI-generated acquisition bandwidth. Unlocks the autonomous Inbox Triage engine to clinically dismantle inbound objections without human intervention. Includes priority API processing for zero-latency execution. Removes the cognitive bottleneck from your pipeline entirely.</p>
-              <Link href="https://whop.com/checkout/plan_vYopYzyoqunDb" target="_blank" className="relative z-10 text-center px-4 sm:px-6 py-4 bg-[#FF5A1F] text-white font-bold text-sm sm:text-base tracking-widest uppercase font-mono rounded-lg hover:bg-[#ff6b35] transition-all hover:scale-[1.02]">Deploy Full Architecture</Link>
+
+              {/* Enterprise Card */}
+              <div className="p-6 sm:p-8 border border-[#FF5A1F]/30 bg-[#FF5A1F]/5 rounded-xl hover:border-[#FF5A1F]/60 transition-all shadow-[0_0_30px_rgba(255,90,31,0.05)] flex flex-col relative overflow-hidden group h-full">
+                <div className="absolute top-0 right-0 w-48 sm:w-64 h-48 sm:h-64 bg-[#FF5A1F]/10 blur-3xl pointer-events-none" />
+                <div className="flex justify-between items-start mb-2 relative z-10">
+                  <h4 className="text-xl sm:text-2xl font-bold text-white">FrameLeads Enterprise</h4>
+                  <div className="text-right mt-1 sm:mt-0">
+                    <span className="text-2xl sm:text-3xl font-bold text-[#FF5A1F]">$697</span>
+                    <span className="text-[#8A8A93] text-sm font-mono ml-1">/mo</span>
+                  </div>
+                </div>
+                <div className="text-[#FF5A1F] font-mono text-xs sm:text-sm mb-6 pb-6 border-b border-white/5 relative z-10">Unmetered Cognitive Architecture</div>
+                <p className="text-[#8A8A93] text-sm leading-relaxed mb-8 flex-grow relative z-10">Uncapped, unlimited AI-generated acquisition bandwidth. Unlocks the autonomous Inbox Triage engine to clinically dismantle inbound objections without human intervention. Includes priority API processing for zero-latency execution. Removes the cognitive bottleneck from your pipeline entirely.</p>
+                <Link href="https://whop.com/checkout/plan_vYopYzyoqunDb" target="_blank" className="relative z-10 text-center px-4 sm:px-6 py-4 bg-[#FF5A1F] text-white font-bold text-sm sm:text-base tracking-widest uppercase font-mono rounded-lg hover:bg-[#ff6b35] transition-all hover:scale-[1.02]">Deploy Full Architecture</Link>
+                <div className="flex flex-col items-center justify-center mt-4 gap-2 relative z-10">
+                  <p className="text-center text-[10px] sm:text-xs text-[#8A8A93] font-mono block lg:hidden">$697/mo — less than 2% of a single closed deal in your pipeline.</p>
+                  <p className="text-center text-[10px] sm:text-xs text-[#8A8A93] font-mono">Manual review capacity is capped per operator.</p>
+                </div>
+              </div>
             </div>
 
           </div>
@@ -218,7 +234,7 @@ export default function Home() {
             </div>
             <div className="border-b border-white/10 pb-6 md:pb-8">
               <h4 className="text-base sm:text-lg text-white font-bold mb-3">Why shouldn't I just hire another SDR to manage my inbox?</h4>
-              <p className="text-[#8A8A93] text-sm leading-relaxed">An SDR is a rental. When they quit, your institutional knowledge and pipeline relationship context leaves with them. FrameLeads is permanent infrastructure. It scales infinitely, never sleeps, and never forgets an objection handling matrix.</p>
+              <p className="text-[#8A8A93] text-sm leading-relaxed">An SDR is a rental. When they quit, your institutional knowledge and pipeline relationship context leaves with them. FrameLeads is permanent infrastructure that never forgets an objection handling matrix.</p>
             </div>
             <div className="pb-6 md:pb-8">
               <h4 className="text-base sm:text-lg text-white font-bold mb-3">How fast is deployment?</h4>
