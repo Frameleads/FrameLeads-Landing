@@ -174,6 +174,7 @@ export default function Home() {
             
             {/* Core */}
             <div className="p-6 sm:p-8 border border-white/10 bg-[#121212] rounded-xl hover:border-white/30 transition-all flex flex-col group">
+              <div className="text-[#FF5A1F] text-[10px] font-mono uppercase tracking-[0.2em] mb-2">For Individuals</div>
               <div className="flex justify-between items-start mb-2">
                 <h4 className="text-xl sm:text-2xl font-bold text-white">FrameLeads Core</h4>
                 <div className="text-right mt-1 sm:mt-0">
@@ -188,17 +189,10 @@ export default function Home() {
 
             {/* Enterprise Wrapper */}
             <div className="relative flex flex-col h-full w-full">
-              {/* External Annotation - Desktop Only */}
-              <div className="hidden lg:flex absolute top-10 -right-[270px] w-[250px] items-center gap-4 z-20 pointer-events-none">
-                <div className="h-px w-12 bg-[#333333]"></div>
-                <div className="text-[#888888] text-xs font-mono leading-tight text-left">
-                  $697/mo — less than 2% of a single closed deal in your pipeline.
-                </div>
-              </div>
-
               {/* Enterprise Card */}
               <div className="p-6 sm:p-8 border border-[#FF5A1F]/30 bg-[#FF5A1F]/5 rounded-xl hover:border-[#FF5A1F]/60 transition-all shadow-[0_0_30px_rgba(255,90,31,0.05)] flex flex-col relative overflow-hidden group h-full">
                 <div className="absolute top-0 right-0 w-48 sm:w-64 h-48 sm:h-64 bg-[#FF5A1F]/10 blur-3xl pointer-events-none" />
+                <div className="text-[#FF5A1F] text-[10px] font-mono uppercase tracking-[0.2em] mb-2 relative z-10">For Teams & Businesses</div>
                 <div className="flex justify-between items-start mb-2 relative z-10">
                   <h4 className="text-xl sm:text-2xl font-bold text-white">FrameLeads Enterprise</h4>
                   <div className="text-right mt-1 sm:mt-0">
@@ -210,7 +204,7 @@ export default function Home() {
                 <p className="text-[#8A8A93] text-sm leading-relaxed mb-8 flex-grow relative z-10">Uncapped, unlimited AI-generated acquisition bandwidth. Unlocks the autonomous Inbox Triage engine to clinically dismantle inbound objections without human intervention. Includes priority API processing for zero-latency execution. Removes the cognitive bottleneck from your pipeline entirely.</p>
                 <Link href="https://whop.com/checkout/plan_vYopYzyoqunDb" target="_blank" className="relative z-10 text-center px-4 sm:px-6 py-4 bg-[#FF5A1F] text-white font-bold text-sm sm:text-base tracking-widest uppercase font-mono rounded-lg hover:bg-[#ff6b35] transition-all hover:scale-[1.02]">Deploy Full Architecture</Link>
                 <div className="flex flex-col items-center justify-center mt-4 gap-2 relative z-10">
-                  <p className="text-center text-[10px] sm:text-xs text-[#8A8A93] font-mono block lg:hidden">$697/mo — less than 2% of a single closed deal in your pipeline.</p>
+                  <p className="text-center text-[10px] text-[#666666] font-mono mt-3 uppercase tracking-wide">$697/mo — less than 2% of a single closed deal in your pipeline.</p>
                   <p className="text-center text-[10px] sm:text-xs text-[#8A8A93] font-mono">Manual review capacity is capped per operator.</p>
                 </div>
               </div>
