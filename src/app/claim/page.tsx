@@ -102,6 +102,9 @@ export default function ClaimPage() {
                   {!isSubmitting && <span className="transition-transform duration-300 group-hover:translate-x-1">&rarr;</span>}
                 </span>
               </button>
+              <p className="text-[11px] text-zinc-500 text-center mt-4 max-w-sm mx-auto leading-relaxed uppercase tracking-wider">
+                *Note: Due to our enterprise security protocols, automated payloads occasionally route to spam. Check your spam folder if the architecture does not arrive within 60 seconds.*
+              </p>
               <p className="text-[#8A8A93] text-[10px] sm:text-xs font-mono text-center uppercase tracking-widest mt-6">
                 The payload will be delivered instantly to your inbox.
               </p>
