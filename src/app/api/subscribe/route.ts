@@ -9,6 +9,7 @@ export async function POST(request: Request) {
     }
 
     const API_KEY = process.env.MAILERLITE_API_KEY;
+    const GROUP_ID = process.env.MAILERLITE_GROUP_ID;
 
     const response = await fetch('https://connect.mailerlite.com/api/subscribers', {
       method: 'POST',
@@ -19,6 +20,7 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify({
         email: email,
+        groups: [GROUP_ID],
       }),
     });
 
