@@ -52,7 +52,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`scroll-smooth ${spaceGrotesk.variable} ${oxanium.variable} ${jetbrainsMono.variable}`}>
-      <body className="font-sans antialiased text-white">{children}</body>
+      <body className="font-sans antialiased text-white" suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   );
 }

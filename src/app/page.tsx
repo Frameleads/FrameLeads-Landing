@@ -63,9 +63,21 @@ export default function Home() {
         <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter leading-[1.1] mb-8 sm:mb-10 text-white">
           Your best rep just quit. Their objection logic didn't get backed up — <span className="text-[#FF5A1F] drop-shadow-[0_0_15px_rgba(255,90,31,0.6)]">it left with them.</span>
         </h2>
-        <p className="text-lg sm:text-xl md:text-2xl text-[#8A8A93] font-light leading-relaxed mb-8 sm:mb-10">
+        <p className="text-lg sm:text-xl md:text-2xl text-[#8A8A93] font-light leading-relaxed mb-12 sm:mb-16">
           Volume and brand safety are not a trade-off. They are an architecture decision.
         </p>
+
+        {/* HIGH TICKET VSL EMBED */}
+        <div className="w-full max-w-4xl mx-auto mb-12 aspect-video rounded-xl overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(255,90,31,0.15)] bg-black relative z-20">
+          <iframe
+            className="w-full h-full"
+            src="https://www.youtube.com/embed/qRsUD60-e9I?modestbranding=1&rel=0&controls=1"
+            title="FrameLeads Autonomous Architecture Walkthrough"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          ></iframe>
+        </div>
 
         <button onClick={() => scrollToSection('audit')} className="group relative w-full sm:w-auto inline-flex items-center justify-center rounded-xl bg-[#FF5A1F] text-white font-bold text-base sm:text-lg tracking-wider px-8 sm:px-10 py-4 sm:py-5 shadow-[0_0_35px_rgba(255,90,31,0.4)] hover:bg-[#ff6b35] hover:scale-105 transition-all">
           <span className="relative z-10 flex items-center gap-2">
@@ -76,24 +88,8 @@ export default function Home() {
         <p className="mt-4 text-[10px] sm:text-xs text-[#8A8A93] font-mono tracking-widest uppercase">47 outbound audits completed this month.</p>
       </main>
 
-      {/* Hero Image Mockup */}
-      <div className="relative w-full max-w-7xl mx-auto mt-8 md:mt-12 px-4 sm:px-6 md:px-8 opacity-100">
-        <div className="absolute inset-0 z-0 bg-[#FF5A1F]/20 blur-[80px] md:blur-[100px] rounded-full transform scale-90 pointer-events-none" />
-        <div className="border border-white/10 rounded-xl md:rounded-2xl bg-[#121212] shadow-2xl overflow-hidden relative z-10">
-          <Image
-            src="/hero-mockup-v2.jpg"
-            alt="FrameLeads Platform Architecture"
-            width={1920}
-            height={1080}
-            className="w-full h-auto object-cover opacity-100"
-            priority
-            unoptimized
-          />
-        </div>
-      </div>
-
       {/* THE KNIFE TWIST SECTION */}
-      <section className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 py-24 md:py-32 mt-12 md:mt-20 border-t border-white/5">
+      <section className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 py-24 md:py-32 border-t border-white/5">
         <div className="text-center max-w-3xl mx-auto mb-16 md:mb-20">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white mb-6">
             You know exactly what's wrong.<br/>
@@ -126,8 +122,24 @@ export default function Home() {
         </div>
       </section>
 
+      {/* SHIFTED HERO MOCKUP */}
+      <div className="relative w-full max-w-7xl mx-auto mb-16 px-4 sm:px-6 md:px-8 opacity-100">
+        <div className="absolute inset-0 z-0 bg-[#FF5A1F]/10 blur-[80px] md:blur-[100px] rounded-full transform scale-90 pointer-events-none" />
+        <div className="border border-white/10 rounded-xl md:rounded-2xl bg-[#121212] shadow-2xl overflow-hidden relative z-10">
+          <Image
+            src="/hero-mockup-v2.jpg"
+            alt="FrameLeads Platform Architecture"
+            width={1920}
+            height={1080}
+            className="w-full h-auto object-cover opacity-100"
+            priority
+            unoptimized
+          />
+        </div>
+      </div>
+
       {/* AUDIT INJECTION */}
-      <div className="px-4 sm:px-6">
+      <div className="px-4 sm:px-6" id="audit">
         <OutboundFragilityAudit />
       </div>
 
@@ -166,6 +178,19 @@ export default function Home() {
 
         {/* DEPLOYMENT OPTIONS */}
         <div id="deploy" className="max-w-5xl mx-auto mb-20 md:mb-32">
+          
+          {/* MOTION GRAPHIC INJECTION */}
+          <div className="w-full mb-16 rounded-xl overflow-hidden border border-white/10 shadow-[0_0_40px_rgba(255,90,31,0.08)] bg-[#121212]">
+            <video
+              src="/motion-graphic.mp4"
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-auto object-cover opacity-90"
+            />
+          </div>
+
           <div className="text-center mb-10 md:mb-12">
             <h3 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Select Your Deployment Architecture</h3>
             <p className="text-[#8A8A93] mt-3 sm:mt-4 font-mono text-xs sm:text-sm px-2">Do not over-engineer. Deploy the tier that matches your current deal volume.</p>
