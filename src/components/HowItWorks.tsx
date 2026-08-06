@@ -53,7 +53,7 @@ export default function HowItWorks() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 relative items-start">
         
         {/* LEFT COLUMN: INTERACTIVE STEPS */}
-        <div className="w-full lg:col-span-5 flex flex-col space-y-0 pb-32">
+        <div className="w-full lg:col-span-5 flex flex-col space-y-0 pb-16 lg:pb-32 order-last lg:order-first">
           {steps.map((step, index) => {
             const isActive = activeStep === index;
             return (
@@ -84,7 +84,7 @@ export default function HowItWorks() {
         </div>
 
         {/* RIGHT COLUMN: STICKY VISUALS */}
-        <div className="w-full lg:col-span-7 lg:sticky top-[25vh] xl:top-[30vh] h-fit hidden lg:block">
+        <div className="w-full lg:col-span-7 lg:sticky top-[25vh] xl:top-[30vh] h-fit order-first lg:order-last mb-8 lg:mb-0">
           <div className="aspect-[4/3] w-full rounded-xl overflow-hidden border border-white/10 bg-[#0a0a0a] shadow-[0_0_50px_-12px_rgba(255,87,34,0.15)] relative">
             {steps.map((step, index) => {
               const isActive = activeStep === index;
