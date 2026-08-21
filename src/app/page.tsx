@@ -207,7 +207,7 @@ export default function Home() {
         <div className="w-full max-w-4xl mx-auto mt-12 aspect-video rounded-xl overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(255,90,31,0.15)] bg-black relative z-20">
           <iframe
             className="w-full h-full"
-            src="https://www.youtube.com/embed/FXa9uZeuSsg?rel=0&modestbranding=1"
+            src="https://www.youtube.com/embed/FXa9uZeuSsg?rel=0&modestbranding=1&cc_load_policy=3"
             title="FrameLeads Autonomous Architecture Walkthrough"
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
