@@ -3,8 +3,10 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import OutboundFragilityAudit from "../components/OutboundFragilityAudit";
 import HowItWorks from "../components/HowItWorks";
+import StepByStepHowItWorks from "../components/StepByStepHowItWorks";
 
 const CheckIcon = ({ className = "text-white" }: { className?: string }) => (
   <svg className={`w-5 h-5 flex-shrink-0 mt-0.5 ${className}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -18,8 +20,73 @@ const CrossIcon = ({ className = "text-[#8A8A93]" }: { className?: string }) => 
   </svg>
 );
 
+const MicroPilotIcon = () => (
+  <svg viewBox="0 0 64 64" aria-hidden="true" className="h-14 w-14">
+    {[-45, 15, 75, 135, 195, 255].map((angle, index) => (
+      <rect
+        key={angle}
+        x="29"
+        y="5"
+        width="6"
+        height="14"
+        rx="3"
+        fill={index === 0 ? "#FF5A1F" : "#FFFFFF"}
+        transform={`rotate(${angle} 32 32)`}
+      />
+    ))}
+  </svg>
+);
+
+const CoreIcon = () => (
+  <svg viewBox="0 0 64 64" aria-hidden="true" className="h-14 w-14">
+    <polygon points="32,6 55,19 32,32 9,19" fill="#FF5A1F" />
+    <polygon points="32,6 55,19 55,45 32,58 9,45 9,19" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinejoin="round" />
+    <path d="M9 19 32 32 55 19M32 32V58" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinejoin="round" />
+  </svg>
+);
+
+const EnterpriseIcon = () => (
+  <svg viewBox="0 0 64 64" aria-hidden="true" className="h-14 w-14">
+    <path d="M13 52V31C13 16 21 8 32 8s19 8 19 23v21" fill="none" stroke="#FFFFFF" strokeWidth="10" strokeLinecap="round" />
+    <path d="M19 50V31c0-10 5-16 13-16s13 6 13 16v19" fill="none" stroke="#FF5A1F" strokeWidth="2.5" strokeLinecap="round" />
+  </svg>
+);
+
+const faqs = [
+  {
+    question: "Does this replace my existing sending tools (Smartlead/Instantly)?",
+    answer: "No. FrameLeads is the intelligence layer; they are the delivery layer. We plug directly into your existing tools via API to give them autonomous reasoning, personalization, and triage capabilities.",
+  },
+  {
+    question: "What prevents the AI from hallucinating and burning a $50k deal?",
+    answer: "Our Velvet Rope Governance. The AI is authorized to handle standard routing autonomously. However, the moment it detects a high-stakes, complex objection, it pauses the automation and routes the drafted reply to your queue for 1-click manual approval.",
+  },
+  {
+    question: "Why shouldn't I just hire another human SDR?",
+    answer: "Humans sleep, suffer from fatigue, and eventually quit—taking your pipeline context with them. FrameLeads is permanent infrastructure. It operates 24/7 and never forgets an objection-handling rule.",
+  },
+  {
+    question: "Do I need to be a developer to set this up?",
+    answer: "No. We engineered this for founders, not engineers. If you can drag and drop a CSV file and flip a toggle switch, you can deploy the entire architecture in under 10 minutes.",
+  },
+  {
+    question: "What happens if I hit my tier limit mid-month?",
+    answer: "The system pauses gracefully. We do not auto-charge surprise overage fees. You will receive an alert to upgrade your tier, ensuring you always maintain absolute control over your spend.",
+  },
+];
+
+const navItems = [
+  { label: "Audit", href: "#audit" },
+  { label: "Solutions", href: "#solutions" },
+  { label: "How it Works", href: "#how-it-works" },
+  { label: "Pricing", href: "#pricing" },
+  { label: "FAQ", href: "#faq" },
+];
+
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [activeNavHref, setActiveNavHref] = useState<string | null>(null);
 
   const scrollToSection = (id: string) => {
     setIsMenuOpen(false);
@@ -27,17 +94,10 @@ export default function Home() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#0D0D0D] bg-grid-overlay selection:bg-[#FF5A1F] selection:text-white overflow-hidden font-sans">
+    <div className="relative min-h-screen overflow-x-clip bg-[#1A1A1A] bg-grid-overlay font-sans selection:bg-[#FF5A1F] selection:text-white">
       
-      {/* Top Status Bar */}
-      <div className="w-full border-b border-white/10 px-4 sm:px-6 py-2 bg-black/50 relative z-50">
-        <p className="font-mono text-[10px] text-white/50 tracking-widest uppercase text-center sm:text-left">
-          // SYSTEM: ACTIVE | PROTOCOL: VELVET ROPE
-        </p>
-      </div>
-
       {/* Navigation Header */}
-      <header className="w-full px-4 sm:px-6 py-4 flex items-center justify-between relative z-50 border-b border-white/5 bg-[#0D0D0D]/90 backdrop-blur-md">
+      <header className="sticky top-6 z-50 mx-auto mt-6 flex w-[95%] max-w-5xl items-center justify-between rounded-2xl border border-[#242424] bg-[#0A0A0A]/70 px-6 py-4 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.05)] backdrop-blur-xl md:px-8">
         <div className="flex items-center gap-3">
           <Image src="/logo.png" alt="FrameLeads Logo" width={32} height={32} className="object-contain rounded-[8px]" />
           <h1 className="font-heading font-bold text-xl sm:text-2xl tracking-wide text-white">
@@ -46,12 +106,34 @@ export default function Home() {
         </div>
 
         {/* Desktop Nav */}
-        <div className="hidden md:flex items-center gap-8 font-mono text-xs tracking-widest uppercase text-[#8A8A93]">
-          <button onClick={() => scrollToSection('audit')} className="hover:text-white transition-colors">Audit</button>
-          <button onClick={() => scrollToSection('architecture')} className="hover:text-white transition-colors">Architecture</button>
-          <button onClick={() => scrollToSection('deploy')} className="hover:text-white transition-colors">Products</button>
-          <button onClick={() => scrollToSection('faq')} className="hover:text-white transition-colors">Briefing</button>
-        </div>
+        <nav
+          className="hidden items-center gap-1 md:flex lg:gap-2"
+          aria-label="Primary navigation"
+          onMouseLeave={() => setHoveredIndex(null)}
+        >
+          {navItems.map((item, index) => {
+            const showPill = hoveredIndex === index || (hoveredIndex === null && activeNavHref === item.href);
+
+            return (
+              <a
+                key={item.href}
+                href={item.href}
+                onMouseEnter={() => setHoveredIndex(index)}
+                onClick={() => setActiveNavHref(item.href)}
+                className={`relative z-0 isolate rounded-full px-4 py-2 text-sm font-medium transition-colors duration-200 hover:text-white ${activeNavHref === item.href ? "text-white" : "text-[#888888]"}`}
+              >
+                {showPill && (
+                  <motion.div
+                    layoutId="navPill"
+                    className="absolute inset-0 z-[-1] rounded-xl bg-[#FF5A1F]/20 border border-[#FF5A1F]/50"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+                {item.label}
+              </a>
+            );
+          })}
+        </nav>
 
         {/* Mobile Hamburger Button */}
         <button className="md:hidden text-white p-2 focus:outline-none" onClick={() => setIsMenuOpen(!isMenuOpen)}>
@@ -63,84 +145,220 @@ export default function Home() {
 
       {/* Mobile Menu Overlay */}
       {isMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-40 bg-[#0D0D0D] pt-32 px-6 flex flex-col gap-8 h-screen border-b border-white/10 animate-in fade-in slide-in-from-top-4">
-          <button onClick={() => scrollToSection('audit')} className="text-left text-3xl font-bold text-white tracking-tight border-b border-white/10 pb-4">01. Fragility Audit</button>
-          <button onClick={() => scrollToSection('architecture')} className="text-left text-3xl font-bold text-white tracking-tight border-b border-white/10 pb-4">02. Architecture</button>
-          <button onClick={() => scrollToSection('deploy')} className="text-left text-3xl font-bold text-white tracking-tight border-b border-white/10 pb-4">03. Products</button>
-          <button onClick={() => scrollToSection('faq')} className="text-left text-3xl font-bold text-white tracking-tight border-b border-white/10 pb-4">04. Executive Briefing</button>
-        </div>
+        <nav className="md:hidden fixed inset-0 z-40 bg-[#0D0D0D] pt-32 px-6 flex flex-col gap-8 h-screen border-b border-white/10 animate-in fade-in slide-in-from-top-4" aria-label="Mobile navigation">
+          {navItems.map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              onClick={() => {
+                setActiveNavHref(item.href);
+                setIsMenuOpen(false);
+              }}
+              className={`border-b border-white/10 pb-4 text-left text-3xl font-bold tracking-tight transition-colors duration-200 hover:text-white ${activeNavHref === item.href ? "text-white" : "text-[#888888]"}`}
+            >
+              {item.label}
+            </a>
+          ))}
+        </nav>
       )}
 
       {/* Hero Section */}
-      <main className="relative z-10 flex flex-col items-center justify-center pt-24 pb-16 px-4 sm:px-6 text-center max-w-5xl mx-auto">
-        <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter leading-[1.1] mb-8 sm:mb-10 text-white">
-          Your best rep just quit. Their objection logic didn't get backed up — <span className="text-[#FF5A1F] drop-shadow-[0_0_15px_rgba(255,90,31,0.6)]">it left with them.</span>
-        </h2>
-        <p className="text-lg sm:text-xl md:text-2xl text-[#8A8A93] font-light leading-relaxed mb-12 sm:mb-16">
-          Volume and brand safety are not a trade-off. They are an architecture decision.
-        </p>
+      <main className="relative z-10 mx-auto flex max-w-5xl flex-col items-center justify-center px-4 pb-12 pt-20 text-center sm:px-6 sm:pt-24 md:pb-16">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6, delay: 0, ease: "easeOut" }}
+        >
+          <h2 className="mb-8 text-4xl font-bold leading-[1.1] tracking-tighter text-white sm:mb-10 sm:text-5xl md:text-6xl lg:text-7xl">
+            You don&apos;t need more leads. <span className="text-[#FF5A1F] drop-shadow-[0_0_12px_rgba(255,90,31,0.35)]">You need to stop burning the ones you have.</span>
+          </h2>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+          className="w-full"
+        >
+          <p className="mx-auto mb-12 max-w-4xl text-lg font-light leading-relaxed text-[#8A8A93] sm:mb-16 sm:text-xl md:text-2xl">
+            <span className="font-bold text-white">Every manual delay leaks part of the $40k/month already sitting in your pipeline.</span>{" "}
+            FrameLeads drafts the perfect reply, drops booked meetings directly onto your live calendar, and never sends a complex response without your 1-click approval.
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+          className="w-full sm:w-auto"
+        >
+          <button onClick={() => scrollToSection('audit')} className="group relative inline-flex w-full items-center justify-center rounded-xl bg-[#FF5A1F] px-8 py-4 text-base font-bold tracking-wider text-white shadow-[0_0_35px_rgba(255,90,31,0.4)] transition-transform duration-200 hover:scale-[1.02] hover:bg-[#ff6b35] active:scale-[0.98] sm:w-auto sm:px-10 sm:py-5 sm:text-lg">
+            <span className="relative z-10 flex items-center gap-2">
+              See your active leak in 60 seconds.
+              <span className="transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true">&rarr;</span>
+            </span>
+          </button>
+        </motion.div>
+        <p className="mt-5 text-xs text-[#888888] font-mono uppercase tracking-[0.15em]">NO SALES CALL REQUIRED.</p>
 
         {/* HIGH TICKET VSL EMBED */}
-        <div className="w-full max-w-4xl mx-auto mb-12 aspect-video rounded-xl overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(255,90,31,0.15)] bg-black relative z-20">
+        <div className="w-full max-w-4xl mx-auto mt-12 aspect-video rounded-xl overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(255,90,31,0.15)] bg-black relative z-20">
           <iframe
             className="w-full h-full"
-            src="https://www.youtube.com/embed/qRsUD60-e9I?modestbranding=1&rel=0&controls=1"
+            src="https://www.youtube.com/embed/FXa9uZeuSsg?rel=0&modestbranding=1"
             title="FrameLeads Autonomous Architecture Walkthrough"
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
           ></iframe>
         </div>
-
-        <button onClick={() => scrollToSection('audit')} className="group relative w-full sm:w-auto inline-flex items-center justify-center rounded-xl bg-[#FF5A1F] text-white font-bold text-base sm:text-lg tracking-wider px-8 sm:px-10 py-4 sm:py-5 shadow-[0_0_35px_rgba(255,90,31,0.4)] hover:bg-[#ff6b35] hover:scale-105 transition-all">
-          <span className="relative z-10 flex items-center gap-2">
-            Run the Outbound Fragility Audit
-            <span className="transition-transform duration-300 group-hover:translate-x-1">&rarr;</span>
-          </span>
-        </button>
-        <p className="mt-4 text-[10px] sm:text-xs text-[#8A8A93] font-mono tracking-widest uppercase">100% self-serve diagnostic. Discover your pipeline leaks in 60 seconds. No sales call required.</p>
       </main>
 
       {/* THE KNIFE TWIST SECTION */}
-      <section className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 py-24 md:py-32 border-t border-white/5">
-        <div className="text-center max-w-3xl mx-auto mb-16 md:mb-20">
+      <section className="relative mx-auto w-full max-w-7xl border-t border-white/5 px-4 py-12 sm:px-6 md:py-20">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="mx-auto mb-12 max-w-3xl text-center md:mb-16"
+        >
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white mb-6">
-            You know exactly what's wrong.<br/>
-            <span className="text-[#8A8A93] font-light">You're still inside it.</span>
+            You already know exactly why your pipeline is leaking.
           </h2>
-          <p className="text-base sm:text-lg text-[#8A8A93] font-mono leading-relaxed px-2">
-            Every solution you have tried installed labor, or installed risk. Neither is infrastructure.
+          <p className="text-base sm:text-lg text-[#8A8A93] leading-relaxed px-2">
+            Every fix you have tried either added more human fatigue or installed dangerous AI risk. Neither actually solves the bottleneck.
           </p>
-        </div>
+        </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* FAILURES */}
-          <div className="p-6 sm:p-8 border border-white/5 bg-[#121212] rounded-xl hover:border-[#FF5A1F]/30 transition-colors group">
-            <div className="font-mono text-xs text-[#FF5A1F] mb-6 uppercase tracking-widest">// The AI Wrapper Failure</div>
-            <h3 className="text-lg sm:text-xl text-white font-bold mb-4">The Whale Lead Burn</h3>
-            <p className="text-[#8A8A93] text-sm leading-relaxed mb-6">Fully autonomous AI was designed for deals where a wrong message costs a lost lead. You are in deals where a wrong message costs a lost relationship.</p>
-            <div className="font-mono text-xs text-[#8A8A93] p-4 bg-black/50 border-l-2 border-[#FF5A1F]">"It books meetings. It also permanently disqualifies whale leads you will never know about."</div>
-          </div>
-          <div className="p-6 sm:p-8 border border-white/5 bg-[#121212] rounded-xl hover:border-[#FF5A1F]/30 transition-colors group">
-            <div className="font-mono text-xs text-[#FF5A1F] mb-6 uppercase tracking-widest">// The Human SDR Failure</div>
-            <h3 className="text-lg sm:text-xl text-white font-bold mb-4">The Knowledge Event</h3>
-            <p className="text-[#8A8A93] text-sm leading-relaxed mb-6">An SDR isn't a hire. It's a rental. When they quit, your institutional knowledge and pipeline relationship context leaves with them — and you find out mid-deal.</p>
-          </div>
-          <div className="p-6 sm:p-8 border border-white/5 bg-[#121212] rounded-xl hover:border-[#FF5A1F]/30 transition-colors group">
-            <div className="font-mono text-xs text-[#FF5A1F] mb-6 uppercase tracking-widest">// The DIY Stack Failure</div>
-            <h3 className="text-lg sm:text-xl text-white font-bold mb-4">The 2:00 AM Alert</h3>
-            <p className="text-[#8A8A93] text-sm leading-relaxed mb-6">You built a Rube Goldberg machine out of Zapier and Make. The part of your stack that breaks is exactly the part your largest deal depends on.</p>
-            <div className="font-mono text-xs text-[#8A8A93] p-4 bg-black/50 border-l-2 border-[#FF5A1F]">"You spent $80,000 on infrastructure. All you have to show for it is a spreadsheet and held-together wiring."</div>
-          </div>
+        <div className="flex flex-col gap-12">
+          {/* Human SDR Failure: text left, visual right */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6, delay: 0, ease: "easeOut" }}
+            className="flex flex-col items-center gap-12 md:flex-row md:gap-24"
+          >
+            <div className="w-full md:w-1/2">
+              <h3 className="font-sans text-3xl sm:text-4xl font-bold tracking-tight text-[#FF5A1F] mb-6">The Human SDR Failure</h3>
+              <p className="font-sans text-base sm:text-lg text-[#B0B0B0] leading-relaxed">Humans get tired. They forget objection rules. Warm leads go cold overnight. And when a rep eventually quits, your pipeline intelligence walks out the door with them.</p>
+            </div>
+
+            <div className="w-full md:w-1/2">
+              <div className="metric-card-shell" aria-label="Estimated active monthly pipeline leak">
+                <div className="metric-card" role="group">
+                  <dl className="metric-card__rows">
+                    <div className="metric-card__row">
+                      <dt>Leads ignored &gt; 48hrs</dt>
+                      <dd>-$12,000</dd>
+                    </div>
+                    <div className="metric-card__row">
+                      <dt>Missed follow-ups</dt>
+                      <dd>-$18,000</dd>
+                    </div>
+                    <div className="metric-card__row">
+                      <dt>Dropped intent</dt>
+                      <dd>-$10,000</dd>
+                    </div>
+                    <div className="metric-card__total">
+                      <dt>Active leak:</dt>
+                      <dd>-$40,000 / mo</dd>
+                    </div>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* AI Wrapper Failure: visual left, text right */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            className="flex flex-col items-center gap-12 md:flex-row-reverse md:gap-24"
+          >
+            <div className="w-full md:w-1/2">
+              <h3 className="font-sans text-3xl sm:text-4xl font-bold tracking-tight text-[#FF5A1F] mb-6">The AI Wrapper Failure</h3>
+              <p className="font-sans text-base sm:text-lg text-[#B0B0B0] leading-relaxed">Cheap AI is built for low-ticket spam. In high-ticket sales, one hallucinated reply permanently burns a $50,000 relationship. It disqualifies whale leads entirely behind your back.</p>
+            </div>
+
+            <div className="w-full md:w-1/2">
+              <div className="metric-card-shell" aria-label="Critical AI pricing error">
+                <div className="metric-card aspect-video flex items-center justify-center p-5 sm:p-8">
+                  <div className="absolute -left-12 top-4 h-40 w-40 rounded-full bg-red-600/10" aria-hidden="true" />
+                  <div className="absolute -right-8 bottom-0 h-36 w-36 rounded-full bg-white/5" aria-hidden="true" />
+                  <div className="absolute inset-0 bg-black/30 backdrop-blur-2xl" aria-hidden="true" />
+                  <div className="relative z-10 w-full max-w-sm rounded-xl border border-red-900/30 bg-black p-5 sm:p-6 text-left shadow-2xl">
+                    <div className="flex items-start gap-4">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-red-500/30 bg-red-500/10 font-mono text-lg font-bold text-red-500" aria-hidden="true">!</div>
+                      <div>
+                        <h4 className="font-sans text-base sm:text-lg font-bold tracking-wide text-red-500">CRITICAL ERROR</h4>
+                        <p className="mt-2 font-sans text-sm sm:text-base leading-relaxed text-white/55">
+                          AI hallucinated pricing logic.<br />
+                          <span className="font-bold text-white">$50,000 deal at risk.</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Duct-Tape Failure: text left, visual right */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            className="flex flex-col items-center gap-12 md:flex-row md:gap-24"
+          >
+            <div className="w-full md:w-1/2">
+              <h3 className="font-sans text-3xl sm:text-4xl font-bold tracking-tight text-[#FF5A1F] mb-6">The Duct-Tape Failure</h3>
+              <p className="font-sans text-base sm:text-lg text-[#B0B0B0] leading-relaxed">You wired together Zapier, Make, and five different tools. It is a fragile mess. It always breaks at the exact moment your highest-intent prospect is waiting for a response.</p>
+            </div>
+
+            <div className="w-full md:w-1/2">
+              <div className="metric-card-shell" aria-label="Broken webhook connection">
+                <div className="metric-card aspect-video flex items-center justify-center px-8">
+                  <div className="relative flex w-full max-w-sm items-center justify-between">
+                    <div className="absolute left-12 right-[58%] top-1/2 border-t-2 border-[#333]" aria-hidden="true" />
+                    <div className="absolute left-[58%] right-12 top-1/2 border-t-2 border-[#333]" aria-hidden="true" />
+
+                    {[0, 1, 2].map((node) => (
+                      <div key={node} className="relative z-10 h-12 w-12 rounded-lg border border-[#242424] bg-black shadow-xl" aria-hidden="true" />
+                    ))}
+
+                    <div className="absolute left-1/2 top-[calc(50%+2rem)] z-20 -translate-x-1/2 whitespace-nowrap rounded-full border border-red-500/20 bg-red-500/10 px-2 py-1 font-mono text-[9px] text-red-500 sm:text-xs">
+                      Webhook Failed: Intent Unrecognized
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* SHIFTED HERO MOCKUP */}
-      <div className="relative w-full max-w-7xl mx-auto mb-16 px-4 sm:px-6 md:px-8 opacity-100">
+      {/* 6-CARD ARCHITECTURE BENTO */}
+      <HowItWorks />
+
+      {/* AUTONOMOUS ACQUISITION + ARCHITECTURE MOCKUP */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="relative mx-auto mb-12 w-full max-w-7xl px-4 opacity-100 sm:px-6 md:mb-16 md:px-8"
+      >
         <div className="absolute inset-0 z-0 bg-[#FF5A1F]/10 blur-[80px] md:blur-[100px] rounded-full transform scale-90 pointer-events-none" />
         <div className="border border-white/10 rounded-xl md:rounded-2xl bg-[#121212] shadow-2xl overflow-hidden relative z-10">
           <Image
-            src="/hero-mockup-v2.jpg"
+            src="/hero-mockup-v2.png"
             alt="FrameLeads Platform Architecture"
             width={1920}
             height={1080}
@@ -149,181 +367,160 @@ export default function Home() {
             unoptimized
           />
         </div>
-      </div>
+      </motion.div>
 
       {/* AUDIT INJECTION */}
-      <div className="px-4 sm:px-6" id="audit">
+      <div className="my-16 px-4 sm:px-6 md:my-24 lg:my-32">
         <OutboundFragilityAudit />
       </div>
 
-      {/* 6-PILLAR ARCHITECTURE (HOW IT WORKS) */}
-      <HowItWorks />
+      {/* RESTORED STEP-BY-STEP HOW IT WORKS */}
+      <StepByStepHowItWorks />
 
       {/* DEPLOYMENT OPTIONS (SCALABLE PRICING) */}
-      <div id="deploy" className="max-w-5xl mx-auto mb-20 md:mb-32 px-4 sm:px-6">
+      <div id="pricing" className="mx-auto mb-16 max-w-7xl px-4 sm:px-6 md:mb-24 lg:mb-32">
         
-        {/* MOTION GRAPHIC INJECTION */}
-        <div className="w-full mb-16 rounded-xl overflow-hidden border border-white/10 shadow-[0_0_40px_rgba(255,90,31,0.08)] bg-[#121212]">
-          <video
-            src="/motion-graphic.mp4"
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full h-auto object-cover opacity-90"
-          />
-        </div>
-
-        <div className="text-center mb-10 md:mb-12">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="mb-10 text-center md:mb-12"
+        >
           <h3 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Select Your Deployment Architecture</h3>
           <p className="text-[#8A8A93] mt-3 sm:mt-4 font-mono text-xs sm:text-sm px-2">Do not over-engineer. Deploy the tier that matches your current deal volume.</p>
-        </div>
+        </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-stretch">
-          
-          {/* Core */}
-          <div className="p-6 sm:p-8 border border-white/10 bg-[#121212] rounded-xl flex flex-col h-full relative">
-            <div className="text-[#FF5A1F] text-[10px] font-mono uppercase tracking-[0.2em] mb-3">For Individuals</div>
-            <h4 className="text-2xl sm:text-3xl font-bold text-white mb-2">FrameLeads Core</h4>
-            <div className="flex items-baseline gap-1 mb-6 pb-6 border-b border-white/5">
-              <span className="text-4xl font-bold text-white">$147</span>
-              <span className="text-[#8A8A93] text-sm font-mono">/mo</span>
+        <div className="mx-auto flex max-w-7xl flex-col items-stretch gap-6 lg:flex-row">
+          {/* Micro-Pilot */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            className="lg:flex-1"
+          >
+          <div className="relative flex h-full flex-col rounded-2xl border border-[#242424] bg-[#121212] p-6 shadow-2xl transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[#FF5A1F]/30 hover:shadow-[0_10px_40px_-10px_rgba(255,90,31,0.15)] sm:p-8 lg:flex-1">
+            <div className="mb-6"><MicroPilotIcon /></div>
+            <h4 className="mb-2 text-2xl font-bold text-white">FrameLeads Micro-Pilot</h4>
+            <div className="mb-6 flex items-baseline gap-1 border-b border-white/5 pb-6">
+              <span className="text-4xl font-bold text-white">$10</span>
+              <span className="font-mono text-sm text-[#8A8A93]">one-time purchase</span>
             </div>
-            
-            <ul className="space-y-4 mb-8 flex-grow">
-              <li className="flex items-start gap-3">
-                <CheckIcon />
-                <span className="text-sm text-[#E0E0E0]">500 AI-tailored outbound leads per month</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <CheckIcon />
-                <span className="text-sm text-[#E0E0E0]">Zero-Code Data Ingestion & Omnichannel Sandbox</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <CheckIcon />
-                <span className="text-sm text-[#E0E0E0]">1-Click Smartlead Sync</span>
-              </li>
-              <li className="flex items-start gap-3 opacity-40 grayscale">
-                <CrossIcon />
-                <span className="text-sm text-[#8A8A93] line-through decoration-white/20">Autonomous Inbox Triage</span>
-              </li>
-              <li className="flex items-start gap-3 opacity-40 grayscale">
-                <CrossIcon />
-                <span className="text-sm text-[#8A8A93] line-through decoration-white/20">Velvet Rope Governance</span>
-              </li>
+            <ul className="mb-8 flex-grow space-y-4">
+              <li className="flex items-start gap-3"><CheckIcon className="text-white" /><span className="text-sm text-white">25 AI-tailored outbound leads (One-Time)</span></li>
+              <li className="flex items-start gap-3"><CheckIcon className="text-white" /><span className="text-sm text-white">Zero-Code Data Ingestion &amp; Sandbox</span></li>
+              <li className="flex items-start gap-3 opacity-50"><CrossIcon /><span className="text-sm text-[#8A8A93]">1-Click Smartlead Sync</span></li>
+              <li className="flex items-start gap-3 opacity-50"><CrossIcon /><span className="text-sm text-[#8A8A93]">1-Click Instantly Sync</span></li>
+              <li className="flex items-start gap-3 opacity-50"><CrossIcon /><span className="text-sm text-[#8A8A93]">Autonomous Inbox Triage</span></li>
+              <li className="flex items-start gap-3 opacity-50"><CrossIcon /><span className="text-sm text-[#8A8A93]">Zero-Click Calendar Concierge</span></li>
+              <li className="flex items-start gap-3 opacity-50"><CrossIcon /><span className="text-sm text-[#8A8A93]">Velvet Rope Governance</span></li>
             </ul>
-            
-            <div className="mt-auto">
-              <Link href="https://whop.com/checkout/plan_MUeh0CYdRPPaJ" target="_blank" className="block text-center px-4 sm:px-6 py-4 border border-white/10 text-white font-bold text-sm sm:text-base tracking-widest uppercase font-mono rounded-lg hover:bg-white hover:text-black transition-all w-full">Deploy Core Engine</Link>
-            </div>
+            <Link href="https://whop.com/brandflowstudio/frameleads-micro-pilot/" target="_blank" rel="noopener noreferrer" className="mt-auto block w-full rounded-lg border border-white/15 px-4 py-4 text-center font-mono text-sm font-bold uppercase tracking-widest text-white transition-all hover:bg-white hover:text-black">Start Micro-Pilot</Link>
           </div>
+          </motion.div>
+
+          {/* Core */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            className="lg:flex-1"
+          >
+          <div className="relative flex h-full flex-col rounded-2xl border border-[#242424] bg-[#121212] p-6 shadow-2xl transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[#FF5A1F]/30 hover:shadow-[0_10px_40px_-10px_rgba(255,90,31,0.15)] sm:p-8 lg:flex-1">
+            <div className="mb-6"><CoreIcon /></div>
+            <h4 className="mb-2 text-2xl font-bold text-white">FrameLeads Core</h4>
+            <div className="mb-6 flex items-baseline gap-1 border-b border-white/5 pb-6">
+              <span className="text-4xl font-bold text-white">$147</span>
+              <span className="font-mono text-sm text-[#8A8A93]">/mo</span>
+            </div>
+            <ul className="mb-8 flex-grow space-y-4">
+              <li className="flex items-start gap-3"><CheckIcon className="text-white" /><span className="text-sm text-white">500 AI-tailored outbound leads per month</span></li>
+              <li className="flex items-start gap-3"><CheckIcon className="text-white" /><span className="text-sm text-white">Zero-Code Data Ingestion</span></li>
+              <li className="flex items-start gap-3"><CheckIcon className="text-white" /><span className="text-sm text-white">The Omnichannel Sandbox</span></li>
+              <li className="flex items-start gap-3"><CheckIcon className="text-white" /><span className="text-sm text-white">1-Click Smartlead Sync</span></li>
+              <li className="flex items-start gap-3"><CheckIcon className="text-white" /><span className="text-sm text-white">1-Click Instantly Sync</span></li>
+              <li className="flex items-start gap-3 opacity-50"><CrossIcon /><span className="text-sm text-[#8A8A93]">Autonomous Inbox Triage</span></li>
+              <li className="flex items-start gap-3 opacity-50"><CrossIcon /><span className="text-sm text-[#8A8A93]">Zero-Click Calendar Concierge</span></li>
+              <li className="flex items-start gap-3 opacity-50"><CrossIcon /><span className="text-sm text-[#8A8A93]">Velvet Rope Governance</span></li>
+            </ul>
+            <Link href="https://whop.com/brandflowstudio/frameleads-24/" target="_blank" rel="noopener noreferrer" className="mt-auto block w-full rounded-lg border border-white/15 px-4 py-4 text-center font-mono text-sm font-bold uppercase tracking-widest text-white transition-all hover:bg-white hover:text-black">Deploy Core Engine</Link>
+          </div>
+          </motion.div>
 
           {/* Enterprise */}
-          <div className="p-6 sm:p-8 border border-[#FF5A1F] bg-[#121212] rounded-xl flex flex-col h-full relative shadow-[0_0_40px_rgba(255,90,31,0.15)] overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[#FF5A1F]/10 blur-3xl pointer-events-none" />
-            <div className="text-[#FF5A1F] text-[10px] font-mono uppercase tracking-[0.2em] mb-3 relative z-10">For Teams & Businesses</div>
-            <h4 className="text-2xl sm:text-3xl font-bold text-white mb-2 relative z-10">FrameLeads Enterprise</h4>
-            <div className="flex items-baseline gap-1 mb-6 pb-6 border-b border-white/5 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            className="lg:flex-1"
+          >
+          <div className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-[#FF5A1F] bg-[#121212] p-6 shadow-[0_0_40px_rgba(255,90,31,0.15)] transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[#FF5A1F]/30 hover:shadow-[0_10px_40px_-10px_rgba(255,90,31,0.15)] sm:p-8 lg:flex-1">
+            <div className="pointer-events-none absolute right-0 top-0 h-64 w-64 bg-[#FF5A1F]/10 blur-3xl" />
+            <div className="relative z-10 mb-6"><EnterpriseIcon /></div>
+            <h4 className="relative z-10 mb-2 text-2xl font-bold text-white">FrameLeads Enterprise</h4>
+            <div className="relative z-10 mb-6 flex items-baseline gap-1 border-b border-white/5 pb-6">
               <span className="text-4xl font-bold text-[#FF5A1F]">$697</span>
-              <span className="text-[#8A8A93] text-sm font-mono">/mo</span>
+              <span className="font-mono text-sm text-[#8A8A93]">/mo</span>
             </div>
-            
-            <ul className="space-y-4 mb-8 flex-grow relative z-10">
-              <li className="flex items-start gap-3">
-                <CheckIcon className="text-[#FF5A1F]" />
-                <span className="text-sm text-[#E0E0E0]">Uncapped, unlimited AI generation</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <CheckIcon className="text-[#FF5A1F]" />
-                <span className="text-sm text-white font-medium">Unlocks Autonomous Inbox Triage</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <CheckIcon className="text-[#FF5A1F]" />
-                <span className="text-sm text-white font-medium">Unlocks Velvet Rope Governance & manual override</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <CheckIcon className="text-[#FF5A1F]" />
-                <span className="text-sm text-[#E0E0E0]">Priority API processing for zero-latency execution</span>
-              </li>
+            <ul className="relative z-10 mb-8 flex-grow space-y-4">
+              <li className="flex items-start gap-3"><CheckIcon className="text-white" /><span className="text-sm text-white">20,000 AI-tailored outbound leads per month</span></li>
+              <li className="flex items-start gap-3"><CheckIcon className="text-white" /><span className="text-sm text-white">Zero-Code Data Ingestion &amp; Sandbox</span></li>
+              <li className="flex items-start gap-3"><CheckIcon className="text-white" /><span className="text-sm text-white">1-Click Smartlead &amp; Instantly Sync</span></li>
+              <li className="flex items-start gap-3"><CheckIcon className="text-white" /><span className="text-sm text-white">Autonomous Inbox Triage</span></li>
+              <li className="flex items-start gap-3"><CheckIcon className="text-white" /><span className="text-sm text-white">High-Intent Signal Scoring</span></li>
+              <li className="flex items-start gap-3"><CheckIcon className="text-white" /><span className="text-sm text-white">Zero-Click Calendar Concierge</span></li>
+              <li className="flex items-start gap-3"><CheckIcon className="text-white" /><span className="text-sm text-white">Velvet Rope Governance</span></li>
+              <li className="flex items-start gap-3"><CheckIcon className="text-white" /><span className="text-sm text-white">Priority API processing (Dedicated Routing)</span></li>
             </ul>
-            
-            <div className="mt-auto relative z-10">
-              <div className="mb-4 text-center">
-                <p className="text-[10px] text-[#666666] font-mono uppercase tracking-wide">$697/mo — less than 2% of a single closed deal in your pipeline.</p>
-              </div>
-              <Link href="https://whop.com/checkout/plan_vYopYzyoqunDb" target="_blank" className="block text-center px-4 sm:px-6 py-4 bg-[#FF5A1F] text-white font-bold text-sm sm:text-base tracking-widest uppercase font-mono rounded-lg hover:bg-[#ff6b35] transition-all hover:scale-[1.02] w-full">Deploy Full Architecture</Link>
-            </div>
+            <Link href="https://whop.com/brandflowstudio/frameleads-enterprise-autonomous-architecture/" target="_blank" rel="noopener noreferrer" className="relative z-10 mt-auto block w-full rounded-lg bg-[#FF5A1F] px-4 py-4 text-center font-mono text-sm font-bold uppercase tracking-widest text-white shadow-[0_0_28px_rgba(255,90,31,0.35)] transition-transform duration-200 hover:scale-[1.02] hover:bg-[#ff6b35] active:scale-[0.98]">Deploy Full Architecture</Link>
           </div>
-
+          </motion.div>
         </div>
       </div>
 
       {/* EXECUTIVE BRIEFING (FAQ SPLIT LAYOUT) */}
-      <div id="faq" className="max-w-7xl mx-auto border-t border-white/5 pt-16 md:pt-24 mb-20 px-4 sm:px-6">
+      <div id="faq" className="mx-auto mb-16 max-w-7xl border-t border-white/5 px-4 pt-12 sm:px-6 md:mb-20 md:pt-24">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-20">
           
           {/* Left Column (Sticky Header) */}
-          <div className="md:col-span-1 md:sticky top-32 space-y-6 self-start">
-            <div className="font-mono text-xs text-[#FF5A1F] uppercase tracking-widest">// EXECUTIVE BRIEFING</div>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="self-start space-y-6 md:sticky md:top-32 md:col-span-1"
+          >
+            <div className="font-mono text-xs text-[#FF5A1F] uppercase tracking-widest">{"// EXECUTIVE BRIEFING"}</div>
             <h3 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">Operational Clarity.</h3>
             <p className="text-[#8A8A93] text-sm leading-relaxed">Everything you need to know about the Velvet Rope infrastructure and deployment process.</p>
             <a href="https://www.linkedin.com/in/akram-walid-4717893a9" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center px-6 py-3 border border-white/10 text-white font-mono text-xs uppercase tracking-widest rounded hover:bg-white hover:text-black transition-colors mt-4">
               Contact Support
             </a>
-          </div>
+          </motion.div>
 
           {/* Right Column (Accordions) */}
-          <div className="md:col-span-2 space-y-4">
-            
-            <details className="group border border-white/10 bg-[#121212] rounded-xl overflow-hidden [&_summary::-webkit-details-marker]:hidden">
-              <summary className="flex items-center justify-between cursor-pointer p-6 font-bold text-white sm:text-lg select-none">
-                <span>Does this replace my existing tech stack?</span>
-                <span className="transition-transform group-open:rotate-180 text-[#FF5A1F]">
-                  <svg fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-                </span>
-              </summary>
-              <div className="px-6 pb-6 text-[#8A8A93] text-sm leading-relaxed">
-                No. We are an orchestration layer, not a replacement for your sending infrastructure. FrameLeads connects directly to tools like Smartlead, ingests the data, and applies our Velvet Rope routing logic over the top.
-              </div>
-            </details>
-
-            <details className="group border border-white/10 bg-[#121212] rounded-xl overflow-hidden [&_summary::-webkit-details-marker]:hidden">
-              <summary className="flex items-center justify-between cursor-pointer p-6 font-bold text-white sm:text-lg select-none">
-                <span>What prevents the AI from hallucinating and burning a $50k deal?</span>
-                <span className="transition-transform group-open:rotate-180 text-[#FF5A1F]">
-                  <svg fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-                </span>
-              </summary>
-              <div className="px-6 pb-6 text-[#8A8A93] text-sm leading-relaxed">
-                The architecture itself. We do not let AI touch high-ticket nuance unsupervised. The moment the system detects a complex inquiry or high-value signal, it halts the automation and queues a drafted response for your manual 1-click approval.
-              </div>
-            </details>
-
-            <details className="group border border-white/10 bg-[#121212] rounded-xl overflow-hidden [&_summary::-webkit-details-marker]:hidden">
-              <summary className="flex items-center justify-between cursor-pointer p-6 font-bold text-white sm:text-lg select-none">
-                <span>Why shouldn't I just hire another SDR to manage my inbox?</span>
-                <span className="transition-transform group-open:rotate-180 text-[#FF5A1F]">
-                  <svg fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-                </span>
-              </summary>
-              <div className="px-6 pb-6 text-[#8A8A93] text-sm leading-relaxed">
-                An SDR is a rental. When they quit, your institutional knowledge and pipeline relationship context leaves with them. FrameLeads is permanent infrastructure that never forgets an objection handling matrix.
-              </div>
-            </details>
-
-            <details className="group border border-white/10 bg-[#121212] rounded-xl overflow-hidden [&_summary::-webkit-details-marker]:hidden">
-              <summary className="flex items-center justify-between cursor-pointer p-6 font-bold text-white sm:text-lg select-none">
-                <span>How fast is deployment?</span>
-                <span className="transition-transform group-open:rotate-180 text-[#FF5A1F]">
-                  <svg fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-                </span>
-              </summary>
-              <div className="px-6 pb-6 text-[#8A8A93] text-sm leading-relaxed">
-                Instant. Upon checkout, you immediately unlock the FrameLeads Core SaaS environment. If you deploy the Enterprise tier, your bespoke Cognitive Architecture calibrations begin immediately upon onboarding.
-              </div>
-            </details>
-
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="space-y-4 md:col-span-2"
+          >
+            {faqs.map((faq) => (
+              <details key={faq.question} className="group overflow-hidden rounded-xl border border-white/10 bg-[#121212] [&_summary::-webkit-details-marker]:hidden">
+                <summary className="flex cursor-pointer select-none items-center justify-between gap-5 p-6 font-bold text-white sm:text-lg">
+                  <span>{faq.question}</span>
+                  <span className="shrink-0 text-[#FF5A1F] transition-transform group-open:rotate-180">
+                    <svg fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="h-5 w-5"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                  </span>
+                </summary>
+                <div className="px-6 pb-6 text-sm leading-relaxed text-[#8A8A93]">{faq.answer}</div>
+              </details>
+            ))}
+          </motion.div>
         </div>
       </div>
 

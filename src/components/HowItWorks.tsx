@@ -1,109 +1,190 @@
 "use client";
 
-import { useState } from "react";
+import type { ReactNode } from "react";
+import { motion } from "framer-motion";
 
-import Image from "next/image";
+const cardClassName =
+  "h-[36rem] overflow-hidden rounded-2xl border border-[#242424] bg-[#1A1A1A] shadow-[0_24px_60px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.06)] transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[#FF5A1F]/30 hover:shadow-[0_10px_40px_-10px_rgba(255,90,31,0.15)] sm:h-[38rem] lg:h-[35rem]";
 
-const steps = [
-  {
-    title: "Zero-Code Data Ingestion",
-    description: "Drop raw CSVs directly into the engine. The system automatically maps columns and preps your lead list.",
-    image: "/ingestion.jpg",
-  },
-  {
-    title: "Campaign Context Engine",
-    description: "Define your value proposition and angles once. The engine guarantees your outreach never sounds generic.",
-    image: "/campaign.jpg",
-  },
-  {
-    title: "Omnichannel Sandbox",
-    description: "Generate tailored, multi-channel copy instantly across Email, LinkedIn, and WhatsApp.",
-    image: "/sandbox.jpg",
-  },
-  {
-    title: "1-Click Smartlead Sync",
-    description: "Push your generated, highly-personalized campaigns directly to your sending stack with a single click.",
-    image: "/deploy.jpg",
-  },
-  {
-    title: "Autonomous Inbox Triage",
-    description: "The AI actively monitors your inbox, handles standard objections, and identifies high-intent signals instantly.",
-    image: "/inbox-triage.jpg",
-  },
-  {
-    title: "Velvet Rope Governance",
-    description: "Pause automation on high-stakes replies. The system queues them for your manual review before anything sends.",
-    image: "/governance.jpg",
-  },
-];
+function BentoCard({ visual, title, description, index }: { visual: ReactNode; title: string; description: string; index: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ duration: 0.6, delay: index * 0.1, ease: "easeOut" }}
+    >
+      <article className={cardClassName}>
+        <div className="h-[60%] overflow-hidden border-b border-[#242424] bg-[radial-gradient(circle_at_50%_30%,rgba(255,90,31,0.08),transparent_58%)] p-5 sm:p-7">
+          {visual}
+        </div>
+        <div className="flex h-[40%] flex-col justify-center p-5 sm:p-6">
+          <h3 className="font-sans text-xl font-bold tracking-tight text-white sm:text-2xl">{title}</h3>
+          <p className="mt-3 font-sans text-sm leading-relaxed text-[#888888]">{description}</p>
+        </div>
+      </article>
+    </motion.div>
+  );
+}
 
 export default function HowItWorks() {
-  const [activeStep, setActiveStep] = useState(0);
-
   return (
-    <section className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 py-24 md:py-32 border-t border-white/5">
-      <div className="mb-16 md:mb-20">
-        <div className="font-mono text-xs text-[#FF5A1F] mb-6 uppercase tracking-widest">// THE ARCHITECTURE</div>
-        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight mb-4">How it works</h2>
-        <p className="text-base sm:text-lg text-[#8A8A93] leading-relaxed max-w-2xl">
-          FrameLeads handles the heavy lifting of signal-based acquisition so you can focus on closing.
+    <section id="solutions" className="relative w-full border-t border-white/5 px-4 py-16 sm:px-6 md:py-24">
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="mx-auto mb-10 flex max-w-7xl flex-col items-center text-center md:mb-16"
+      >
+        <div className="mb-6 font-mono text-xs uppercase tracking-widest text-[#FF5A1F]">{"// FEATURES"}</div>
+        <h2 className="mb-4 text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">Close more deals. Without typing more replies.</h2>
+        <p className="mx-auto max-w-2xl text-center text-base leading-relaxed text-[#888888] sm:text-lg">
+          FrameLeads plugs directly into your existing sending tools. It finds the intent, drafts the reply, and books the meeting—all from one autonomous intelligence layer.
         </p>
-      </div>
+      </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 relative items-start">
-        
-        {/* LEFT COLUMN: INTERACTIVE STEPS */}
-        <div className="w-full lg:col-span-5 flex flex-col space-y-0 pb-16 lg:pb-32 order-last lg:order-first">
-          {steps.map((step, index) => {
-            const isActive = activeStep === index;
-            return (
-              <div 
-                key={index}
-                onClick={() => setActiveStep(index)}
-                className="cursor-pointer group flex flex-col items-start text-left space-y-1 p-3 sm:p-4 rounded-xl transition-all duration-300 hover:bg-white/[0.02]"
-              >
-                <span className={`font-mono text-[10px] sm:text-xs font-bold uppercase transition-colors duration-300 ${isActive ? 'text-[#FF5A1F]' : 'text-neutral-500'}`}>
-                  STEP {index + 1}
-                </span>
-                <h3 className={`text-lg sm:text-xl font-bold transition-colors duration-300 ${isActive ? 'text-white' : 'text-neutral-500 group-hover:text-neutral-300'}`}>
-                  {step.title}
-                </h3>
-                
-                <div 
-                  className={`overflow-hidden transition-all duration-500 ease-in-out pl-0 ${
-                    isActive ? 'max-h-[150px] opacity-100 mt-1' : 'max-h-0 opacity-0 mt-0'
-                  }`}
-                >
-                  <p className="text-[#8A8A93] text-xs sm:text-sm leading-relaxed">
-                    {step.description}
-                  </p>
+      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <BentoCard
+          index={0}
+          title="Zero-Code Ingestion."
+          description="Drop raw CSVs directly into the engine. The system automatically maps columns, cleans the data, and preps your lead list instantly."
+          visual={
+            <div className="flex h-full items-center justify-center">
+              <div className="w-full max-w-xs rounded-xl border border-[#242424] bg-black p-5 shadow-2xl">
+                <div className="mx-auto flex h-20 w-16 flex-col items-center justify-center rounded-lg border border-[#242424] bg-[#090909] shadow-[0_0_30px_rgba(255,90,31,0.18)]">
+                  <div className="mb-2 h-1 w-7 rounded-full bg-[#333333]" />
+                  <span className="font-mono text-xs font-bold tracking-wider text-[#FF5A1F]">CSV</span>
+                </div>
+                <div className="mt-6 flex items-center justify-between font-mono text-[10px] text-[#888888]">
+                  <span>Mapping Data...</span>
+                  <span className="text-[#FF5A1F]">100%</span>
+                </div>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#242424]">
+                  <div className="h-full w-full rounded-full bg-[#FF5A1F] shadow-[0_0_14px_rgba(255,90,31,0.8)]" />
                 </div>
               </div>
-            );
-          })}
-        </div>
+            </div>
+          }
+        />
 
-        {/* RIGHT COLUMN: STICKY VISUALS */}
-        <div className="w-full lg:col-span-7 lg:sticky top-[25vh] xl:top-[30vh] h-fit order-first lg:order-last mb-8 lg:mb-0">
-          <div className="aspect-[4/3] w-full rounded-xl overflow-hidden border border-white/10 bg-[#0a0a0a] shadow-[0_0_50px_-12px_rgba(255,87,34,0.15)] relative">
-            {steps.map((step, index) => {
-              const isActive = activeStep === index;
-              return (
-                <Image 
-                  key={index}
-                  src={step.image}
-                  alt={step.title}
-                  fill
-                  unoptimized
-                  className={`w-full h-full object-cover object-center transition-opacity duration-500 ${
-                    isActive ? 'opacity-100 z-10' : 'opacity-0 z-0'
-                  }`}
-                />
-              );
-            })}
-          </div>
-        </div>
-        
+        <BentoCard
+          index={1}
+          title="The Omnichannel Sandbox."
+          description="Generate tailored, multi-channel copy across Email and LinkedIn instantly. Review the AI's logic, regenerate with 1-click, and perfect the messaging before pushing it live."
+          visual={
+            <div className="flex h-full items-center justify-center">
+              <div className="grid h-[78%] w-full max-w-sm grid-cols-[0.8fr_1.2fr] overflow-hidden rounded-xl border border-[#242424] bg-black shadow-2xl">
+                <div className="border-r border-[#242424] p-3 sm:p-4">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full border border-[#333333] bg-[#161616] font-mono text-[10px] text-[#FF5A1F]">AW</div>
+                  <div className="mt-4 h-2 w-3/4 rounded-full bg-[#888888]/40" />
+                  <div className="mt-2 h-1.5 w-1/2 rounded-full bg-[#888888]/20" />
+                  <div className="mt-5 space-y-2">
+                    <div className="h-1.5 w-full rounded-full bg-[#888888]/15" />
+                    <div className="h-1.5 w-4/5 rounded-full bg-[#888888]/15" />
+                  </div>
+                </div>
+                <div className="p-3 sm:p-4">
+                  <div className="flex items-center justify-between border-b border-[#242424] pb-3 font-mono text-[9px] uppercase tracking-wider text-[#888888]">
+                    <span>Email Draft</span>
+                    <span className="text-[#FF5A1F]">AI</span>
+                  </div>
+                  <div className="mt-4 space-y-3 font-mono text-[9px] leading-relaxed text-[#888888] sm:text-[10px]">
+                    <div className="h-1.5 w-11/12 rounded-full bg-[#888888]/30" />
+                    <p>
+                      Hi <span className="text-[#FF5A1F]">{"{{ first_name }}"}</span>, noticed your team is scaling
+                      <span className="text-[#FF5A1F]"> outbound</span>.
+                    </p>
+                    <div className="h-1.5 w-full rounded-full bg-[#888888]/20" />
+                    <div className="h-1.5 w-4/5 rounded-full bg-[#888888]/20" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        />
+
+        <BentoCard
+          index={2}
+          title="1-Click Stack Sync."
+          description="Push your generated, highly-personalized campaigns directly to Smartlead, Instantly, or your existing sending stack with a single click."
+          visual={
+            <div className="flex h-full items-center justify-center">
+              <div className="relative h-52 w-full max-w-xs">
+                <div className="absolute left-1/2 top-1/2 h-px w-[58%] -translate-x-1/2 -translate-y-1/2 bg-[#FF5A1F] shadow-[0_0_9px_rgba(255,90,31,0.65)]" />
+                <div className="absolute left-1/2 top-1/2 h-[62%] w-px -translate-x-1/2 -translate-y-1/2 bg-[#FF5A1F] shadow-[0_0_9px_rgba(255,90,31,0.65)]" />
+                <div className="absolute left-1/2 top-1/2 z-10 flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-2xl border border-[#FF5A1F]/40 bg-black font-mono text-xs font-bold text-[#FF5A1F] shadow-[0_0_28px_rgba(255,90,31,0.22)]">FRAME</div>
+                <div className="absolute left-0 top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-xl border border-[#242424] bg-black font-mono text-[9px] text-[#888888]">SL</div>
+                <div className="absolute right-0 top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-xl border border-[#242424] bg-black font-mono text-[9px] text-[#888888]">IN</div>
+                <div className="absolute left-1/2 top-0 z-10 flex h-12 w-12 -translate-x-1/2 items-center justify-center rounded-xl border border-[#242424] bg-black font-mono text-[9px] text-[#888888]">CRM</div>
+              </div>
+            </div>
+          }
+        />
+
+        <BentoCard
+          index={3}
+          title="AI Inbox Triage."
+          description="The AI actively monitors your inbox, identifies high-intent signals, and drafts a personalized reply for every objection — instantly, in your voice."
+          visual={
+            <div className="flex h-full items-center justify-center">
+              <div className="w-full max-w-sm rounded-xl border border-[#242424] bg-black p-4 shadow-2xl sm:p-5">
+                <div className="w-[88%] rounded-2xl rounded-tl-sm bg-[#242424] px-4 py-3 font-sans text-xs leading-relaxed text-white/75 sm:text-sm">How does this compare to our setup?</div>
+                <div className="mt-4 inline-flex rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1.5 font-mono text-[9px] text-emerald-400 shadow-[0_0_18px_rgba(52,211,153,0.12)] sm:text-[10px]">[ Intent: Competitor Objection ]</div>
+                <div className="mt-4 flex w-fit items-center gap-1 rounded-full border border-[#242424] bg-[#111111] px-3 py-2">
+                  {[0, 1, 2].map((dot) => (
+                    <span key={dot} className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#888888]" style={{ animationDelay: `${dot * 150}ms` }} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          }
+        />
+
+        <BentoCard
+          index={4}
+          title="Absolute brand protection."
+          description="Pause automation on high-stakes replies. The system flags complex objections and routes them to your Executive Override Queue for manual review before sending."
+          visual={
+            <div className="flex h-full items-center justify-center">
+              <div className="w-full max-w-xs rounded-xl border border-[#242424] bg-black p-5 text-center shadow-2xl">
+                <div className="mx-auto flex h-16 w-16 flex-col items-center justify-center rounded-2xl border border-[#FF5A1F]/30 bg-[#FF5A1F]/10 shadow-[0_0_28px_rgba(255,90,31,0.2)]">
+                  <div className="h-5 w-7 rounded-t-full border-2 border-b-0 border-[#FF5A1F]" />
+                  <div className="h-6 w-9 rounded-md bg-[#FF5A1F]" />
+                </div>
+                <div className="mt-5 inline-flex rounded-full border border-[#FF5A1F]/20 bg-[#FF5A1F]/10 px-3 py-1.5 font-mono text-[9px] text-[#FF5A1F] sm:text-[10px]">High-Stakes Reply Paused</div>
+                <button type="button" className="mt-5 w-full rounded-lg bg-[#FF5A1F] px-4 py-2.5 font-mono text-[10px] font-bold uppercase tracking-wider text-white shadow-[0_0_22px_rgba(255,90,31,0.25)]">Approve &amp; Send</button>
+              </div>
+            </div>
+          }
+        />
+
+        <BentoCard
+          index={5}
+          title="Zero-touch calendar booking."
+          description="When an interested prospect replies, the system reads your live calendar, proposes the next step, and drops the booked meeting directly into your schedule."
+          visual={
+            <div className="flex h-full items-center justify-center">
+              <div className="w-full max-w-xs rounded-xl border border-[#242424] bg-black p-4 shadow-2xl sm:p-5">
+                <div className="flex items-center justify-between border-b border-[#242424] pb-3">
+                  <div>
+                    <div className="font-mono text-[9px] uppercase tracking-widest text-[#888888]">Next available</div>
+                    <div className="mt-1 font-sans text-sm font-bold text-white">Thursday, Aug 20</div>
+                  </div>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full border border-emerald-500/25 bg-emerald-500/10 font-mono text-sm font-bold text-emerald-400">✓</div>
+                </div>
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <button type="button" className="rounded-lg border border-[#FF5A1F]/30 bg-[#FF5A1F]/10 px-3 py-3 font-mono text-xs font-bold text-[#FF5A1F] shadow-[0_0_16px_rgba(255,90,31,0.12)]">10:30 AM</button>
+                  <button type="button" className="rounded-lg border border-[#FF5A1F]/30 bg-[#FF5A1F]/10 px-3 py-3 font-mono text-xs font-bold text-[#FF5A1F] shadow-[0_0_16px_rgba(255,90,31,0.12)]">2:00 PM</button>
+                </div>
+                <div className="mt-4 flex items-center gap-2 font-mono text-[9px] text-emerald-400">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                  Live calendar connected
+                </div>
+              </div>
+            </div>
+          }
+        />
       </div>
     </section>
   );
