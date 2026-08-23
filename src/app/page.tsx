@@ -195,10 +195,7 @@ export default function Home() {
           className="w-full sm:w-auto"
         >
           <button onClick={() => scrollToSection('audit')} className="group relative inline-flex w-full items-center justify-center rounded-xl bg-[#FF5A1F] px-8 py-4 text-base font-bold tracking-wider text-white shadow-[0_0_35px_rgba(255,90,31,0.4)] transition-transform duration-200 hover:scale-[1.02] hover:bg-[#ff6b35] active:scale-[0.98] sm:w-auto sm:px-10 sm:py-5 sm:text-lg">
-            <span className="relative z-10 flex items-center gap-2">
-              See your active leak in 60 seconds.
-              <span className="transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true">&rarr;</span>
-            </span>
+            See your active leak in 60 seconds.
           </button>
         </motion.div>
         <p className="mt-5 text-xs text-[#888888] font-mono uppercase tracking-[0.15em]">NO SALES CALL REQUIRED.</p>
