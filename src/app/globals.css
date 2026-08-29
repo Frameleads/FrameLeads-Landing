@@ -3,6 +3,9 @@
 @config "../../tailwind.config.ts";
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
   body {
     @apply bg-[#0D0D0D];
   }
