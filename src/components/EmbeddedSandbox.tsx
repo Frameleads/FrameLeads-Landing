@@ -116,11 +116,11 @@ export default function EmbeddedSandbox() {
   const executionIsWaiting = csvIsVisible || phase === "READING" || phase === "POPULATED";
 
   return (
-    <section ref={sectionRef} id="interactive-sandbox" className="relative mx-auto w-full max-w-6xl scroll-mt-28 px-4 py-24 sm:px-6">
+    <section ref={sectionRef} id="interactive-sandbox" className="relative mx-auto w-full max-w-6xl scroll-mt-28 overflow-x-hidden px-4 py-16 sm:px-6 md:py-24">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
+        viewport={{ once: true, margin: "-50px" }}
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="mx-auto mb-12 max-w-3xl text-center"
       >
@@ -134,15 +134,15 @@ export default function EmbeddedSandbox() {
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-80px" }}
+        viewport={{ once: true, margin: "-50px" }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="relative isolate overflow-hidden rounded-2xl border border-white/[0.12] bg-white/[0.02] p-8 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.1)] backdrop-blur-xl lg:p-12"
+        className="relative isolate w-full max-w-full overflow-hidden rounded-2xl border border-white/[0.12] bg-white/[0.02] p-4 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.1)] backdrop-blur-xl sm:p-8 lg:p-12"
       >
         <div className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-br from-white/[0.05] via-transparent to-transparent" />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
 
-        <div className="relative z-10 grid min-h-[36rem] grid-cols-1 md:grid-cols-2">
-          <div className="relative border-b border-white/10 pb-8 md:border-b-0 md:border-r md:pb-0 md:pr-8 lg:pr-12">
+        <div className="relative z-10 grid min-h-0 min-w-0 grid-cols-1 md:min-h-[36rem] md:grid-cols-2">
+          <div className="relative min-w-0 border-b border-white/10 pb-8 md:border-b-0 md:border-r md:pb-0 md:pr-8 lg:pr-12">
             <div className="mb-6">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#FF5A1F]">SOURCE LAYER</p>
@@ -154,7 +154,7 @@ export default function EmbeddedSandbox() {
 
             <AnimatePresence mode="wait">
               {csvIsVisible ? (
-                <motion.div key="csv-drop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }} className="flex min-h-[27rem] flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-600 bg-white/[0.02] p-6 text-center shadow-inner">
+                <motion.div key="csv-drop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }} className="flex min-h-[22rem] w-full max-w-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-600 bg-white/[0.02] p-4 text-center shadow-inner sm:min-h-[27rem] sm:p-6">
                   <motion.div
                     initial={{ opacity: 0, y: -38, rotate: -4 }}
                     animate={{ opacity: 1, y: 0, rotate: 0 }}
@@ -222,7 +222,7 @@ export default function EmbeddedSandbox() {
             </AnimatePresence>
           </div>
 
-          <div className="relative flex min-h-[32rem] flex-col pt-8 md:pl-8 md:pt-0 lg:pl-12">
+          <div className="relative flex min-h-[28rem] min-w-0 flex-col pt-8 md:min-h-[32rem] md:pl-8 md:pt-0 lg:pl-12">
             <div className="mb-6">
               <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#FF5A1F]">DECISION LAYER</p>
               <h3 className="mt-2 text-xl font-bold text-white sm:text-2xl">2. Autonomous Execution</h3>

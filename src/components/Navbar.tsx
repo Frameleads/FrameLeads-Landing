@@ -40,7 +40,7 @@ export default function Navbar({ onAuditClick }: NavbarProps) {
       </button>
 
       {isMenuOpen && (
-        <nav id="mobile-navigation" aria-label="Mobile navigation" className="absolute inset-x-0 top-[calc(100%+0.75rem)] rounded-2xl border border-white/[0.08] bg-white/[0.03] px-4 py-5 shadow-2xl backdrop-blur-xl lg:hidden">
+        <nav id="mobile-navigation" aria-label="Mobile navigation" className="absolute left-0 top-[calc(100%+0.75rem)] z-50 w-full rounded-2xl border border-white/10 border-b bg-[#0a0a0a] px-4 py-5 shadow-2xl lg:hidden">
           <div className="mx-auto flex max-w-7xl flex-col gap-1">
             <button type="button" data-tripwire-guard="true" onClick={openAudit} className="rounded-lg px-3 py-3 text-left text-sm text-gray-300 transition-colors hover:bg-white/[0.05] hover:text-white">Audit</button>
             {sectionLinks.map((item) => <Link key={item.href} href={item.href} onClick={() => setIsMenuOpen(false)} className="rounded-lg px-3 py-3 text-sm text-gray-300 transition-colors hover:bg-white/[0.05] hover:text-white">{item.label}</Link>)}

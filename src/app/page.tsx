@@ -352,7 +352,7 @@ export default function Home() {
   ] as const;
 
   return (
-    <div id="top" className="relative min-h-screen overflow-x-clip bg-[#111111] bg-grid-overlay font-sans selection:bg-[#FF5A1F] selection:text-white">
+    <div id="top" className="relative min-h-screen overflow-x-hidden bg-[#111111] bg-grid-overlay font-sans selection:bg-[#FF5A1F] selection:text-white">
       
       <Navbar onAuditClick={launchAudit} />
 
@@ -650,17 +650,17 @@ export default function Home() {
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
+        viewport={{ once: true, margin: "-50px" }}
         transition={{ duration: 0.8, ease: "easeOut" }}
         className="relative mx-auto mb-12 w-full max-w-7xl px-4 opacity-100 sm:px-6 md:mb-16 md:px-8"
       >
-        <div className="relative z-10 overflow-hidden rounded-2xl border border-white/[0.15] bg-white/[0.03] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.2)] backdrop-blur-[24px]">
+        <div className="relative z-10 h-auto w-full max-w-full overflow-hidden rounded-2xl border border-white/[0.15] bg-white/[0.03] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.2)] backdrop-blur-[24px]">
           <Image
             src="/hero-mockup-v2.png"
             alt="FrameLeads Platform Architecture"
             width={1920}
             height={1080}
-            className="relative z-10 h-auto w-full object-cover opacity-100"
+            className="relative z-10 h-auto w-full max-w-full object-contain opacity-100"
             priority
             unoptimized
           />
@@ -672,7 +672,7 @@ export default function Home() {
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, margin: "-50px" }}
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="mx-auto max-w-3xl text-center"
         >
@@ -680,8 +680,8 @@ export default function Home() {
           <h2 className="mt-5 text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">One lead. One continuous decision path.</h2>
         </motion.div>
 
-        <div className="mt-12 grid grid-cols-1 items-start gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:gap-16">
-          <div>
+        <div className="mt-12 grid min-w-0 grid-cols-1 items-start gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:gap-16">
+          <div className="min-w-0">
             <div className="relative pl-6 sm:pl-8">
               <div className="pointer-events-none absolute bottom-0 left-0 top-0 w-px bg-gradient-to-b from-[#FF5A1F] via-red-500 to-[#FF5A1F]/20 shadow-[0_0_12px_rgba(255,90,31,0.7)]" />
               <div className="pointer-events-none absolute bottom-0 left-[-2px] top-0 w-[5px] bg-[#FF5A1F]/20 blur-sm" />
@@ -690,7 +690,7 @@ export default function Home() {
                   key={step.number}
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-100px" }}
+                  viewport={{ once: true, margin: "-50px" }}
                   transition={{ duration: 0.6, delay: index * 0.08, ease: "easeOut" }}
                   className="relative border-b border-white/5 py-5 first:pt-0 last:border-b-0 last:pb-0"
                 >
@@ -707,7 +707,7 @@ export default function Home() {
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
+              viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.6, ease: "easeOut" }}
               className="mt-10 border-t border-white/5 pt-8"
             >
@@ -720,9 +720,9 @@ export default function Home() {
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
+            viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="relative flex h-[600px] w-full items-center justify-center overflow-hidden rounded-2xl border border-white/[0.18] bg-white/[0.04] shadow-[0_12px_40px_-10px_rgba(0,0,0,0.8),inset_0_1px_0px_rgba(255,255,255,0.3)] backdrop-blur-[24px] lg:sticky lg:top-32"
+            className="relative flex h-auto min-h-[34rem] min-w-0 w-full max-w-full items-center justify-center overflow-hidden rounded-2xl border border-white/[0.18] bg-white/[0.04] shadow-[0_12px_40px_-10px_rgba(0,0,0,0.8),inset_0_1px_0px_rgba(255,255,255,0.3)] backdrop-blur-[24px] sm:h-[600px] lg:sticky lg:top-32"
             role="img"
             aria-label="FrameLeads pipeline from CSV upload through intent routing to calendar dispatch"
           >
