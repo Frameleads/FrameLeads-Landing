@@ -194,37 +194,37 @@ function StopgapVisual({ index }: { index: number }) {
 
 function OperatingLoopDiagram() {
   return (
-    <div className="relative z-10 flex h-full w-full flex-col justify-between p-8">
+    <div className="relative z-10 flex h-full w-full max-w-full flex-col justify-between p-4 md:p-8">
       <div className="pointer-events-none absolute bottom-20 left-1/2 top-20 w-px -translate-x-1/2 bg-gradient-to-b from-emerald-400/35 via-[#FF5A1F]/50 to-emerald-400/35" aria-hidden="true" />
 
-      <div className="relative z-10 mx-auto w-full max-w-sm rounded-xl border border-emerald-500/20 bg-[#090909]/90 p-5 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
-        <div className="flex items-center justify-between gap-4">
-          <div>
+      <div className="relative z-10 mx-auto w-full max-w-md rounded-xl border border-emerald-500/20 bg-[#090909]/90 p-4 shadow-[0_18px_45px_rgba(0,0,0,0.45)] md:p-5">
+        <div className="flex min-w-0 flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <div className="min-w-0 w-full">
             <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-[#666666]">Source intake</p>
-            <p className="mt-2 font-mono text-sm font-semibold text-white">Q3_High_Intent_Leads.csv</p>
+            <p className="mt-2 max-w-full truncate font-mono text-sm font-semibold text-white" title="Q3_High_Intent_Leads.csv">Q3_High_Intent_Leads.csv</p>
           </div>
-          <span className="shrink-0 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1.5 font-mono text-[10px] text-emerald-400">✓ CSV Uploaded</span>
+          <span className="shrink-0 self-start rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1.5 font-mono text-[10px] text-emerald-400 sm:self-auto">✓ CSV Uploaded</span>
         </div>
       </div>
 
-      <div className="relative z-10 mx-auto w-full max-w-md rounded-2xl border border-[#FF5A1F]/20 bg-[#090909]/95 p-6 shadow-[0_20px_50px_rgba(0,0,0,0.55)]">
+      <div className="relative z-10 mx-auto w-full max-w-md rounded-2xl border border-[#FF5A1F]/20 bg-[#090909]/95 p-4 shadow-[0_20px_50px_rgba(0,0,0,0.55)] md:p-6">
         <div className="text-center">
           <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#FF5A1F]">Routing layer</p>
           <h3 className="mt-2 text-lg font-bold text-white">Intent Scoring Engine</h3>
           <div className="mx-auto mt-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 font-mono text-[9px] text-white/60"><span className="h-1.5 w-1.5 rounded-full bg-[#FF5A1F]" />Signal classified · Score 94</div>
         </div>
 
-        <div className="relative mt-8 grid grid-cols-2 gap-5">
+        <div className="relative mt-6 grid min-w-0 grid-cols-2 gap-2 sm:mt-8 sm:gap-5">
           <div className="pointer-events-none absolute left-1/4 right-1/4 -top-4 border-t border-[#FF5A1F]/35" />
-          <div className="rounded-xl border border-white/10 bg-[#121212] p-4 text-center"><span className="font-mono text-[10px] text-white/65">EMAIL</span><p className="mt-2 text-xs text-[#888888]">Native send ready</p></div>
-          <div className="rounded-xl border border-white/10 bg-[#121212] p-4 text-center"><span className="font-mono text-[10px] text-white/65">LINKEDIN</span><p className="mt-2 text-xs text-[#888888]">Zero-ban handoff</p></div>
+          <div className="min-w-0 rounded-xl border border-white/10 bg-[#121212] p-3 text-center sm:p-4"><span className="font-mono text-[10px] text-white/65">EMAIL</span><p className="mt-2 text-xs text-[#888888]">Native send ready</p></div>
+          <div className="min-w-0 rounded-xl border border-white/10 bg-[#121212] p-3 text-center sm:p-4"><span className="font-mono text-[10px] text-white/65">LINKEDIN</span><p className="mt-2 text-xs text-[#888888]">Zero-ban handoff</p></div>
         </div>
       </div>
 
-      <div className="relative z-10 mx-auto w-full max-w-sm rounded-xl border border-emerald-500/25 bg-[#090909]/95 p-5 shadow-[0_0_28px_rgba(52,211,153,0.08),0_18px_45px_rgba(0,0,0,0.45)]">
+      <div className="relative z-10 mx-auto w-full max-w-md rounded-xl border border-emerald-500/25 bg-[#090909]/95 p-4 shadow-[0_0_28px_rgba(52,211,153,0.08),0_18px_45px_rgba(0,0,0,0.45)] md:p-5">
         <div className="flex items-center gap-4">
           <span className="relative flex h-3 w-3 shrink-0"><span className="absolute -inset-1 rounded-full bg-emerald-400/30 blur-sm" /><span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.75)]" /></span>
-          <div><p className="font-mono text-[9px] uppercase tracking-[0.18em] text-emerald-400/70">Advance complete</p><p className="mt-1 font-mono text-sm font-semibold text-white">[ Calendar Invite Dispatched ]</p></div>
+          <div className="min-w-0"><p className="font-mono text-[9px] uppercase tracking-[0.18em] text-emerald-400/70">Advance complete</p><p className="mt-1 text-wrap font-mono text-sm font-semibold text-white">[ Calendar Invite Dispatched ]</p></div>
         </div>
       </div>
     </div>
@@ -235,7 +235,7 @@ function ArchitectureVisual({ index }: { index: number }) {
   if (index === 0) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="w-full max-w-xs rounded-xl border border-[#242424] bg-white/[0.03] p-5 shadow-2xl">
+        <div className="mx-auto w-full max-w-md rounded-xl border border-[#242424] bg-white/[0.03] p-4 shadow-2xl md:p-5">
           <div className="mx-auto flex h-20 w-16 flex-col items-center justify-center rounded-lg border border-[#242424] bg-[#090909] shadow-[0_0_30px_rgba(255,90,31,0.18)]">
             <div className="mb-2 h-1 w-7 rounded-full bg-[#333333]" />
             <span className="font-mono text-xs font-bold tracking-wider text-[#FF5A1F]">CSV</span>
@@ -352,12 +352,12 @@ export default function Home() {
   ] as const;
 
   return (
-    <div id="top" className="relative min-h-screen overflow-x-hidden bg-[#111111] bg-grid-overlay font-sans selection:bg-[#FF5A1F] selection:text-white">
+    <div id="top" className="relative min-h-screen max-w-[100vw] overflow-x-hidden bg-[#111111] bg-grid-overlay font-sans selection:bg-[#FF5A1F] selection:text-white">
       
       <Navbar onAuditClick={launchAudit} />
 
       {/* Hero Section */}
-      <main className="relative z-10 mx-auto flex max-w-5xl flex-col items-center justify-center px-4 pb-12 pt-28 text-center sm:px-6 sm:pt-32 md:pb-16">
+      <main className="relative z-10 mx-auto flex max-w-5xl flex-col items-center justify-center px-4 pb-12 pt-16 text-center sm:px-6 sm:pt-20 md:pb-16 lg:pt-32">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}

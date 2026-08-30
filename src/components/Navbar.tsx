@@ -24,7 +24,7 @@ export default function Navbar({ onAuditClick }: NavbarProps) {
   };
 
   return (
-    <header className="fixed top-6 left-1/2 -translate-x-1/2 w-[95%] max-w-6xl z-50 flex items-center justify-between rounded-2xl border border-white/[0.08] bg-white/[0.03] px-6 py-4 backdrop-blur-md transition-colors duration-300 hover:bg-white/[0.05]">
+    <header className="sticky left-auto top-0 z-50 flex w-full max-w-none translate-x-0 items-center justify-between border-b border-white/10 bg-[#0a0a0a]/90 px-4 py-4 backdrop-blur-md transition-colors duration-300 sm:px-6 lg:fixed lg:left-1/2 lg:top-6 lg:w-[95%] lg:max-w-6xl lg:-translate-x-1/2 lg:rounded-2xl lg:border lg:border-white/[0.08] lg:bg-white/[0.03] lg:hover:bg-white/[0.05]">
       <Link href="#top" className="flex shrink-0 items-center gap-3" aria-label="FrameLeads home">
         <Image src="/logo.png" alt="" width={34} height={34} priority className="rounded-lg object-contain" />
         <span className="font-heading text-lg font-bold tracking-wide text-white sm:text-xl">FrameLeads</span>
