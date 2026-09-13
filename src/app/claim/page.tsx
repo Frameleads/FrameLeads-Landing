@@ -48,7 +48,7 @@ export default function ClaimPage() {
       {/* Top Status Bar */}
       <div className="w-full border-b border-white/10 px-4 sm:px-6 py-2 bg-black/50 relative z-50">
         <p className="font-mono text-[10px] text-white/50 tracking-widest uppercase text-center sm:text-left">
-          // SYSTEM: ACTIVE | PAYLOAD: AI SDR FRAMEWORK
+          {"// SYSTEM: ACTIVE | PAYLOAD: AI SDR FRAMEWORK"}
         </p>
       </div>
 

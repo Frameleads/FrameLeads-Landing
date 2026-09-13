@@ -124,10 +124,13 @@ export default function EmbeddedSandbox() {
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="mx-auto mb-12 max-w-3xl text-center"
       >
-        <p className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-[#FF5A1F]">NO DECK REQUIRED</p>
-        <h2 className="mt-5 text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">Your first send is the proof.</h2>
-        <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-gray-400 sm:text-lg">
-          Watch it draft. Watch it personalize. Watch it send natively—no export, no external tool, no card on file.
+        <p className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-[#FF5A1F]">INSPECT CONTROLLED EXECUTION</p>
+        <h2 className="mt-5 text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">Don&apos;t take the workflow on faith.</h2>
+        <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-gray-300 sm:text-lg">
+          The decision layer doesn&apos;t start only after the reply. The same governed context controls what FrameLeads prepares before the conversation begins.
+        </p>
+        <p className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-gray-400 sm:text-lg">
+          This product simulation uses a mapped prospect record—not an inbound reply—to show how FrameLeads prepares and routes a channel-ready action.
         </p>
       </motion.div>
 
@@ -136,7 +139,7 @@ export default function EmbeddedSandbox() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-50px" }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="relative isolate w-full max-w-full overflow-hidden rounded-2xl border border-white/[0.12] bg-white/[0.02] p-4 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.1)] backdrop-blur-xl sm:p-8 lg:p-12"
+        className="relative isolate w-full max-w-full overflow-hidden rounded-2xl border border-white/[0.1] bg-[#1A1A1A] p-4 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.35)] sm:p-8 lg:p-12"
       >
         <div className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-br from-white/[0.05] via-transparent to-transparent" />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
@@ -199,7 +202,7 @@ export default function EmbeddedSandbox() {
                         <motion.div
                           key={field.label}
                           animate={{ borderColor: isComplete ? "rgba(255,90,31,0.28)" : "rgba(255,255,255,0.1)" }}
-                          className="relative overflow-hidden rounded-xl border bg-white/[0.02] px-4 py-3 shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)] backdrop-blur-md"
+                          className="relative overflow-hidden rounded-xl border bg-[#242424] px-4 py-3 shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]"
                         >
                           {isComplete && <motion.div initial={{ opacity: 0.12 }} animate={{ opacity: 0 }} transition={{ duration: 0.6 }} className="pointer-events-none absolute inset-0 bg-[#FF5A1F]/20" />}
                           <div className="relative flex items-center justify-between gap-3">
@@ -209,7 +212,7 @@ export default function EmbeddedSandbox() {
                             </div>
                             <AnimatePresence>
                               {isComplete && (
-                                <motion.span initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} className="grid h-5 w-5 shrink-0 place-items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 text-[10px] text-emerald-400">✓</motion.span>
+                                <motion.span initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} className="grid h-5 w-5 shrink-0 place-items-center rounded-full border border-[#FF5A1F]/30 bg-[#FF5A1F]/[0.06] text-[10px] text-[#FF5A1F]">✓</motion.span>
                               )}
                             </AnimatePresence>
                           </div>
@@ -225,7 +228,7 @@ export default function EmbeddedSandbox() {
           <div className="relative flex min-h-[28rem] min-w-0 flex-col pt-8 md:min-h-[32rem] md:pl-8 md:pt-0 lg:pl-12">
             <div className="mb-6">
               <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#FF5A1F]">DECISION LAYER</p>
-              <h3 className="mt-2 text-xl font-bold text-white sm:text-2xl">2. Autonomous Execution</h3>
+              <h3 className="mt-2 text-xl font-bold text-white sm:text-2xl">2. Controlled Execution</h3>
               <p className="mt-2 text-sm text-[#888888]">Context converted into the next safe action.</p>
             </div>
 
@@ -259,7 +262,13 @@ export default function EmbeddedSandbox() {
                   transition={{ duration: phase === "RESETTING" ? 0.3 : 0.45, ease: "easeOut" }}
                   className="flex flex-1 flex-col"
                 >
-                  <div className="flex-1 rounded-xl border border-white/10 bg-white/[0.02] p-4 font-mono text-xs leading-6 text-gray-300 shadow-inner sm:p-5 sm:text-sm">
+                  <div className="mb-4 rounded-xl border border-[#FF5A1F]/20 bg-[#242424] p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3"><p className="font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-[#FF5A1F]">Route decision</p><span className="rounded-full border border-[#FF5A1F]/25 bg-[#FF5A1F]/[0.05] px-2 py-1 font-mono text-[8px] uppercase tracking-wider text-[#FF5A1F]">Ready to move</span></div>
+                    <dl className="mt-3 grid gap-3 text-xs sm:grid-cols-2"><div><dt className="font-mono text-[8px] uppercase tracking-wider text-white/35">Route</dt><dd className="mt-1 text-white/80">Native email draft</dd></div><div><dt className="font-mono text-[8px] uppercase tracking-wider text-white/35">Human review</dt><dd className="mt-1 text-white/80">Not requested in this demo</dd></div></dl>
+                    <p className="mt-3 border-t border-white/[0.06] pt-3 text-xs leading-relaxed text-white/50"><span className="font-semibold text-white/70">Why this route:</span> The source record contains the mapped account and contact fields required for this draft.</p>
+                  </div>
+                  <p className="mb-2 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-white/35">Prepared action</p>
+                  <div className="flex-1 rounded-xl border border-white/10 bg-[#242424] p-4 font-mono text-xs leading-6 text-gray-300 shadow-inner sm:p-5 sm:text-sm">
                     <p className="text-[#777777]">To: colin@procre8.co</p>
                     <p className="text-[#777777]">Subject: Procre8&apos;s pipeline triage</p>
                     <div className="my-4 h-px bg-white/[0.07]" />

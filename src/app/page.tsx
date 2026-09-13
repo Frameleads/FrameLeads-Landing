@@ -3,11 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import ExitIntentPopup from "../components/ExitIntentPopup";
 import EmbeddedSandbox from "../components/EmbeddedSandbox";
 import Navbar from "../components/Navbar";
-import PipelineAudit from "../components/PipelineAudit";
+import PipelineAudit, { type AuditResult } from "../components/PipelineAudit";
 import VideoSection from "../components/VideoSection";
 
 const CheckIcon = ({ className = "text-white" }: { className?: string }) => (
@@ -16,8 +16,8 @@ const CheckIcon = ({ className = "text-white" }: { className?: string }) => (
   </svg>
 );
 
-const CrossIcon = ({ className = "text-gray-600" }: { className?: string }) => (
-  <svg className={`mt-0.5 h-5 w-5 flex-shrink-0 ${className}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+const CrossIcon = () => (
+  <svg className="mt-0.5 h-5 w-5 flex-shrink-0 text-[#888888]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
   </svg>
 );
@@ -37,98 +37,140 @@ const EnterpriseIcon = () => (
   </svg>
 );
 
+const pricingCapabilities = [
+  { capability: "Prospect capacity", coreDetail: "500 / month", enterpriseDetail: "20,000 / month", coreIncluded: true },
+  { capability: "Omnichannel Sandbox", coreIncluded: true },
+  { capability: "Outbound deployment", coreIncluded: true },
+  { capability: "Inbox Triage", coreIncluded: true },
+  { capability: "AI reply regeneration", coreIncluded: true },
+  { capability: "Approve-and-send dispatch", coreIncluded: true },
+  { capability: "Meeting booking & dispatch", coreIncluded: true },
+  { capability: "High-intent signal scoring", coreIncluded: false },
+  { capability: "Why-now & signal analysis", coreIncluded: false },
+  { capability: "Governance dashboard", coreIncluded: false },
+  { capability: "Approval-latency analytics", coreIncluded: false },
+  { capability: "Institutional-memory metrics", coreIncluded: false },
+] as const;
+
+function PricingCapabilityList({ tier }: { tier: "core" | "enterprise" }) {
+  return (
+    <ul className="relative z-10 mb-8 flex-grow space-y-2.5">
+      {pricingCapabilities.map((row, index) => {
+        const included = tier === "enterprise" || row.coreIncluded;
+        const detail = "coreDetail" in row ? (tier === "core" ? row.coreDetail : row.enterpriseDetail) : null;
+        return (
+          <li key={row.capability} className={`flex items-start gap-3 ${index === 7 ? "pt-2" : ""}`}>
+            {included ? <CheckIcon className="text-white" /> : <CrossIcon />}
+            <span className={`text-sm leading-relaxed ${included ? "text-white" : "text-[#888888]/70"}`}>{row.capability}{detail ? ` — ${detail}` : ""}</span>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 const faqs = [
   {
-    question: "Does this replace my existing sending tools (Smartlead/Instantly)?",
-    answer: "FrameLeads is the governed control layer. It executes natively across Email and LinkedIn—but for massive volume, it plugs directly into your existing sending stack via API.",
+    question: "Does FrameLeads replace my SDR?",
+    answer: "No. FrameLeads reduces repetitive operational decisions and keeps the workflow consistent. Consequential judgment can remain with your SDR, founder, or sales team.",
   },
   {
-    question: "What prevents the AI from hallucinating and burning a $50k deal?",
-    answer: "Our Velvet Rope Governance. The AI is authorized to handle standard routing autonomously. However, the moment it detects a high-stakes, complex objection, it pauses the automation and routes the drafted reply to your queue for 1-click manual approval.",
+    question: "What if I already use another outbound platform?",
+    answer: "Keep the infrastructure that already works. FrameLeads supports native execution and can sync approved campaigns with Smartlead and Instantly, depending on your package.",
   },
   {
-    question: "Why shouldn't I just hire another human SDR?",
-    answer: "Humans sleep, suffer from fatigue, and eventually quit—taking your pipeline context with them. FrameLeads is permanent infrastructure. It operates 24/7 and never forgets an objection-handling rule.",
+    question: "Can FrameLeads operate without human approval?",
+    answer: "Routine actions can continue through the configured workflow. Enterprise governance keeps human approval available for consequential or exceptional situations.",
   },
   {
-    question: "Do I need to be a developer to set this up?",
-    answer: "No. We engineered this for founders, not engineers. If you can drag and drop a CSV file and flip a toggle switch, you can deploy the entire architecture in under 10 minutes.",
+    question: "What happens with ambiguous or high-consequence conversations?",
+    answer: "They can be paused and routed for human review instead of being treated like routine automation. The relevant context stays attached to the decision.",
   },
   {
-    question: "What happens if I hit my tier limit mid-month?",
-    answer: "The system pauses gracefully. We do not auto-charge surprise overage fees. You will receive an alert to upgrade your tier, ensuring you always maintain absolute control over your spend.",
+    question: "Do I need to rebuild my current workflow?",
+    answer: "Not necessarily. FrameLeads is designed to connect the campaign, execution, and decision work around the systems you already use.",
+  },
+  {
+    question: "Is FrameLeads only for companies whose salesperson left?",
+    answer: "No. It also fits teams that want more controlled automation or want to centralize decision logic currently spread across people, prompts, and workflow tools.",
+  },
+  {
+    question: "How is this different from connecting an LLM to my inbox myself?",
+    answer: "An LLM can generate text. FrameLeads adds the surrounding operating system: campaign context, intent classification, next-action routing, supported execution, and—on Enterprise—human-review governance.",
   },
 ];
 
 const architectureModules = [
   {
-    title: "Connect Any Lead Source",
-    headline: "Bring the signal. Leave the cleanup.",
-    description: "Upload a CSV or connect a webhook. FrameLeads maps the rest.",
-    tags: ["• CSV uploaded", "• Webhook active"],
+    visualIndex: 3,
+    eyebrow: "01 — Understand",
+    title: "Know what the prospect actually means.",
+    feature: "Intent Classification",
+    description: "Before anything moves, FrameLeads classifies what the prospect is actually asking for.",
+    detail: "Classify before acting.",
   },
   {
-    title: "The Execution Sandbox",
-    headline: "Generate, test, and send without leaving the screen.",
-    description: "Inspect channel-ready outreach and execute it natively.",
-    tags: ["• Send via Email", "• Send via LinkedIn"],
+    visualIndex: 0,
+    eyebrow: "02 — Remember",
+    title: "The sales context shouldn’t leave with the salesperson.",
+    feature: "Persistent Context",
+    description: "FrameLeads keeps the available campaign rules and conversation context attached to the decision—not trapped inside whoever happens to be watching the inbox.",
+    detail: "The rep can change. The operating logic doesn’t have to.",
   },
   {
-    title: "1-Click Deployment",
-    headline: "Prove the message here. Scale it everywhere.",
-    description: "Push approved campaigns directly to your sending stack.",
-    tags: ["• Smartlead connected", "• Instantly connected"],
+    visualIndex: 4,
+    eyebrow: "03 — Decide",
+    title: "Writing the reply is not the decision.",
+    feature: "Governed Next-Action Routing",
+    description: "A reply does not automatically deserve another reply. FrameLeads determines the next action from the intent, context, and rules available to it.",
+    detail: "FrameLeads does not treat every reply as permission to automate.",
   },
   {
-    title: "Native Inbox Triage",
-    headline: "Every reply gets a decision—not a queue.",
-    description: "Intent is scored and the next action is routed in real time.",
-    tags: ["• Intent score: 94", "• Status: Meeting-ready"],
-  },
-  {
-    title: "Zero-Click Concierge",
-    headline: "Turn \"interested\" into \"invited.\"",
-    description: "Qualified intent becomes a live calendar invitation.",
-    tags: ["• Calendar connected", "• Meeting secured"],
-  },
-  {
-    title: "Velvet Rope Governance",
-    headline: "Automate the routine. Protect the consequential.",
-    description: "Complex replies stop for human approval before sending.",
-    tags: ["• Approve & Send", "• Keep Quarantined"],
+    visualIndex: 5,
+    eyebrow: "04 — Control",
+    title: "Automation needs boundaries.",
+    feature: "Human Escalation",
+    description: "Routine situations can continue. Consequential or ambiguous decisions stop for review.",
+    detail: "Human attention stays reserved for decisions that require judgment.",
   },
 ];
 
 const operatingSteps = [
   {
     number: "01",
-    title: "Ingest",
-    description: "Upload a CSV or receive the lead by webhook.",
+    label: "Ingest",
+    outcome: "Bring prospects into FrameLeads.",
+    description: "Upload a lead list or receive prospects through your connected workflow. FrameLeads starts with the lead, offer and account context required for the campaign.",
   },
   {
     number: "02",
-    title: "Generate",
-    description: "Create channel-specific outreach from the lead, offer, and account context.",
+    label: "Generate",
+    outcome: "Create campaign-ready outreach.",
+    description: "Turn prospect, account and offer context into channel-specific messaging before execution.",
   },
   {
     number: "03",
-    title: "Execute",
-    description: "Send natively by email or LinkedIn—or deploy the verified campaign to Smartlead or Instantly.",
+    label: "Execute",
+    outcome: "Launch through your outbound stack.",
+    description: "Send through supported channels or deploy the prepared campaign into your connected outbound infrastructure.",
   },
   {
     number: "04",
-    title: "Read",
-    description: "Monitor replies and assign an intent score from 1-100.",
+    label: "Read",
+    outcome: "Interpret every reply before acting.",
+    description: "Once prospects respond, FrameLeads classifies the signal and applies the available campaign and conversation context.",
   },
   {
     number: "05",
-    title: "Advance",
-    description: "Dispatch the meeting invite when intent clears your threshold.",
+    label: "Advance",
+    outcome: "Move qualified intent forward.",
+    description: "When the signal and workflow rules support it, FrameLeads moves the conversation into the appropriate follow-up, meeting, or next-action workflow.",
   },
   {
     number: "06",
-    title: "Govern",
-    description: "Quarantine ambiguity, preserve context, and put high-value exceptions in front of a human.",
+    label: "Govern",
+    outcome: "Keep authority over the exceptions.",
+    description: "Ambiguous or consequential situations stop before being treated like routine automation, keeping human judgment where the workflow requires it.",
   },
 ];
 
@@ -137,7 +179,7 @@ function DisruptionVisual({ index }: { index: number }) {
     return (
       <div className="w-full max-w-sm space-y-2 px-4">
         <div className="flex items-center gap-3 rounded-lg border border-white/[0.06] bg-white/[0.03] p-2.5 opacity-60"><span className="grid h-7 w-7 place-items-center rounded-full bg-white/[0.06] font-mono text-[8px] text-[#888888]">LP</span><div className="min-w-0 flex-1"><p className="truncate text-[10px] text-white/70">Newsletter unsubscribe</p><p className="font-mono text-[8px] text-[#555555]">Low priority · 2m ago</p></div></div>
-        <div className="flex items-center gap-3 rounded-lg border border-red-500/20 bg-red-500/[0.04] p-2.5 shadow-[0_0_22px_rgba(239,68,68,0.08)]"><span className="grid h-7 w-7 place-items-center rounded-full border border-red-500/20 bg-red-500/10 font-mono text-[8px] text-red-400">$50K</span><div className="min-w-0 flex-1"><p className="truncate text-[10px] font-semibold text-white">Ready to review pricing</p><p className="font-mono text-[8px] text-[#777777]">High-intent deal</p></div><span className="rounded-full border border-red-500/30 bg-red-500/10 px-2 py-1 font-mono text-[8px] text-red-400">[ Delayed 14hrs ]</span></div>
+        <div className="flex items-center gap-3 rounded-lg border border-[#FF3333]/20 bg-[#FF3333]/[0.035] p-2.5 shadow-[0_0_20px_rgba(255,51,51,0.07)]"><span className="grid h-7 w-7 place-items-center rounded-full border border-[#FF3333]/25 bg-[#FF3333]/10 font-mono text-[8px] text-[#FF3333]">HI</span><div className="min-w-0 flex-1"><p className="truncate text-[10px] font-semibold text-white">Ready to review pricing</p><p className="font-mono text-[8px] text-[#777777]">High-intent signal · 2h ago</p></div><span className="shrink-0 rounded-full border border-[#FF3333]/25 bg-[#FF3333]/10 px-2 py-1 font-mono text-[8px] text-[#FF3333]">Priority review</span></div>
       </div>
     );
   }
@@ -145,90 +187,49 @@ function DisruptionVisual({ index }: { index: number }) {
   if (index === 1) {
     return (
       <div className="relative flex w-full max-w-xs items-center justify-between px-5">
-        <div className="absolute left-[26%] right-[26%] top-1/2 border-t-2 border-dashed border-red-500/30" />
+        <div className="absolute left-[26%] right-[26%] top-1/2 border-t-2 border-dashed border-[#FF5A1F]/30" />
         <span className="absolute left-1/2 top-1/2 z-20 h-4 w-7 -translate-x-1/2 -translate-y-1/2 rotate-[-18deg] bg-transparent" />
-        <div className="relative z-10 text-center"><div className="grid h-14 w-14 place-items-center rounded-full border border-red-500/30 bg-red-500/10 font-mono text-[9px] text-red-400 shadow-[0_0_24px_rgba(239,68,68,0.14)]">SDR_01</div><p className="mt-2 font-mono text-[8px] uppercase text-red-400">Offline</p></div>
+        <div className="relative z-10 translate-y-3.5 text-center"><div className="grid h-14 w-14 place-items-center rounded-full border border-[#FF5A1F]/30 bg-[#FF5A1F]/10 font-mono text-[9px] text-[#FF5A1F] shadow-[0_0_24px_rgba(255,90,31,0.14)]">INBOX</div><p className="mt-2 text-center font-mono text-[8px] uppercase leading-[1.25] text-[#FF5A1F]"><span className="block">Individual</span><span className="block">Context</span></p></div>
         <div className="relative z-10 grid h-14 w-16 place-items-center rounded-xl border border-white/10 bg-white/[0.03] font-mono text-[9px] text-[#777777]">CRM</div>
-        <span className="absolute bottom-[-1.25rem] left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-red-500/20 bg-red-500/10 px-2 py-1 font-mono text-[8px] text-red-400">Context connection lost</span>
+        <span className="absolute bottom-[-1.25rem] left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-[#FF5A1F]/20 bg-[#FF5A1F]/10 px-2 py-1 font-mono text-[8px] text-[#FF5A1F]">Context varies by owner</span>
       </div>
     );
   }
 
   return (
     <div className="grid w-full max-w-sm grid-cols-2 gap-3 px-4">
-      <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.05] p-4 text-center shadow-[0_0_22px_rgba(52,211,153,0.08)]"><p className="font-mono text-[8px] uppercase tracking-wider text-[#777777]">Response Time</p><p className="mt-2 font-mono text-2xl font-bold text-emerald-400">9m</p><p className="mt-1 text-[9px] text-emerald-400/70">Best rep</p></div>
-      <div className="rounded-xl border border-red-500/20 bg-red-500/[0.05] p-4 text-center shadow-[0_0_22px_rgba(239,68,68,0.08)]"><p className="font-mono text-[8px] uppercase tracking-wider text-[#777777]">Response Time</p><p className="mt-2 font-mono text-2xl font-bold text-red-400">9h</p><p className="mt-1 text-[9px] text-red-400/70">Newest rep</p></div>
+      <div className="rounded-xl border border-[#00FF66]/20 bg-[#00FF66]/[0.035] p-4 text-center shadow-[0_0_18px_rgba(0,255,102,0.06)]"><p className="font-mono text-[8px] uppercase tracking-wider text-[#777777]">Routine reply</p><p className="mt-2 font-mono text-lg font-bold text-[#00FF66]">MOVE</p><p className="mt-1 text-[9px] text-[#00FF66]/70">Safe next action</p></div>
+      <div className="rounded-xl border border-[#FF3333]/20 bg-[#FF3333]/[0.035] p-4 text-center shadow-[0_0_18px_rgba(255,51,51,0.06)]"><p className="font-mono text-[8px] uppercase tracking-wider text-[#777777]">Consequential reply</p><p className="mt-2 font-mono text-lg font-bold text-[#FF3333]">REVIEW</p><p className="mt-1 text-[9px] text-[#FF3333]/70">Human judgment</p></div>
     </div>
   );
 }
 
-function StopgapVisual({ index }: { index: number }) {
-  if (index === 0) {
-    return (
-      <div className="w-full max-w-xs rounded-xl border border-red-500/20 bg-white/[0.03] p-4 shadow-2xl">
-        <div className="flex items-center justify-between font-mono text-[9px] uppercase tracking-wider text-[#777777]"><span>Task Queue</span><span className="font-bold text-red-400">100%</span></div>
-        <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/[0.07]"><div className="h-full w-full rounded-full bg-gradient-to-r from-[#FF5A1F] to-red-500 shadow-[0_0_16px_rgba(239,68,68,0.55)]" /></div>
-        <div className="mt-4 flex justify-center"><span className="rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1.5 font-mono text-[9px] text-red-400">[ Warning: High Burnout ]</span></div>
-      </div>
-    );
-  }
-
-  if (index === 1) {
-    return (
-      <div className="relative w-full max-w-xs rounded-xl border border-white/10 bg-white/[0.03] p-4 shadow-2xl">
-        <div className="rounded-xl rounded-tl-sm bg-white/[0.06] p-3 text-[10px] leading-relaxed text-white/55">Absolutely—we can guarantee the enterprise plan at <mark className="bg-red-500/20 px-1 text-red-300">$99 forever</mark>.</div>
-        <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-red-500/30 bg-[#220d0d] px-3 py-1.5 font-mono text-[8px] text-red-400 shadow-[0_0_20px_rgba(239,68,68,0.22)]">[ ! ] Hallucinated Pricing Detected</span>
-      </div>
-    );
-  }
-
+function OperatingLoopDiagram({ activeStep }: { activeStep: number }) {
   return (
-    <div className="relative flex w-full max-w-sm items-center justify-between px-3">
-      <div className="absolute left-[15%] right-[15%] top-1/2 border-t-2 border-[#333333]" />
-      <div className="absolute left-[44%] top-1/2 z-10 h-3 w-[12%] -translate-y-1/2 bg-transparent" />
-      {["LEAD", "WEBHOOK", "CRM"].map((node, nodeIndex) => <div key={node} className={`relative z-20 grid h-12 w-16 place-items-center rounded-lg border bg-white/[0.03] font-mono text-[8px] ${nodeIndex === 1 ? "border-red-500/30 text-red-400 shadow-[0_0_20px_rgba(239,68,68,0.12)]" : "border-white/10 text-[#777777]"}`}>{node}</div>)}
-      <span className="absolute left-1/2 top-[78%] z-30 -translate-x-1/2 whitespace-nowrap rounded-full border border-red-500/30 bg-[#220d0d] px-2 py-1 font-mono text-[8px] text-red-400 animate-pulse">Webhook Failed</span>
+    <div className="relative z-10 h-full w-full p-3 sm:p-5 lg:p-7">
+      <div className="h-full min-h-[25rem] overflow-hidden rounded-xl border border-white/10 bg-[#1A1A1A] shadow-[0_18px_45px_rgba(0,0,0,0.45)] lg:min-h-0">
+        <WalkthroughProductTopBar label={`${operatingSteps[activeStep].number} · ${operatingSteps[activeStep].label}`} />
+        <AnimatePresence mode="wait">
+          <motion.div key={activeStep} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.24, ease: "easeOut" }} className="flex min-h-[21rem] items-center justify-center p-4 sm:p-6 lg:min-h-[25rem]">
+            <OperatingStepVisual step={activeStep} />
+          </motion.div>
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
 
-function OperatingLoopDiagram() {
-  return (
-    <div className="relative z-10 flex h-full w-full max-w-full flex-col justify-between p-4 md:p-8">
-      <div className="pointer-events-none absolute bottom-20 left-1/2 top-20 w-px -translate-x-1/2 bg-gradient-to-b from-emerald-400/35 via-[#FF5A1F]/50 to-emerald-400/35" aria-hidden="true" />
+function WalkthroughRow({ label, value, active = false }: { label: string; value: string; active?: boolean }) {
+  return <div className={`grid gap-1 border-b px-1 py-3 last:border-b-0 sm:grid-cols-[7.5rem_1fr] sm:items-center ${active ? "border-[#FF5A1F]/25" : "border-white/[0.06]"}`}><p className="font-mono text-[8px] uppercase tracking-[0.14em] text-[#888888]">{label}</p><p className={`text-sm font-medium ${active ? "text-[#FF5A1F]" : "text-white/80"}`}>{value}</p></div>;
+}
 
-      <div className="relative z-10 mx-auto w-full max-w-md rounded-xl border border-emerald-500/20 bg-[#090909]/90 p-4 shadow-[0_18px_45px_rgba(0,0,0,0.45)] md:p-5">
-        <div className="flex min-w-0 flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-          <div className="min-w-0 w-full">
-            <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-[#666666]">Source intake</p>
-            <p className="mt-2 max-w-full truncate font-mono text-sm font-semibold text-white" title="Q3_High_Intent_Leads.csv">Q3_High_Intent_Leads.csv</p>
-          </div>
-          <span className="shrink-0 self-start rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1.5 font-mono text-[10px] text-emerald-400 sm:self-auto">✓ CSV Uploaded</span>
-        </div>
-      </div>
-
-      <div className="relative z-10 mx-auto w-full max-w-md rounded-2xl border border-[#FF5A1F]/20 bg-[#090909]/95 p-4 shadow-[0_20px_50px_rgba(0,0,0,0.55)] md:p-6">
-        <div className="text-center">
-          <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#FF5A1F]">Routing layer</p>
-          <h3 className="mt-2 text-lg font-bold text-white">Intent Scoring Engine</h3>
-          <div className="mx-auto mt-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 font-mono text-[9px] text-white/60"><span className="h-1.5 w-1.5 rounded-full bg-[#FF5A1F]" />Signal classified · Score 94</div>
-        </div>
-
-        <div className="relative mt-6 grid min-w-0 grid-cols-2 gap-2 sm:mt-8 sm:gap-5">
-          <div className="pointer-events-none absolute left-1/4 right-1/4 -top-4 border-t border-[#FF5A1F]/35" />
-          <div className="min-w-0 rounded-xl border border-white/10 bg-[#121212] p-3 text-center sm:p-4"><span className="font-mono text-[10px] text-white/65">EMAIL</span><p className="mt-2 text-xs text-[#888888]">Native send ready</p></div>
-          <div className="min-w-0 rounded-xl border border-white/10 bg-[#121212] p-3 text-center sm:p-4"><span className="font-mono text-[10px] text-white/65">LINKEDIN</span><p className="mt-2 text-xs text-[#888888]">Zero-ban handoff</p></div>
-        </div>
-      </div>
-
-      <div className="relative z-10 mx-auto w-full max-w-md rounded-xl border border-emerald-500/25 bg-[#090909]/95 p-4 shadow-[0_0_28px_rgba(52,211,153,0.08),0_18px_45px_rgba(0,0,0,0.45)] md:p-5">
-        <div className="flex items-center gap-4">
-          <span className="relative flex h-3 w-3 shrink-0"><span className="absolute -inset-1 rounded-full bg-emerald-400/30 blur-sm" /><span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.75)]" /></span>
-          <div className="min-w-0"><p className="font-mono text-[9px] uppercase tracking-[0.18em] text-emerald-400/70">Advance complete</p><p className="mt-1 text-wrap font-mono text-sm font-semibold text-white">[ Calendar Invite Dispatched ]</p></div>
-        </div>
-      </div>
-    </div>
-  );
+function OperatingStepVisual({ step }: { step: number }) {
+  if (step === 0) return <div className="w-full max-w-md"><div className="flex items-center justify-between"><div><p className="font-mono text-[8px] uppercase tracking-[0.16em] text-[#888888]">Source intake</p><p className="mt-1 truncate font-mono text-sm font-semibold text-white">Q3_Target_Accounts.csv</p></div><span className="rounded-lg border border-white/[0.08] bg-[#242424] px-2.5 py-1 font-mono text-[8px] text-[#888888]">CSV</span></div><div className="mt-4 rounded-xl border border-white/[0.07] bg-[#242424]/40 px-4"><WalkthroughRow label="Records" value="148 mapped" /><WalkthroughRow label="Context attached" value="Offer · Account · Channel" /><WalkthroughRow label="Validation" value="142 ready · 6 require review" /><WalkthroughRow label="Import status" value="Complete" active /></div></div>;
+  if (step === 1) return <div className="w-full max-w-md"><div className="flex items-center justify-between border-b border-white/[0.07] pb-4"><div><p className="font-mono text-[8px] uppercase tracking-wider text-[#888888]">Campaign workspace</p><p className="mt-1 text-sm font-semibold text-white">Q3 enterprise outreach</p></div><span className="font-mono text-[8px] uppercase text-[#FF5A1F]">Generated</span></div><div className="mt-3 rounded-lg border border-[#FF5A1F]/20 bg-[#FF5A1F]/[0.035] px-3 py-2"><p className="font-mono text-[8px] uppercase tracking-wider text-[#888888]">Context loaded</p><p className="mt-1 text-xs font-medium text-white/80">Prospect · Account · Offer</p></div><div className="mt-4 flex border-b border-white/[0.07]"><span className="border-b-2 border-[#FF5A1F] px-3 pb-2 font-mono text-[8px] text-white">Email</span><span className="px-3 pb-2 font-mono text-[8px] text-[#888888]">LinkedIn</span></div><div className="mt-4 rounded-xl border border-white/[0.07] bg-[#242424]/70 p-4"><p className="font-mono text-[8px] uppercase tracking-wider text-[#888888]">Message</p><p className="mt-3 text-xs leading-relaxed text-white/70">A channel-ready message prepared from the mapped prospect, account, and offer context.</p></div></div>;
+  if (step === 2) return <div className="w-full max-w-md"><div className="border-b border-white/[0.07] pb-4"><p className="font-mono text-[8px] uppercase tracking-[0.16em] text-[#888888]">Campaign deployment</p><p className="mt-1 text-sm font-semibold text-white">Q3 Enterprise Outreach</p></div><div className="mt-3 rounded-xl border border-white/[0.07] bg-[#242424]/40 px-4"><WalkthroughRow label="Status" value="Ready" active /><WalkthroughRow label="Destination" value="Connected outbound workflow" /></div><button type="button" className="mt-5 h-10 w-full rounded-xl bg-[#FF5A1F] px-4 text-sm font-semibold text-white shadow-sm">Deploy campaign</button></div>;
+  if (step === 3) return <div className="w-full max-w-md"><div className="flex items-center justify-between border-b border-white/[0.07] pb-4"><div><p className="font-mono text-[8px] uppercase tracking-wider text-[#888888]">Inbox triage</p><p className="mt-1 text-sm font-semibold text-white">New prospect reply</p></div><span className="flex items-center gap-2 font-mono text-[8px] uppercase text-[#FF5A1F]"><span className="h-1.5 w-1.5 rounded-full bg-[#FF5A1F]" />Classifying</span></div><div className="mt-4 rounded-xl border border-white/[0.07] bg-[#242424]/70 p-4 text-sm leading-relaxed text-white/75">Can you clarify the pricing before we schedule?</div><div className="mt-3 rounded-xl border border-white/[0.07] bg-[#242424]/40 px-4"><WalkthroughRow label="Intent" value="Pricing question" active /><WalkthroughRow label="Confidence" value="87%" /><WalkthroughRow label="Next" value="Evaluate route" /></div><div className="mt-4 h-1 overflow-hidden rounded-full bg-white/[0.06]"><motion.div initial={{ width: 0 }} animate={{ width: "87%" }} transition={{ duration: 0.55, ease: "easeOut" }} className="h-full rounded-full bg-[#FF5A1F]" /></div></div>;
+  if (step === 4) return <div className="w-full max-w-md"><div className="flex items-center justify-between border-b border-white/[0.07] pb-4"><div><p className="font-mono text-[8px] uppercase tracking-wider text-[#888888]">Next-action queue</p><p className="mt-1 text-sm font-semibold text-white">Qualified intent</p></div><span className="rounded-lg border border-[#FF5A1F]/25 bg-[#FF5A1F]/[0.05] px-2.5 py-1 font-mono text-[8px] uppercase text-[#FF5A1F]">Route selected</span></div><div className="mt-4 rounded-xl border border-[#FF5A1F]/25 bg-[#242424]/70 p-4"><p className="font-mono text-[8px] uppercase tracking-wider text-[#888888]">Meeting workflow</p><p className="mt-2 text-lg font-semibold text-white">Discovery call requested</p><div className="mt-4 border-t border-white/[0.07] px-1"><WalkthroughRow label="Next action" value="Prepare meeting invite" active /><WalkthroughRow label="Status" value="Ready to dispatch" /></div></div></div>;
+  return <div className="w-full max-w-md"><div className="flex items-center justify-between border-b border-white/[0.07] pb-4"><div><p className="font-mono text-[8px] uppercase tracking-wider text-[#888888]">Governance queue</p><p className="mt-1 text-sm font-semibold text-white">Review required</p></div><span className="rounded-lg border border-white/[0.1] bg-[#242424] px-2.5 py-1 font-mono text-[8px] uppercase text-white/65">Paused</span></div><div className="mt-4 rounded-xl border border-[#FF5A1F]/25 bg-[#242424]/70 p-4"><p className="font-mono text-[8px] uppercase tracking-wider text-[#888888]">Exception detected</p><p className="mt-2 text-sm font-semibold text-white">Custom commercial terms</p><div className="mt-4 border-t border-white/[0.07] px-1"><WalkthroughRow label="Route" value="Human review" active /><WalkthroughRow label="Automation" value="Paused" /><WalkthroughRow label="Context" value="Preserved" /></div></div></div>;
 }
 
 function ArchitectureVisual({ index }: { index: number }) {
@@ -288,13 +289,13 @@ function ArchitectureVisual({ index }: { index: number }) {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="w-full max-w-sm rounded-xl border border-[#242424] bg-white/[0.03] p-4 shadow-2xl sm:p-5">
-          <div className="w-[88%] rounded-2xl rounded-tl-sm bg-white/[0.03] px-4 py-3 text-xs leading-relaxed text-white/75 sm:text-sm">Sounds interesting—do you have time Tuesday?</div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <span className="rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1.5 font-mono text-[9px] text-emerald-400 shadow-[0_0_18px_rgba(52,211,153,0.12)]">[ Intent: Meeting Ready ]</span>
-          </div>
-          <div className="mt-4 flex w-fit items-center gap-1 rounded-full border border-[#242424] bg-white/[0.03] px-3 py-2">
-            {[0, 1, 2].map((dot) => <span key={dot} className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#888888]" style={{ animationDelay: `${dot * 150}ms` }} />)}
-          </div>
+          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-white/35">Prospect reply</p>
+          <div className="mt-3 rounded-xl rounded-tl-sm bg-white/[0.04] px-4 py-3 text-xs leading-relaxed text-white/75 sm:text-sm">Can you clarify the pricing before we schedule?</div>
+          <dl className="mt-5 grid grid-cols-2 gap-3">
+            <div className="rounded-lg border border-[#FF5A1F]/20 bg-[#FF5A1F]/[0.04] p-3"><dt className="font-mono text-[8px] uppercase tracking-wider text-white/35">Intent</dt><dd className="mt-1 text-xs font-semibold text-[#FF5A1F]">Pricing question</dd></div>
+            <div className="rounded-lg border border-white/10 bg-white/[0.025] p-3"><dt className="font-mono text-[8px] uppercase tracking-wider text-white/35">Confidence</dt><dd className="mt-1 text-xs font-semibold text-white">87%</dd></div>
+            <div className="col-span-2 rounded-lg border border-white/10 bg-white/[0.025] p-3"><dt className="font-mono text-[8px] uppercase tracking-wider text-white/35">Next</dt><dd className="mt-1 text-xs font-semibold text-white/75">Evaluate route</dd></div>
+          </dl>
         </div>
       </div>
     );
@@ -306,13 +307,13 @@ function ArchitectureVisual({ index }: { index: number }) {
         <div className="w-full max-w-xs rounded-xl border border-[#242424] bg-white/[0.03] p-4 shadow-2xl sm:p-5">
           <div className="flex items-center justify-between border-b border-[#242424] pb-3">
             <div><div className="font-mono text-[9px] uppercase tracking-widest text-[#888888]">Available</div><div className="mt-1 text-sm font-bold text-white">Thursday, Aug 20</div></div>
-            <div className="flex h-8 w-8 items-center justify-center rounded-full border border-emerald-500/25 bg-emerald-500/10 font-mono text-sm font-bold text-emerald-400">✓</div>
+            <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[#FF5A1F]/25 bg-[#FF5A1F]/[0.06] font-mono text-sm font-bold text-[#FF5A1F]">✓</div>
           </div>
           <div className="mt-4 grid grid-cols-2 gap-3">
             <button type="button" className="rounded-lg border border-[#FF5A1F]/30 bg-[#FF5A1F]/10 px-3 py-3 font-mono text-xs font-bold text-[#FF5A1F] shadow-[0_0_16px_rgba(255,90,31,0.12)]">10:30 AM</button>
             <button type="button" className="rounded-lg border border-[#FF5A1F]/30 bg-[#FF5A1F]/10 px-3 py-3 font-mono text-xs font-bold text-[#FF5A1F] shadow-[0_0_16px_rgba(255,90,31,0.12)]">2:00 PM</button>
           </div>
-          <div className="mt-4 flex items-center gap-2 font-mono text-[9px] text-emerald-400"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />Live calendar connected</div>
+          <div className="mt-4 flex items-center gap-2 font-mono text-[9px] text-[#FF5A1F]"><span className="h-1.5 w-1.5 rounded-full bg-[#FF5A1F]" />Live calendar connected</div>
         </div>
       </div>
     );
@@ -321,19 +322,61 @@ function ArchitectureVisual({ index }: { index: number }) {
   return (
     <div className="flex h-full items-center justify-center">
       <div className="w-full max-w-xs rounded-xl border border-[#242424] bg-white/[0.03] p-5 text-center shadow-2xl">
-        <div className="mx-auto flex h-16 w-16 flex-col items-center justify-center rounded-2xl border border-red-500/30 bg-red-500/10 shadow-[0_0_28px_rgba(239,68,68,0.2)]">
-          <div className="h-5 w-7 rounded-t-full border-2 border-b-0 border-red-500" /><div className="h-6 w-9 rounded-md bg-red-500" />
+        <div className="mx-auto flex h-16 w-16 flex-col items-center justify-center rounded-2xl border border-white/15 bg-[#242424]">
+          <div className="h-5 w-7 rounded-t-full border-2 border-b-0 border-white/55" /><div className="h-6 w-9 rounded-md bg-white/55" />
         </div>
-        <div className="mt-5 inline-flex rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1.5 font-mono text-[9px] text-red-400 sm:text-[10px]">High-Stakes Reply Paused</div>
+        <div className="mt-5 inline-flex rounded-full border border-white/15 bg-[#242424] px-3 py-1.5 font-mono text-[9px] text-white/65 sm:text-[10px]">High-Stakes Reply Paused</div>
         <button type="button" className="mt-5 w-full rounded-lg bg-[#FF5A1F] px-4 py-2.5 font-mono text-[10px] font-bold uppercase tracking-wider text-white shadow-[0_0_22px_rgba(255,90,31,0.25)]">Approve &amp; Send</button>
       </div>
     </div>
   );
 }
 
+function ProductTopBar({ label }: { label: string }) {
+  return <div className="flex items-center justify-between border-b border-white/[0.07] bg-[#1A1A1A] px-4 py-3"><div className="flex gap-1.5" aria-hidden="true"><span className="h-1.5 w-1.5 rounded-full bg-white/15" /><span className="h-1.5 w-1.5 rounded-full bg-white/15" /><span className="h-1.5 w-1.5 rounded-full bg-[#FF5A1F]" /></div><span className="font-mono text-[8px] uppercase tracking-[0.16em] text-[#888888]">{label}</span></div>;
+}
+
+function WalkthroughProductTopBar({ label }: { label: string }) {
+  return <div className="flex h-14 items-center justify-between border-b border-white/[0.07] bg-[#1A1A1A]/95 px-4 sm:px-5"><div className="flex min-w-0 items-center gap-3"><span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[#FF5A1F] text-[10px] font-black text-white" aria-hidden="true">F</span><div className="min-w-0"><p className="text-[11px] font-semibold leading-none text-white">FrameLeads</p><p className="mt-1 truncate font-mono text-[7px] uppercase tracking-[0.14em] text-[#888888]">Operating workspace</p></div></div><div className="flex items-center gap-2"><span className="hidden h-1.5 w-1.5 rounded-full bg-[#FF5A1F] sm:block" aria-hidden="true" /><span className="font-mono text-[8px] uppercase tracking-[0.14em] text-[#888888]">{label}</span></div></div>;
+}
+
+function ContextCapabilityVisual() {
+  return (
+    <div className="w-full max-w-lg rounded-xl border border-white/[0.08] bg-[#242424] p-4 sm:p-5">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.07] pb-4"><div><p className="text-sm font-semibold text-white">Procre8</p><p className="mt-1 font-mono text-[8px] uppercase tracking-wider text-[#888888]">Account context dossier</p></div><span className="rounded-full border border-[#FF5A1F]/25 bg-[#FF5A1F]/[0.05] px-3 py-1 font-mono text-[8px] uppercase tracking-wider text-[#FF5A1F]">Context attached</span></div>
+      <dl className="mt-4 grid gap-x-5 gap-y-4 sm:grid-cols-2">
+        {[["Campaign", "Q3 high-intent outreach"], ["Offer", "Reply workflow governance"], ["Previous signal", "Pipeline triage identified"], ["Available rule", "Pricing questions require review"], ["Contact", "Colin · Procre8"], ["Source", "Mapped account record"]].map(([label, value]) => <div key={label}><dt className="font-mono text-[8px] uppercase tracking-wider text-[#888888]">{label}</dt><dd className="mt-1 text-xs leading-relaxed text-white/75">{value}</dd></div>)}
+      </dl>
+      <div className="mt-5 rounded-lg border border-white/[0.07] bg-[#1A1A1A] p-3"><p className="font-mono text-[8px] uppercase tracking-wider text-[#888888]">Incoming reply</p><p className="mt-2 text-xs text-white/70">Can you send more detail on how pricing works?</p></div>
+    </div>
+  );
+}
+
+function RoutingCapabilityVisual() {
+  return (
+    <div className="w-full max-w-md rounded-xl border border-white/[0.08] bg-[#242424] p-4 sm:p-5">
+      <div className="flex items-center justify-between border-b border-white/[0.07] pb-4"><div><p className="font-mono text-[8px] uppercase tracking-[0.16em] text-[#888888]">Decision / 01842</p><p className="mt-1 text-sm font-semibold text-white">Reply routing record</p></div><span className="h-2 w-2 rounded-full bg-[#FF5A1F]" aria-label="FrameLeads active" /></div>
+      <dl className="mt-4 space-y-3">{[["Intent", "Pricing negotiation"], ["Account context", "Enterprise evaluation"], ["Rule matched", "Commercial negotiation requires approval"], ["Automation", "Paused"]].map(([label, value]) => <div key={label} className="grid gap-1 border-b border-white/[0.05] pb-3 sm:grid-cols-[8rem_1fr] sm:items-center"><dt className="font-mono text-[8px] uppercase tracking-wider text-[#888888]">{label}</dt><dd className="text-xs text-white/70">{value}</dd></div>)}</dl>
+      <div className="mt-4 rounded-lg border border-[#FF5A1F]/30 bg-[#1A1A1A] p-4"><p className="font-mono text-[8px] uppercase tracking-wider text-[#888888]">Selected route</p><p className="mt-2 text-lg font-bold text-[#FF5A1F]">Founder review</p></div>
+    </div>
+  );
+}
+
+function ControlCapabilityVisual() {
+  return (
+    <div className="grid w-full max-w-lg gap-3 sm:grid-cols-2">
+      {[
+        { id: "A", conversation: "Meeting confirmation", route: "Continue workflow", automation: "Active" },
+        { id: "B", conversation: "Custom pricing request", route: "Human review", automation: "Paused" },
+      ].map((record) => <div key={record.id} className="rounded-xl border border-white/[0.08] bg-[#242424] p-4"><div className="flex items-center justify-between"><p className="font-mono text-[8px] uppercase tracking-wider text-[#888888]">Conversation {record.id}</p><span className={`h-1.5 w-1.5 rounded-full ${record.automation === "Active" ? "bg-[#FF5A1F]" : "border border-white/35"}`} aria-hidden="true" /></div><p className="mt-4 text-sm font-semibold text-white">{record.conversation}</p><dl className="mt-5 space-y-3 border-t border-white/[0.06] pt-4"><div><dt className="font-mono text-[8px] uppercase tracking-wider text-[#888888]">Route</dt><dd className="mt-1 text-xs text-white/75">{record.route}</dd></div><div><dt className="font-mono text-[8px] uppercase tracking-wider text-[#888888]">Automation</dt><dd className={`mt-1 text-xs font-semibold ${record.automation === "Active" ? "text-[#FF5A1F]" : "text-white/65"}`}>{record.automation}</dd></div></dl></div>)}
+    </div>
+  );
+}
+
 export default function Home() {
   const [isAuditExpanded, setIsAuditExpanded] = useState(false);
-  const [customLeak, setCustomLeak] = useState<number | null>(null);
+  const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
+  const [activeStep, setActiveStep] = useState(0);
   const auditRef = useRef<HTMLDivElement>(null);
 
   const launchAudit = () => {
@@ -341,15 +384,7 @@ export default function Home() {
     window.setTimeout(() => auditRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
   };
 
-  const hasCustomLeak = customLeak !== null;
-  const firstLeakShare = hasCustomLeak ? Math.round(customLeak * 0.3) : 12000;
-  const secondLeakShare = hasCustomLeak ? Math.round(customLeak * 0.45) : 18000;
-  const thirdLeakShare = hasCustomLeak ? customLeak - firstLeakShare - secondLeakShare : 10000;
-  const leakLedgerRows = [
-    ["Leads ignored past the 48-hour intent window", firstLeakShare],
-    ["Follow-ups that quietly never happened", secondLeakShare],
-    ["High-intent signals nobody scored or noticed", thirdLeakShare],
-  ] as const;
+  const formatCurrency = (value: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
 
   return (
     <div id="top" className="relative min-h-screen max-w-[100vw] overflow-x-hidden bg-[#111111] bg-grid-overlay font-sans selection:bg-[#FF5A1F] selection:text-white">
@@ -365,11 +400,12 @@ export default function Home() {
           transition={{ duration: 0.6, delay: 0, ease: "easeOut" }}
         >
           <p className="mb-6 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#FF5A1F] sm:text-xs">
-            THE VELVET ROPE PROTOCOL - FOR $10K+ DEAL FLOW
+            FOR B2B TEAMS RUNNING HIGH-VALUE OUTBOUND
           </p>
           <h1 className="mb-8 text-4xl font-bold leading-[1.08] tracking-tighter text-white sm:mb-10 sm:text-5xl md:text-6xl lg:text-7xl">
-            Your SDR team isn&apos;t a growth function. It&apos;s a liability with a payroll.
+            Your outbound is automated until someone replies.
           </h1>
+          <p className="mb-8 text-2xl font-semibold tracking-tight text-white/80 sm:mb-10 sm:text-3xl md:text-4xl">Then the manual decision queue starts.</p>
         </motion.div>
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -379,11 +415,9 @@ export default function Home() {
           className="w-full"
         >
           <p className="mx-auto mb-10 max-w-4xl text-center text-lg font-light leading-relaxed text-gray-400 sm:text-xl">
-            Every human-routed reply, every &apos;I&apos;ll get to it after lunch,&apos; every overnight cold-down—that&apos;s not a staffing problem. That&apos;s capital leaving your business, hour by hour, while you pay someone to watch it happen. FrameLeads replaces manual routing with an autonomous execution layer that reads intent, drafts the reply, sends it natively, and books the meeting—before your best rep would have finished reading the email.
+            You can automate prospecting, sending, and follow-ups. But the moment a real prospect replies, someone still has to read the message, understand the intent, decide how important it is, decide what happens next, and know whether the response is safe to automate or needs human judgment. That decision layer is where outbound becomes manual again. FrameLeads was built to govern that layer.
           </p>
         </motion.div>
-
-        <VideoSection />
 
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -393,14 +427,22 @@ export default function Home() {
           className="w-full max-w-md md:w-auto"
         >
           <button type="button" data-tripwire-guard="true" onClick={launchAudit} className="inline-flex w-full max-w-md items-center justify-center rounded-xl bg-[#FF5A1F] px-8 py-4 text-center text-base font-bold text-white shadow-[0_0_35px_rgba(255,90,31,0.4)] transition-transform duration-200 hover:scale-[1.02] hover:bg-[#ff6b35] active:scale-[0.98] md:w-auto md:px-10 md:py-5 md:text-lg">
-            Run a Pipeline Leak Audit
+            Diagnose My Reply Workflow
           </button>
           <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-[#888888]">
-            Free 3-question interactive audit. Discover exactly how much revenue is trapped in manual routing.
+            3 questions. No email required. See where manual routing is creating operational exposure.
           </p>
         </motion.div>
 
       </main>
+
+      <section className="relative mx-auto w-full max-w-7xl border-t border-white/5 px-4 py-12 sm:px-6 md:py-16">
+        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6, ease: "easeOut" }} className="mx-auto mb-8 max-w-3xl text-center">
+          <p className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-[#FF5A1F]">SEE FRAMELEADS IN ACTION</p>
+          <h2 className="mt-5 text-3xl font-bold tracking-tight text-white sm:text-4xl">See the FrameLeads operating system in action.</h2>
+        </motion.div>
+        <VideoSection />
+      </section>
 
       {/* SECTION 2 — THE DISRUPTION */}
       <section className="relative mx-auto w-full max-w-7xl border-t border-white/5 px-4 pb-16 pt-8 sm:px-6 md:pb-24 md:pt-12">
@@ -411,25 +453,25 @@ export default function Home() {
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="mx-auto max-w-4xl text-center"
         >
-          <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">You didn&apos;t lose those leads. You spent money to lose them slower.</h2>
+          <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">You automated the campaign.<br />Not the decisions after the reply.</h2>
           <p className="mx-auto mt-6 max-w-3xl text-base leading-relaxed text-gray-400 sm:text-lg">
-            You already built a system. A rep checks the inbox. A rep drafts the reply. A rep updates the CRM. A rep — eventually — books the call. That&apos;s not infrastructure. That&apos;s a single point of failure with a salary, a sick day, and a two-week notice.
+            Once a prospect answers, your system has to decide what the message means, how valuable it is, what context applies, what should happen next, and whether automation is safe. When those decisions live inside a human inbox, the workflow is still manual.
           </p>
         </motion.div>
 
-        <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="mt-12 grid auto-rows-fr grid-cols-1 gap-6 md:grid-cols-3">
           {[
             {
-              title: "It's slow by design.",
-              text: "They triage by 'what's on top,' not by what's about to close.",
+              title: "The inbox sorts by time. Revenue doesn't.",
+              text: "A low-value reply from two minutes ago can sit above a high-intent buying signal from two hours ago. Chronology is not prioritization.",
             },
             {
-              title: "It's fragile by design.",
-              text: "One rep quits, and every objection-handling pattern walks out the door.",
+              title: "The context lives in people.",
+              text: "Objection logic, account history, offer rules, and next-step judgment often change depending on who is watching the inbox.",
             },
             {
-              title: "It's inconsistent by design.",
-              text: "Your best rep replies in nine minutes. Your newest rep replies in nine hours.",
+              title: "Speed isn't the only risk.",
+              text: "Some replies can move automatically. Others involve pricing, legal, technical, or high-value decisions that should stop for human review.",
             },
           ].map((card, index) => (
             <motion.article
@@ -438,14 +480,14 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-100px" }}
               transition={{ duration: 0.6, delay: index * 0.1, ease: "easeOut" }}
-              className="relative isolate h-[18rem] overflow-hidden rounded-2xl border border-white/[0.12] bg-white/[0.02] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.1)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-white/30"
+              className="relative isolate h-full overflow-hidden rounded-2xl border border-white/[0.12] bg-white/[0.02] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.1)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-white/30"
             >
               <div className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-br from-white/[0.05] via-transparent to-transparent" />
-              <div className="relative z-10 flex h-full flex-col">
-                <div className="flex h-40 shrink-0 items-center justify-center overflow-hidden rounded-t-xl border-b border-white/[0.05]">
+              <div className="relative z-10 grid h-full grid-rows-[10rem_1fr]">
+                <div className="flex min-h-0 items-center justify-center overflow-hidden rounded-t-xl border-b border-white/[0.05]">
                   <DisruptionVisual index={index} />
                 </div>
-                <div className="flex flex-1 flex-col justify-center p-4">
+                <div className="flex min-h-0 flex-col justify-start px-6 pb-8 pt-6">
                   <h3 className="text-xl font-bold tracking-tight text-white">{card.title}</h3>
                   <p className="mt-2 text-xs leading-relaxed text-[#888888] sm:text-sm">{card.text}</p>
                 </div>
@@ -461,7 +503,9 @@ export default function Home() {
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="mx-auto mt-12 max-w-3xl border-t border-white/5 pt-10 text-center text-lg font-medium leading-relaxed text-white sm:text-xl"
         >
-          You don&apos;t have a lead-generation problem. You have a routing infrastructure problem — and no amount of &apos;more leads&apos; fixes a broken pipe.
+          More leads don&apos;t remove a manual decision queue.<br />They feed it.
+          <span className="mx-auto mt-4 block max-w-3xl text-sm font-normal text-gray-400 sm:text-base">Every new reply adds another manual decision. Scale the campaigns without fixing that layer, and you scale the queue.</span>
+          <span className="mx-auto mt-2 block max-w-3xl font-mono text-[10px] font-normal uppercase tracking-[0.12em] text-[#888888] sm:text-xs">Priority. Response. Routing. Escalation. Next action.</span>
         </motion.p>
       </section>
 
@@ -475,14 +519,14 @@ export default function Home() {
           <div className="relative mx-auto w-full max-w-4xl overflow-hidden rounded-2xl border border-white/[0.12] bg-white/[0.02] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.1)] backdrop-blur-xl transition-all duration-700">
             <div className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-br from-white/[0.05] via-transparent to-transparent" />
             <div className="relative z-10 p-6 sm:p-10">
-              {isAuditExpanded && <PipelineAudit onLeakCalculated={setCustomLeak} />}
+              {isAuditExpanded && <PipelineAudit onAuditComplete={setAuditResult} onClose={() => setIsAuditExpanded(false)} />}
             </div>
           </div>
         </div>
       </section>
 
-      {/* SECTION 3 — QUANTIFY THE LEAK */}
-      <section id="leak-ledger" className="relative mx-auto w-full max-w-7xl scroll-mt-32 border-t border-white/5 px-4 py-16 sm:px-6 md:py-24">
+      {/* SECTION 3 — POST-AUDIT DIAGNOSTIC BRIDGE */}
+      <section id="leak-ledger" className="relative mx-auto w-full max-w-7xl scroll-mt-40 border-t border-white/5 px-4 py-16 sm:px-6 md:scroll-mt-44 md:py-24">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -490,8 +534,8 @@ export default function Home() {
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="mx-auto max-w-4xl text-center"
         >
-          <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">{hasCustomLeak ? "Here’s what your routing delays are projected to cost you this year." : "Here’s what sitting on your hands is actually costing you this month."}</h2>
-          <p className="mt-5 text-base text-gray-400 sm:text-lg">{hasCustomLeak ? "Your answers, translated into exposed pipeline:" : "The math your P&L isn’t showing you:"}</p>
+          <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">{auditResult ? "The bottleneck sits between the reply and the next action." : "What actually becomes manual after the reply?"}</h2>
+          <p className="mt-5 text-base text-gray-400 sm:text-lg">{auditResult ? "Your numbers show how much deal activity still depends on a manual decision layer." : "That is the decision layer the Audit measures."}</p>
         </motion.div>
 
         <motion.div
@@ -504,17 +548,20 @@ export default function Home() {
           <div className="pointer-events-none absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
 
           <div className="relative z-10">
-            {leakLedgerRows.map(([label, amount]) => (
-              <div key={label} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-5 border-b border-white/5 py-5 first:pt-0">
-                <span className="text-sm leading-relaxed text-gray-400 sm:text-base">{label}</span>
-                <span className="font-mono text-base font-bold tabular-nums text-red-500 drop-shadow-[0_0_14px_rgba(239,68,68,0.35)] sm:text-lg">–${amount.toLocaleString()}</span>
+            {(auditResult ? [
+              ["Qualified conversations requiring a decision / month", auditResult.monthlyConversations.toLocaleString()],
+              ["Manual triage time / year", `${auditResult.annualTriageHours.toLocaleString()} hours`],
+              ["Pipeline value passing through the workflow / month", formatCurrency(auditResult.monthlyPipelineTouched)],
+            ] : [
+              ["READ", "Understand what the prospect actually means."],
+              ["DECIDE", "Choose priority, response, and next action."],
+              ["GOVERN", "Determine whether automation is safe or human judgment is required."],
+            ]).map(([label, value]) => (
+              <div key={label} className="grid gap-2 border-b border-white/5 py-5 first:pt-0 last:border-b-0 last:pb-0 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:items-center sm:gap-8">
+                <span className={`leading-relaxed ${auditResult ? "text-sm text-gray-400 sm:text-base" : "font-mono text-xs font-bold tracking-[0.18em] text-[#FF5A1F]"}`}>{label}</span>
+                <span className={`leading-relaxed sm:text-right ${auditResult ? "font-mono text-lg font-bold tabular-nums text-white sm:text-xl" : "text-sm text-gray-300 sm:text-base"}`}>{value}</span>
               </div>
             ))}
-
-            <div className="mt-2 grid grid-cols-1 gap-3 border-t-2 border-white/10 pt-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-6">
-              <span className="text-lg font-bold text-white">Total active leak</span>
-              <span className="font-mono text-2xl font-black tabular-nums text-red-500 drop-shadow-[0_0_22px_rgba(239,68,68,0.55)] sm:text-3xl">–${(customLeak ?? 40000).toLocaleString()} / {hasCustomLeak ? "yr" : "mo"}</span>
-            </div>
           </div>
         </motion.div>
 
@@ -525,75 +572,18 @@ export default function Home() {
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="mx-auto mt-8 max-w-4xl space-y-5 text-center text-base leading-relaxed text-gray-400 sm:text-lg"
         >
-          <p>{hasCustomLeak ? "This estimate is calculated from your deal value, reply volume, and response delays—not a generic industry benchmark." : <>That number isn&apos;t a projection. It&apos;s pipeline you <em className="text-white">already generated</em> — money you already paid to acquire — evaporating because a reply sat in a queue for six hours instead of six seconds.</>}</p>
-          <p><strong className="font-bold text-white">Run this forward:</strong> {hasCustomLeak ? <><strong className="font-bold text-white">${customLeak.toLocaleString()} a year</strong> is exposed while qualified replies wait for routing, context, and follow-up.</> : <>at $40k/month, that&apos;s <strong className="font-bold text-white">$480,000 a year</strong> bleeding out of deals you already won the right to close.</>} You didn&apos;t lose these buyers to a competitor. You lost them to your own response time.</p>
-          <p>The question isn&apos;t &apos;can we afford to fix this.&apos; It&apos;s <strong className="font-bold text-white">how much longer can we afford not to.</strong></p>
+          {auditResult ? (
+            <>
+              <p>This is workflow exposure, not projected revenue. It shows how much activity still depends on someone manually interpreting and routing each conversation.</p>
+              <p className="text-white">FrameLeads exists to govern that decision layer: classify intent, preserve context, move routine next actions, and stop consequential replies for human review.</p>
+            </>
+          ) : (
+            <button type="button" data-tripwire-guard="true" onClick={launchAudit} className="font-bold text-[#FF5A1F] underline decoration-[#FF5A1F]/30 underline-offset-4 transition-colors hover:text-[#ff6b35]">Run My Reply Workflow Audit ↑</button>
+          )}
         </motion.div>
       </section>
 
-      {/* SECTION 4 — WHY THE OBVIOUS FIXES DON'T WORK */}
-      <section className="relative mx-auto w-full max-w-7xl border-t border-white/5 px-4 py-16 sm:px-6 md:py-24">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="text-center"
-        >
-          <h2 className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-[#FF5A1F]">WHY THE OBVIOUS FIXES DON&apos;T WORK</h2>
-        </motion.div>
-
-        <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-3">
-          {[
-            {
-              title: "I'll just hire another SDR.",
-              text: "Humans get tired. You're not solving the bottleneck, you're renting it a little longer.",
-            },
-            {
-              title: "I'll just use a cheap AI tool.",
-              text: "One hallucinated pricing line doesn't just lose the sale — it burns the relationship permanently.",
-            },
-            {
-              title: "I'll just wire together Zapier...",
-              text: "Duct tape holds until your highest-intent prospect is waiting on a reply — and then it snaps.",
-            },
-          ].map((card, index) => (
-            <motion.article
-              key={card.title}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.6, delay: index * 0.1, ease: "easeOut" }}
-              className="relative isolate h-[21rem] overflow-hidden rounded-2xl border border-white/[0.12] bg-white/[0.02] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.1)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-red-500/25"
-            >
-              <div className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-br from-white/[0.05] via-transparent to-transparent" />
-              <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[#FF5A1F]/70 to-transparent" />
-              <div className="relative z-10 flex h-full flex-col">
-                <div className="flex h-48 shrink-0 items-center justify-center overflow-hidden border-b border-white/[0.05]">
-                  <StopgapVisual index={index} />
-                </div>
-                <div className="flex flex-1 flex-col justify-center p-4">
-                  <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-red-400">Failed fix 0{index + 1}</span>
-                  <h3 className="mt-2 text-xl font-bold tracking-tight text-white">{card.title}</h3>
-                  <p className="mt-2 text-xs leading-relaxed text-[#888888] sm:text-sm">{card.text}</p>
-                </div>
-              </div>
-            </motion.article>
-          ))}
-        </div>
-
-        <motion.p
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="mx-auto mt-12 max-w-3xl border-t border-white/5 pt-10 text-center text-lg font-medium leading-relaxed text-white sm:text-xl"
-        >
-          None of these are infrastructure. They&apos;re stopgaps wearing an infrastructure costume.
-        </motion.p>
-      </section>
-
-      {/* CATEGORY DEFINITION + 6-MODULE ARCHITECTURE */}
+      {/* PRESCRIPTION + ARCHITECTURE PROOF */}
       <section id="solutions" className="relative mx-auto w-full max-w-7xl scroll-mt-32 border-t border-white/5 px-4 py-16 sm:px-6 md:py-24">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -602,70 +592,50 @@ export default function Home() {
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="mx-auto max-w-3xl text-center"
         >
-          <p className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-[#FF5A1F]">ONE CONTROL LAYER</p>
+          <p className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-[#FF5A1F]">THE PRESCRIPTION</p>
           <h2 className="mt-5 text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">
-            Outbound should be a closed loop. Not a chain of handoffs.
+            The decision layer your outbound stack is missing.
           </h2>
-          <p className="mx-auto mt-6 max-w-3xl text-base leading-relaxed text-gray-400 sm:text-lg">
-            FrameLeads is the autonomous control layer between your lead sources, channels, inboxes, calendar, and sending stack. Routine work moves immediately. High-stakes work stops exactly where human judgment creates value.
-          </p>
+          <p className="mx-auto mt-6 max-w-3xl text-base leading-relaxed text-gray-300 sm:text-lg">FrameLeads handles the decision work that begins when a prospect replies—understanding the signal, applying the right context, choosing the next action, and stopping decisions that require human judgment.</p>
+          <div className="mx-auto mt-10 max-w-xl overflow-hidden rounded-xl border border-white/10 bg-[#1A1A1A] text-left shadow-[0_20px_50px_rgba(0,0,0,0.32)]">
+            <ProductTopBar label="Reply intake" />
+            <div className="grid gap-3 p-4 sm:grid-cols-[1fr_auto] sm:items-center sm:p-5"><div><p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#888888]">Incoming reply</p><p className="mt-2 text-sm text-white/80">Can you clarify how this applies to our team?</p></div><span className="w-fit rounded-full border border-[#FF5A1F]/25 bg-[#FF5A1F]/[0.06] px-3 py-1.5 font-mono text-[9px] uppercase tracking-wider text-[#FF5A1F]">FrameLeads active</span></div>
+          </div>
         </motion.div>
 
-        <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-20 space-y-20 md:mt-28 md:space-y-28">
           {architectureModules.map((module, index) => (
-            <motion.div
+            <motion.article
               key={module.title}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.6, delay: index * 0.1, ease: "easeOut" }}
-              className="h-full"
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className={`mx-auto grid w-full min-w-0 grid-cols-1 items-center gap-10 md:gap-14 lg:gap-20 ${index % 2 === 1 ? "md:grid-cols-[7fr_5fr]" : "md:grid-cols-[5fr_7fr]"}`}
             >
-              <article className="relative isolate h-[42rem] overflow-hidden rounded-2xl border border-white/[0.12] bg-white/[0.02] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.1)] backdrop-blur-xl transition-all duration-300 ease-out hover:-translate-y-1 hover:border-white/30">
-                <div className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-br from-white/[0.05] via-transparent to-transparent" />
-                <div className="relative z-10 flex h-full flex-col">
-                <div className="h-[64%] shrink-0 overflow-hidden border-b border-white/[0.05] p-5 sm:p-7">
-                  <ArchitectureVisual index={index} />
+              <div className={index % 2 === 1 ? "md:order-2" : ""}>
+                <p className="font-mono text-xs font-bold uppercase tracking-[0.18em] text-[#FF5A1F]">{module.eyebrow}</p>
+                <h3 className="mt-4 text-3xl font-bold tracking-tight text-white sm:text-4xl">{module.title}</h3>
+                <p className="mt-4 font-mono text-xs font-bold uppercase tracking-[0.14em] text-white/45">{module.feature}</p>
+                <p className="mt-5 text-base leading-relaxed text-gray-300 sm:text-lg">{module.description}</p>
+                {index === 2 ? <p className="mt-7 border-l-2 border-[#FF5A1F] pl-4 font-semibold leading-relaxed text-white">{module.detail}</p> : <p className="mt-4 text-sm leading-relaxed text-gray-400 sm:text-base">{module.detail}</p>}
+              </div>
+              <div className={`relative min-h-[24rem] min-w-0 overflow-hidden rounded-2xl border border-white/[0.1] bg-[#1A1A1A] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.32)] ${index % 2 === 1 ? "md:order-1" : ""}`}>
+                <ProductTopBar label={module.feature} />
+                <div className="relative z-10 flex min-h-[20rem] items-center justify-center p-5 sm:p-7">
+                  {index === 0 && <ArchitectureVisual index={module.visualIndex} />}
+                  {index === 1 && <ContextCapabilityVisual />}
+                  {index === 2 && <RoutingCapabilityVisual />}
+                  {index === 3 && <ControlCapabilityVisual />}
                 </div>
-                <div className="flex h-[36%] flex-col justify-center p-5 sm:p-6">
-                  <span className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-[#FF5A1F]">Module {String(index + 1).padStart(2, "0")} · {module.title}</span>
-                  <h3 className="mt-2 font-sans text-xl font-bold leading-tight tracking-tight text-white">{module.headline}</h3>
-                  <p className="mt-2 font-sans text-xs leading-relaxed text-[#888888] sm:text-sm">{module.description}</p>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {module.tags.map((tag) => (
-                      <span key={tag} className="rounded-md border border-white/10 bg-white/5 px-2 py-1 font-mono text-[10px] text-white/75 shadow-[0_0_16px_rgba(255,90,31,0.07)] sm:text-xs">{tag}</span>
-                    ))}
-                  </div>
-                </div>
-                </div>
-              </article>
-            </motion.div>
+              </div>
+            </motion.article>
           ))}
         </div>
+
       </section>
 
       <EmbeddedSandbox />
-
-      {/* AUTONOMOUS ACQUISITION + ARCHITECTURE MOCKUP */}
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-50px" }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="relative mx-auto mb-12 w-full max-w-7xl px-4 opacity-100 sm:px-6 md:mb-16 md:px-8"
-      >
-        <div className="relative z-10 h-auto w-full max-w-full overflow-hidden rounded-2xl border border-white/[0.15] bg-white/[0.03] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.2)] backdrop-blur-[24px]">
-          <Image
-            src="/hero-mockup-v2.png"
-            alt="FrameLeads Platform Architecture"
-            width={1920}
-            height={1080}
-            className="relative z-10 h-auto w-full max-w-full object-contain opacity-100"
-            priority
-            unoptimized
-          />
-        </div>
-      </motion.div>
 
       {/* OPERATING LOOP */}
       <section id="how-it-works" className="relative mx-auto w-full max-w-7xl scroll-mt-32 border-t border-white/5 px-4 py-16 sm:px-6 md:py-24">
@@ -676,45 +646,38 @@ export default function Home() {
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="mx-auto max-w-3xl text-center"
         >
-          <p className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-[#FF5A1F]">FROM SOURCE TO MEETING</p>
-          <h2 className="mt-5 text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">One lead. One continuous decision path.</h2>
+          <p className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-[#FF5A1F]">HOW IT WORKS</p>
+          <h2 className="mt-5 text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">From prospect to meeting.<br />One continuous workflow.</h2>
+          <p className="mx-auto mt-6 max-w-3xl text-base leading-relaxed text-gray-400 sm:text-lg">See how FrameLeads moves a prospect from source to next action without splitting the workflow into disconnected tools and decisions.</p>
         </motion.div>
 
-        <div className="mt-12 grid min-w-0 grid-cols-1 items-start gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:gap-16">
+        <div className="mt-12 grid min-w-0 grid-cols-1 items-stretch gap-10 lg:grid-cols-[minmax(0,0.42fr)_minmax(0,0.58fr)] lg:gap-14">
           <div className="min-w-0">
-            <div className="relative pl-6 sm:pl-8">
-              <div className="pointer-events-none absolute bottom-0 left-0 top-0 w-px bg-gradient-to-b from-[#FF5A1F] via-red-500 to-[#FF5A1F]/20 shadow-[0_0_12px_rgba(255,90,31,0.7)]" />
-              <div className="pointer-events-none absolute bottom-0 left-[-2px] top-0 w-[5px] bg-[#FF5A1F]/20 blur-sm" />
+            <div className="relative pl-5 sm:pl-6">
+              <div className="pointer-events-none absolute bottom-0 left-0 top-0 w-px bg-white/10" />
               {operatingSteps.map((step, index) => (
-                <motion.div
+                <div
                   key={step.number}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{ duration: 0.6, delay: index * 0.08, ease: "easeOut" }}
-                  className="relative border-b border-white/5 py-5 first:pt-0 last:border-b-0 last:pb-0"
+                  className="relative border-b border-white/[0.06] last:border-b-0"
                 >
-                  <span className={`absolute -left-[2.05rem] h-3 w-3 rounded-full border border-[#FF8A5F] bg-[#FF5A1F] shadow-[0_0_18px_rgba(255,90,31,0.75)] sm:-left-[2.55rem] ${index === 0 ? "top-0" : "top-5"}`} />
-                  <div className="flex items-baseline gap-3">
-                    <span className="font-mono text-xs font-bold text-[#FF5A1F]">{step.number}</span>
-                    <h3 className="text-xl font-bold text-white">{step.title}</h3>
-                  </div>
-                  <p className="mt-2 text-sm leading-relaxed text-gray-400 sm:text-base">{step.description}</p>
-                </motion.div>
+                  <span className={`absolute -left-[1.42rem] top-6 h-2.5 w-2.5 rounded-full border transition-colors ${activeStep === index ? "border-[#FF5A1F] bg-[#FF5A1F]" : "border-white/20 bg-[#1A1A1A]"}`} aria-hidden="true" />
+                  {activeStep === index && <span className="pointer-events-none absolute -left-5 top-4 h-10 w-px bg-[#FF5A1F] sm:-left-6" aria-hidden="true" />}
+                  <button type="button" onClick={() => setActiveStep(index)} aria-expanded={activeStep === index} aria-controls={`operating-step-panel-${index}`} className="w-full rounded-sm py-4 text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[#FF5A1F]/60">
+                    <span className={`font-mono text-[9px] font-bold uppercase tracking-[0.16em] ${activeStep === index ? "text-[#FF5A1F]" : "text-[#888888]"}`}>{step.number} — {step.label}</span>
+                    <span className="mt-1.5 block text-base font-bold text-white sm:text-lg">{step.outcome}</span>
+                  </button>
+                  <AnimatePresence initial={false}>
+                    {activeStep === index && (
+                      <motion.div id={`operating-step-panel-${index}`} initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.24, ease: "easeOut" }} className="overflow-hidden">
+                        <p className="pb-5 text-sm leading-relaxed text-[#888888] sm:text-base">{step.description}</p>
+                        <div className="mb-5 lg:hidden"><OperatingLoopDiagram activeStep={activeStep} /></div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               ))}
             </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-              className="mt-10 border-t border-white/5 pt-8"
-            >
-              <p className="text-lg font-medium leading-relaxed text-white">
-                The lead never disappears between tools. The next action never depends on someone remembering.
-              </p>
-            </motion.div>
           </div>
 
           <motion.div
@@ -722,28 +685,39 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="relative flex h-auto min-h-[34rem] min-w-0 w-full max-w-full items-center justify-center overflow-hidden rounded-2xl border border-white/[0.18] bg-white/[0.04] shadow-[0_12px_40px_-10px_rgba(0,0,0,0.8),inset_0_1px_0px_rgba(255,255,255,0.3)] backdrop-blur-[24px] sm:h-[600px] lg:sticky lg:top-32"
-            role="img"
-            aria-label="FrameLeads pipeline from CSV upload through intent routing to calendar dispatch"
+            className="relative hidden h-[34rem] min-w-0 w-full max-w-full items-center justify-center overflow-hidden rounded-2xl border border-white/[0.12] bg-[#1A1A1A] shadow-[0_12px_40px_-10px_rgba(0,0,0,0.8)] lg:flex"
+            role="region"
+            aria-live="polite"
+            aria-label={`${operatingSteps[activeStep].label} product walkthrough`}
           >
-            <OperatingLoopDiagram />
+            <OperatingLoopDiagram activeStep={activeStep} />
           </motion.div>
         </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="mx-auto mt-16 max-w-3xl border-t border-white/[0.06] px-4 pt-10 text-center sm:mt-20 sm:pt-12"
+        >
+          <p className="text-xl font-semibold leading-relaxed text-white sm:text-2xl">One lead. One context. One operating path from outreach to next action.</p>
+          <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-gray-400 sm:text-base">FrameLeads keeps generation, execution, reply intelligence, and governance connected instead of treating them as separate workflows.</p>
+        </motion.div>
       </section>
 
       {/* DEPLOYMENT OPTIONS (SCALABLE PRICING) */}
-      <div id="pricing" className="relative mx-auto mb-16 max-w-7xl scroll-mt-32 px-4 sm:px-6 md:mb-24 lg:mb-32">
+      <div id="pricing" className="relative mx-auto mb-16 max-w-7xl scroll-mt-32 px-4 pt-16 sm:px-6 md:mb-24 md:pt-24 lg:mb-32">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="mb-10 text-center md:mb-12"
+          className="mx-auto mb-10 max-w-3xl text-center md:mb-12"
         >
-          <h3 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">Select Your Deployment Architecture</h3>
-          <p className="mt-3 px-2 font-mono text-xs text-[#8A8A93] sm:mt-4 sm:text-sm">
-            Do not over-engineer. Deploy the tier that matches your current deal volume.
-          </p>
+          <p className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-[#FF5A1F]">BUILT TO FIT THE OPERATION</p>
+          <h3 className="mt-5 text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">Choose how much of the workflow you want FrameLeads to govern.</h3>
+          <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-[#888888] sm:text-lg">Start with the architecture that matches your current outbound operation. Expand when campaign volume, workflow complexity, or decision load increases.</p>
         </motion.div>
 
         <div className="mx-auto grid max-w-5xl grid-cols-1 items-stretch gap-6 lg:grid-cols-2">
@@ -760,40 +734,21 @@ export default function Home() {
               <div className="relative z-10 mb-6"><CoreIcon /></div>
               <h4 className="relative z-10 mb-2 text-2xl font-bold text-white">FrameLeads Core</h4>
               <p className="relative z-10 min-h-[3rem] text-sm leading-relaxed text-[#8A8A93]">
-                For teams actively running outbound and ready to stop routing by hand.
+                For founder-led and smaller outbound operations that need execution and reply routing without building the workflow themselves.
               </p>
               <div className="relative z-10 mb-6 mt-6 flex items-baseline gap-1 border-b border-white/5 pb-6">
                 <span className="text-4xl font-bold text-white">$147</span>
                 <span className="font-mono text-sm text-[#8A8A93]">/mo</span>
               </div>
-              <ul className="relative z-10 mb-8 flex-grow space-y-4">
-                {[
-                  "500 AI-tailored outbound leads/mo",
-                  "Full Omnichannel Sandbox + native send",
-                  "1-Click Smartlead & Instantly Sync",
-                  "Autonomous Inbox Triage",
-                  "Zero-Click Calendar Concierge",
-                  "Velvet Rope Governance",
-                  "High-Intent Signal Scoring",
-                  "Priority API processing (Dedicated Routing)",
-                ].map((feature, index) => {
-                  const isIncluded = index < 5;
-                  return (
-                    <li key={feature} className="flex items-start gap-3">
-                      {isIncluded ? <CheckIcon className="text-white" /> : <CrossIcon className="text-gray-600 opacity-50" />}
-                      <span className={isIncluded ? "text-sm text-white" : "text-sm text-gray-600 opacity-50 line-through"}>{feature}</span>
-                    </li>
-                  );
-                })}
-              </ul>
+              <PricingCapabilityList tier="core" />
               <Link
-                href="https://whop.com/brandflowstudio/frameleads-24/"
+                href="https://whop.com/checkout/plan_sAEhr77rTrhX4"
                 target="_blank"
                 rel="noopener noreferrer"
                 data-tripwire-guard="true"
                 className="relative z-10 mt-auto block w-full rounded-lg border border-white/15 px-4 py-4 text-center font-mono text-sm font-bold uppercase tracking-widest text-white transition-all hover:bg-white hover:text-black"
               >
-                Deploy Core Engine
+                Deploy FrameLeads Core
               </Link>
               </div>
             </div>
@@ -812,31 +767,15 @@ export default function Home() {
               <div className="relative z-10 mb-6"><EnterpriseIcon /></div>
               <h4 className="relative z-10 mb-2 text-2xl font-bold text-white">FrameLeads Enterprise</h4>
               <p className="relative z-10 min-h-[3rem] text-sm leading-relaxed text-[#8A8A93]">
-                For teams where a single closed deal funds the subscription twenty times over.
+                For higher-volume operations that need dedicated routing, deeper governance, and explicit human control over exceptions.
               </p>
               <div className="relative z-10 mb-6 mt-6 flex items-baseline gap-1 border-b border-white/5 pb-6">
                 <span className="text-4xl font-bold text-[#FF5A1F]">$697</span>
                 <span className="font-mono text-sm text-[#8A8A93]">/mo</span>
               </div>
-              <ul className="relative z-10 mb-8 flex-grow space-y-4">
-                {[
-                  "20,000 AI-tailored outbound leads/mo",
-                  "Full Omnichannel Sandbox + native send",
-                  "1-Click Smartlead & Instantly Sync",
-                  "Autonomous Inbox Triage",
-                  "Zero-Click Calendar Concierge",
-                  "Velvet Rope Governance",
-                  "High-Intent Signal Scoring",
-                  "Priority API processing (Dedicated Routing)",
-                ].map((feature) => (
-                  <li key={feature} className="flex items-start gap-3">
-                    <CheckIcon className="text-white" />
-                    <span className="text-sm text-white">{feature}</span>
-                  </li>
-                ))}
-              </ul>
+              <PricingCapabilityList tier="enterprise" />
               <Link
-                href="https://whop.com/brandflowstudio/frameleads-enterprise-autonomous-architecture/"
+                href="https://whop.com/checkout/plan_jdy5Z44fMKMAz"
                 target="_blank"
                 rel="noopener noreferrer"
                 data-tripwire-guard="true"
@@ -848,8 +787,21 @@ export default function Home() {
             </div>
           </motion.div>
         </div>
-        <p className="mx-auto mt-8 max-w-3xl text-center text-sm leading-relaxed text-[#8A8A93]">Enterprise deployments include Velvet Rope Governance: strict human-approval routing for high-value deal protection.</p>
+        <p className="mx-auto mt-8 max-w-3xl text-center text-sm leading-relaxed text-[#8A8A93]">Core covers the active execution and reply workflow. Enterprise adds the scale, signal scoring, dedicated routing, and human-approval governance required by more complex operations.</p>
       </div>
+
+      <section className="mx-auto max-w-7xl border-t border-white/5 px-4 py-16 sm:px-6 md:py-24">
+        <div className="mx-auto max-w-3xl text-center"><p className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-[#FF5A1F]">FITS THE OPERATION YOU ALREADY HAVE</p><h2 className="mt-5 text-3xl font-bold tracking-tight text-white sm:text-4xl">FrameLeads doesn&apos;t need to replace everything around it.</h2><p className="mx-auto mt-5 max-w-2xl leading-relaxed text-[#888888]">Keep the parts of your outbound stack that already work. FrameLeads connects campaign execution with the context, routing, and governance around what happens next.</p></div>
+        <div className="mt-10 grid gap-5 md:grid-cols-3">{[
+          ["Already have an SDR?", "Human capacity and decision infrastructure solve different problems. FrameLeads reduces repetitive operational decisions while keeping consequential judgment with the team."],
+          ["Already use outbound software?", "Keep supported sending infrastructure in place. FrameLeads connects the campaign workflow with the decision logic surrounding execution, replies, and next actions."],
+          ["Already use AI?", "Generating text is only part of the workflow. FrameLeads adds structured context, routing, and governance around what the system should do next."],
+        ].map(([title, copy]) => <article key={title} className="rounded-2xl border border-white/[0.1] bg-white/[0.025] p-6"><h3 className="text-lg font-semibold text-white">{title}</h3><p className="mt-3 text-sm leading-relaxed text-[#888888]">{copy}</p></article>)}</div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 md:pb-24">
+        <div className="rounded-2xl border border-white/[0.1] bg-[#1A1A1A] p-6 sm:p-8"><h2 className="mx-auto max-w-3xl text-center text-2xl font-bold tracking-tight text-white sm:text-3xl">FrameLeads is built for outbound operations where the next decision matters.</h2><div className="mt-8 grid gap-8 md:grid-cols-2 md:divide-x md:divide-white/[0.08]"><div><p className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-[#FF5A1F]">A STRONG FIT IF...</p><ul className="mt-5 space-y-3 text-sm text-white/80">{["You already run B2B outbound", "Qualified prospect conversations create manual triage or routing work", "Deal value makes careless automation unacceptable", "You want automation without surrendering human control"].map((item) => <li key={item} className="flex gap-3"><CheckIcon />{item}</li>)}</ul></div><div className="md:pl-8"><p className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-[#888888]">IT MAY BE OVERKILL IF...</p><ul className="mt-5 space-y-3 text-sm text-white/65">{["Your outbound operation is not running yet", "You receive very few qualified conversations", "You only need a basic email-writing tool"].map((item) => <li key={item} className="flex gap-3"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#888888]" />{item}</li>)}</ul></div></div></div>
+      </section>
 
       {/* EXECUTIVE BRIEFING (FAQ SPLIT LAYOUT) */}
       <div id="faq" className="mx-auto mb-16 max-w-7xl scroll-mt-32 border-t border-white/5 px-4 pt-12 sm:px-6 md:mb-20 md:pt-24">
@@ -863,9 +815,9 @@ export default function Home() {
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="self-start space-y-6 md:sticky md:top-32 md:col-span-1"
           >
-            <div className="font-mono text-xs text-[#FF5A1F] uppercase tracking-widest">{"// EXECUTIVE BRIEFING"}</div>
-            <h3 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">Operational Clarity.</h3>
-            <p className="text-[#8A8A93] text-sm leading-relaxed">Everything you need to know about the Velvet Rope infrastructure and deployment process.</p>
+            <div className="font-mono text-xs text-[#FF5A1F] uppercase tracking-widest">BUYING QUESTIONS</div>
+            <h3 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">Clear before you deploy.</h3>
+            <p className="text-[#8A8A93] text-sm leading-relaxed">Practical answers about fit, control, and how FrameLeads works with the operation you already have.</p>
           </motion.div>
 
           {/* Right Column (Accordions) */}
@@ -890,6 +842,13 @@ export default function Home() {
           </motion.div>
         </div>
       </div>
+
+      <section id="commercial-close" className="mx-auto max-w-5xl border-t border-white/5 px-4 py-16 text-center sm:px-6 md:py-24">
+        <p className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-[#FF5A1F]">THE DIAGNOSIS IS CLEAR</p>
+        <h2 className="mx-auto mt-5 max-w-4xl text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">Remove the manual decision layer from your outbound workflow.</h2>
+        <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-[#888888] sm:text-lg">Put FrameLeads between the conversation and the next action.</p>
+        <Link href="https://whop.com/checkout/plan_jdy5Z44fMKMAz" target="_blank" rel="noopener noreferrer" data-tripwire-guard="true" className="mt-8 inline-flex min-h-12 items-center justify-center rounded-xl bg-[#FF5A1F] px-8 py-3.5 font-bold text-white transition-colors hover:bg-[#ff6b35] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F] focus-visible:ring-offset-2 focus-visible:ring-offset-[#111111]">Deploy FrameLeads</Link>
+      </section>
 
       {/* FOOTER */}
       <footer className="relative z-10 w-full border-t border-white/5 bg-[#0D0D0D] py-12 px-4 sm:px-6 mt-20">
