@@ -7,7 +7,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import ExitIntentPopup from "../components/ExitIntentPopup";
 import EmbeddedSandbox from "../components/EmbeddedSandbox";
 import DecisionIntelligenceWalkthrough from "../components/DecisionIntelligenceWalkthrough";
-import DecisionConvergence from "../components/DecisionConvergence";
+import ResponsiveDecisionConvergence from "../components/ResponsiveDecisionConvergence";
 import AuditModal from "../components/AuditModal";
 import CleanBottleneckVisual from "../components/CleanBottleneckVisual";
 import SectionIntro from "../components/SectionIntro";
@@ -403,7 +403,7 @@ function ProblemFlow() {
 }
 
 function SolutionBridge() {
-  return <DecisionConvergence />;
+  return <ResponsiveDecisionConvergence />;
 }
 
 const compactFaqs = [
