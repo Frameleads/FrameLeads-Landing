@@ -3,9 +3,16 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import ExitIntentPopup from "../components/ExitIntentPopup";
 import EmbeddedSandbox from "../components/EmbeddedSandbox";
+import DecisionIntelligenceWalkthrough from "../components/DecisionIntelligenceWalkthrough";
+import DecisionConvergence from "../components/DecisionConvergence";
+import AuditModal from "../components/AuditModal";
+import CleanBottleneckVisual from "../components/CleanBottleneckVisual";
+import SectionIntro from "../components/SectionIntro";
+import HeroIntro from "../components/HeroIntro";
+import OperatingPath from "../components/OperatingPath";
 import Navbar from "../components/Navbar";
 import PipelineAudit, { type AuditResult } from "../components/PipelineAudit";
 import VideoSection from "../components/VideoSection";
@@ -373,7 +380,89 @@ function ControlCapabilityVisual() {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- kept for the inactive LegacyHome export.
+function HeroDecisionVisual() {
+  const reduceMotion = useReducedMotion();
+  const rows = [
+    ["Incoming reply", "Can you clarify the pricing before we schedule?"],
+    ["Intent", "Pricing question"],
+    ["Context", "Enterprise evaluation"],
+    ["Rule matched", "Commercial terms require approval"],
+  ];
+  return <motion.div initial={{ opacity: 0, y: reduceMotion ? 0 : 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.65, ease: "easeOut", delay: 0.18 }} className="mt-10 w-full max-w-3xl overflow-hidden rounded-2xl border border-white/[0.12] bg-[#1A1A1A] text-left shadow-[0_26px_56px_-22px_rgba(0,0,0,0.9)]"><div className="flex items-center justify-between border-b border-white/[0.07] bg-[#242424] px-4 py-3 sm:px-5"><span className="font-mono text-[9px] uppercase tracking-[0.18em] text-[#888888]">FrameLeads / decision record</span><span className="flex items-center gap-2 font-mono text-[8px] uppercase tracking-wider text-[#FF5A1F]"><motion.span animate={reduceMotion ? {} : { opacity: [0.45, 1, 0.45] }} transition={{ duration: 1.4, repeat: 1, repeatDelay: 4 }} className="h-1.5 w-1.5 rounded-full bg-[#FF5A1F]" />Processing</span></div><div className="grid min-w-0 gap-4 p-4 sm:grid-cols-[1fr_auto] sm:p-6"><div className="min-w-0">{rows.map(([label, value], index) => <div key={label}><motion.div initial={{ opacity: 0, x: reduceMotion ? 0 : -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 + index * 0.11, duration: 0.35 }} className="grid gap-1 py-3 sm:grid-cols-[8rem_1fr] sm:items-center"><p className="font-mono text-[8px] uppercase tracking-[0.14em] text-[#888888]">{label}</p><p className={`text-sm ${index === 1 || index === 3 ? "text-[#FF5A1F]" : "text-white/85"}`}>{value}</p></motion.div>{index < rows.length - 1 && <div className="relative ml-4 h-3 overflow-hidden sm:ml-[4.1rem]"><div className="h-full w-px bg-white/10" />{!reduceMotion && <motion.div initial={{ y: -12 }} animate={{ y: 12 }} transition={{ delay: 0.55 + index * 0.11, duration: 0.32, ease: "easeOut" }} className="absolute left-0 top-0 h-2 w-px bg-[#FF5A1F] shadow-[0_0_8px_rgba(255,90,31,0.9)]" />}</div>}</div>)}</div><motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.9, duration: 0.35 }} className="rounded-xl border border-[#FF5A1F]/30 bg-[#FF5A1F]/[0.06] p-4 sm:w-44"><p className="font-mono text-[8px] uppercase tracking-wider text-[#888888]">Decision</p><p className="mt-2 text-lg font-bold text-white">Human review</p><p className="mt-4 border-t border-[#FF5A1F]/20 pt-3 font-mono text-[9px] uppercase tracking-wider text-[#FF5A1F]">Automation: paused</p></motion.div></div></motion.div>;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- retained for the inactive LegacyHome export below.
+function ProblemPath({ items, accent = false }: { items: string[]; accent?: boolean }) {
+  const reduceMotion = useReducedMotion();
+  return <div className="rounded-2xl border border-white/[0.09] bg-[#1A1A1A] p-5 text-left shadow-[0_18px_40px_-24px_rgba(0,0,0,0.9)] sm:p-6"><div className="flex items-center justify-between"><p className={`font-mono text-[9px] uppercase tracking-[0.18em] ${accent ? "text-[#FF5A1F]" : "text-[#888888]"}`}>{accent ? "With FrameLeads" : "Without FrameLeads"}</p><span className={`h-2 w-2 rounded-full ${accent ? "bg-[#FF5A1F] shadow-[0_0_10px_rgba(255,90,31,0.85)]" : "bg-[#888888]"}`} /></div><div className="mt-5 flex flex-col gap-2">{items.map((item, index) => <div key={item}><motion.div animate={accent && !reduceMotion ? { borderColor: index === 1 ? "rgba(255,90,31,.48)" : "rgba(255,255,255,.1)" } : {}} transition={{ delay: index * .16, duration: .35 }} className={`rounded-lg border px-4 py-3 text-sm ${accent && index === 1 ? "border-[#FF5A1F]/35 bg-[#FF5A1F]/[0.06] font-semibold text-white" : "border-white/[0.08] bg-black/10 text-white/75"}`}>{item}</motion.div>{index < items.length - 1 && <div className="relative mx-auto h-5 w-px overflow-hidden"><div className={`h-full w-px ${accent ? "bg-[#FF5A1F]/55" : "bg-white/15"}`} />{!reduceMotion && <motion.div animate={{ y: [0, 20] }} transition={{ delay: index * .22, duration: accent ? .65 : 1.35, repeat: Infinity, repeatDelay: accent ? 2.5 : 3 }} className={`absolute left-0 top-0 h-2 w-px ${accent ? "bg-[#FF5A1F]" : "bg-white/45"}`} />}</div>}</div>)}</div>{accent && <div className="mt-4 grid grid-cols-3 gap-2 text-center font-mono text-[8px] uppercase tracking-wider"><span className="rounded-md border border-green-400/20 bg-green-400/[0.04] px-2 py-2 text-green-300">Automate</span><span className="rounded-md border border-[#FF5A1F]/25 bg-[#FF5A1F]/[0.04] px-2 py-2 text-[#FF5A1F]">Approve</span><span className="rounded-md border border-white/[0.1] px-2 py-2 text-white/75">Escalate</span></div>}</div>;
+}
+
+function ProblemFlow() {
+  return <CleanBottleneckVisual />;
+}
+
+function SolutionBridge() {
+  return <DecisionConvergence />;
+}
+
+const compactFaqs = [
+  ["Does FrameLeads replace my SDR?", "No. FrameLeads reduces repetitive decision work and keeps consequential judgment with your SDR, founder, or sales team."],
+  ["Do I need Smartlead or Instantly to use FrameLeads?", "No. FrameLeads can run outbound natively. If you already use supported sending infrastructure, you can keep it and connect FrameLeads around the reply workflow."],
+  ["Can FrameLeads operate without human approval?", "Routine actions can continue under your configured workflow. Ambiguous or consequential situations can pause for human review."],
+  ["What happens with high-consequence conversations?", "FrameLeads preserves the relevant context, pauses automation when required, and routes the decision to the appropriate human."],
+  ["How is this different from connecting an LLM to my inbox?", "An LLM can generate text. FrameLeads adds the operating layer around it: persistent context, decision rules, next-action routing, execution, and governance."],
+] as const;
+
+const pricingRows = {
+  core: [["Prospect volume", "500 / month"], ["Reply intelligence", "Included"], ["Outbound execution", "Included"], ["Routing", "Reply routing + meeting dispatch"], ["Governance", "Approval controls"]],
+  enterprise: [["Prospect volume", "20,000 / month"], ["Reply intelligence", "Triage + high-intent and why-now signals"], ["Outbound execution", "Included"], ["Routing", "Higher-volume routing architecture"], ["Governance", "Governance dashboard + approval analytics"]],
+} as const;
+
+function PricingCard({ tier }: { tier: "core" | "enterprise" }) {
+  const enterprise = tier === "enterprise";
+  const rows = pricingRows[tier];
+  const extras = enterprise ? ["Omnichannel Sandbox", "AI reply regeneration", "Approve-and-send dispatch", "Signal scoring", "Institutional-memory metrics"] : ["Omnichannel Sandbox", "AI reply regeneration", "Approve-and-send dispatch", "Meeting booking and dispatch"];
+  const href = enterprise ? "https://whop.com/checkout/plan_jdy5Z44fMKMAz" : "https://whop.com/checkout/plan_sAEhr77rTrhX4";
+  return <article className={`relative overflow-hidden rounded-2xl border bg-[#1A1A1A] p-6 shadow-[0_24px_48px_-18px_rgba(0,0,0,0.8)] sm:p-8 ${enterprise ? "border-[#FF5A1F]/40" : "border-white/[0.1]"}`}><div className="relative z-10"><p className="font-mono text-[9px] uppercase tracking-[0.18em] text-[#FF5A1F]">{enterprise ? "Higher-volume architecture" : "Core operation"}</p><h3 className="mt-4 text-2xl font-bold text-white">FrameLeads {enterprise ? "Enterprise" : "Core"}</h3><p className="mt-2 text-sm leading-relaxed text-[#888888]">{enterprise ? "For higher-volume or more complex outbound operations." : "For founder-led and smaller outbound teams."}</p><p className={`mt-6 text-4xl font-bold ${enterprise ? "text-[#FF5A1F]" : "text-white"}`}>${enterprise ? "697" : "147"}<span className="ml-1 font-mono text-sm font-normal text-[#888888]">/ month</span></p><dl className="mt-7 border-t border-white/[0.07]">{rows.map(([label, value]) => <div key={label} className="grid gap-1 border-b border-white/[0.06] py-3 sm:grid-cols-[8rem_1fr]"><dt className="font-mono text-[8px] uppercase tracking-wider text-[#888888]">{label}</dt><dd className="text-sm text-white/85">{value}</dd></div>)}</dl><details className="group mt-5"><summary className="cursor-pointer font-mono text-[9px] uppercase tracking-[0.14em] text-[#FF5A1F] focus-visible:outline-none">See everything included</summary><ul className="mt-4 space-y-2 border-l border-white/[0.1] pl-4 text-sm text-white/65">{extras.map((extra) => <li key={extra}>{extra}</li>)}</ul></details><Link href={href} target="_blank" rel="noopener noreferrer" data-tripwire-guard="true" className={`mt-8 block w-full rounded-xl px-5 py-4 text-center text-sm font-bold transition-colors ${enterprise ? "bg-[#FF5A1F] text-white hover:bg-[#ff6b35]" : "border border-white/20 text-white hover:bg-white hover:text-black"}`}>Deploy FrameLeads {enterprise ? "Enterprise" : "Core"}</Link></div></article>;
+}
+
 export default function Home() {
+  const [isAuditExpanded, setIsAuditExpanded] = useState(false);
+  const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
+  const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
+  const auditRef = useRef<HTMLElement>(null);
+  const launchAudit = () => { setIsAuditExpanded(false); setIsAuditModalOpen(true); };
+
+  return <div id="top" className="relative min-h-screen max-w-[100vw] overflow-x-hidden bg-[#111111] bg-grid-overlay font-sans text-white selection:bg-[#FF5A1F] selection:text-white"><Navbar onAuditClick={launchAudit} />
+    <main className="relative z-10 mx-auto max-w-7xl px-4 pb-16 pt-16 sm:px-6 sm:pt-20 lg:pt-32">
+      <section className="mx-auto max-w-5xl text-center"><HeroIntro onAudit={launchAudit} /><motion.div initial={{ opacity: 0, y: 20, scale: .985 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: .72, ease: "easeOut", delay: .46 }} className="mt-10"><VideoSection /></motion.div></section>
+
+      <section id="problem" className="mx-auto mt-16 max-w-6xl scroll-mt-32 border-t border-white/[0.06] py-16 text-center md:mt-24 md:py-24"><SectionIntro eyebrow="The gap" heading="Sending is automated. The decision after the reply is not." description="Most outbound stacks stop at the inbox, where someone still has to interpret the reply, apply context, and decide what happens next." /><ProblemFlow /></section>
+
+      <section ref={auditRef} id="audit" className="scroll-mt-32"><AnimatePresence initial={false}>{isAuditExpanded && <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.45, ease: "easeOut" }} className="overflow-hidden"><div className="mx-auto mb-16 max-w-4xl overflow-hidden rounded-2xl border border-white/[0.12] bg-[#1A1A1A] p-6 shadow-2xl sm:p-10"><PipelineAudit onAuditComplete={setAuditResult} onClose={() => setIsAuditExpanded(false)} />{auditResult && <p className="mt-6 text-center font-mono text-[9px] uppercase tracking-[0.14em] text-[#888888]">Diagnosis saved for this session</p>}</div></motion.div>}</AnimatePresence></section>
+
+      <section id="solution" className="mx-auto max-w-6xl scroll-mt-32 border-t border-white/[0.06] py-16 text-center md:py-24"><SectionIntro eyebrow="The decision layer" heading="FrameLeads sits between the reply and the next action." description="It combines reply intent, prospect and account context, and your operating rules to determine what should happen next and whether automation is allowed to continue." /><SolutionBridge /></section>
+
+      <section id="capabilities" className="mx-auto max-w-6xl scroll-mt-32 border-t border-white/[0.06] py-16 text-center md:py-24"><SectionIntro eyebrow="How FrameLeads works" heading="Understand. Remember. Decide. Control." className="max-w-2xl" /><DecisionIntelligenceWalkthrough /></section>
+
+      <EmbeddedSandbox />
+
+      <section id="how-it-works" className="mx-auto max-w-6xl scroll-mt-32 border-t border-white/[0.06] py-16 text-center md:py-24"><SectionIntro eyebrow="One operating path" heading="From lead to next action without the handoff gap." description="FrameLeads keeps campaign execution, reply intelligence, routing, and governance connected." /><OperatingPath /></section>
+
+      <section id="pricing" className="mx-auto max-w-6xl scroll-mt-32 border-t border-white/[0.06] py-16 md:py-24"><SectionIntro eyebrow="Pricing" heading="Choose the level of control your operation needs." className="max-w-3xl" /><div className="mt-10 grid gap-6 lg:grid-cols-2"><PricingCard tier="core" /><PricingCard tier="enterprise" /></div></section>
+
+      <section id="fit" className="mx-auto max-w-6xl scroll-mt-32 border-t border-white/[0.06] py-16 md:py-24"><div className="rounded-2xl border border-white/[0.1] bg-[#1A1A1A] p-6 sm:p-8"><h2 className="mx-auto max-w-xl text-balance text-center text-3xl font-bold tracking-tight text-white sm:text-4xl">Built for teams where the next decision matters.</h2><div className="mt-8 grid gap-8 md:grid-cols-2 md:divide-x md:divide-white/[0.08]"><div><p className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-[#FF5A1F]">Strong fit if...</p><ul className="mt-5 space-y-3 text-sm text-white/80">{["You already run B2B outbound.", "Qualified replies create manual triage or routing work.", "Deal value makes careless automation unacceptable.", "You want automation without giving up human control."].map((item) => <li key={item} className="flex gap-3"><CheckIcon />{item}</li>)}</ul></div><div className="md:pl-8"><p className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-[#888888]">May be overkill if...</p><ul className="mt-5 space-y-3 text-sm text-white/65">{["Your outbound operation is not running yet.", "You receive very few qualified prospect conversations.", "You only need help writing emails."].map((item) => <li key={item} className="flex gap-3"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#888888]" />{item}</li>)}</ul></div></div></div></section>
+
+      <section id="faq" className="mx-auto max-w-6xl scroll-mt-32 border-t border-white/[0.06] py-16 md:py-24"><SectionIntro eyebrow="Buying questions" heading="Clear before you deploy." className="max-w-3xl" /><div className="mt-10 space-y-3">{compactFaqs.map(([question, answer]) => <details key={question} className="group overflow-hidden rounded-xl border border-white/[0.1] bg-[#1A1A1A] [&_summary::-webkit-details-marker]:hidden"><summary className="flex cursor-pointer items-center justify-between gap-5 p-5 font-semibold text-white sm:p-6"><span>{question}</span><span className="shrink-0 text-[#FF5A1F] transition-transform group-open:rotate-180">↓</span></summary><p className="px-5 pb-5 text-sm leading-relaxed text-[#888888] sm:px-6 sm:pb-6">{answer}</p></details>)}</div></section>
+
+      <section className="mx-auto max-w-4xl border-t border-white/[0.06] py-16 text-center md:py-24"><SectionIntro eyebrow="Next step" heading="See where your reply workflow becomes manual." description="Run the 3-question Reply Workflow Audit and identify where FrameLeads would sit in your operation." /><motion.button initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: .3 }} transition={{ duration: .5, delay: .34, ease: "easeOut" }} type="button" data-tripwire-guard="true" onClick={launchAudit} className="mt-8 rounded-xl bg-[#FF5A1F] px-7 py-4 text-base font-bold text-white transition-colors hover:bg-[#ff6b35]">Diagnose My Reply Workflow</motion.button></section>
+    </main>
+    <footer className="relative z-10 border-t border-white/[0.06] bg-[#0D0D0D] px-4 py-10 sm:px-6"><div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-5 md:flex-row"><p className="font-mono text-[10px] uppercase tracking-widest text-[#888888]">© 2026 FrameLeads. A BrandFlow Studio Company.</p><a href="mailto:akram@frameleads.io" aria-label="Email FrameLeads support at akram@frameleads.io" className="font-mono text-[10px] uppercase tracking-widest text-[#888888] transition-colors hover:text-white">Support &amp; inquiries · akram@frameleads.io</a><div className="flex gap-6 font-mono text-[10px] uppercase tracking-widest text-[#888888]"><Link href="/terms" className="hover:text-white">Terms</Link><Link href="/privacy" className="hover:text-white">Privacy</Link></div></div></footer><AuditModal open={isAuditModalOpen} onClose={() => setIsAuditModalOpen(false)} onComplete={setAuditResult} /><ExitIntentPopup />
+  </div>;
+}
+
+export function LegacyHome() {
   const [isAuditExpanded, setIsAuditExpanded] = useState(false);
   const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
   const [activeStep, setActiveStep] = useState(0);

@@ -9,8 +9,8 @@ type NavbarProps = {
 };
 
 const sectionLinks = [
-  { label: "Solutions", href: "#solutions" },
-  { label: "How it Works", href: "#how-it-works" },
+  { label: "How It Works", href: "#capabilities" },
+  { label: "Product", href: "#simulation" },
   { label: "Pricing", href: "#pricing" },
   { label: "FAQ", href: "#faq" },
 ] as const;

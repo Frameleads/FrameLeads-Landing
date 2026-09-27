@@ -125,8 +125,8 @@ function AuditDiagnosis({ result, onRecalculate }: { result: AuditResult; onReca
         <Metric label="Monthly deal value in these conversations" value={formatCurrency(result.monthlyPipelineTouched)} accent="white" />
       </div>
       <p className="mt-5 rounded-lg border border-white/[0.06] bg-black/10 px-4 py-3 text-sm leading-relaxed text-white/55">Based on <span className="text-white/80">{result.monthlyConversations.toLocaleString()} unique qualified conversations × {formatCurrency(result.averageDealValue)} average deal value</span>. This represents deal value involved in the workflow — not projected or lost revenue.</p>
-      <a href="#leak-ledger" data-tripwire-guard="true" onClick={(event) => { event.preventDefault(); document.getElementById("leak-ledger")?.scrollIntoView({ behavior: "smooth", block: "start" }); window.history.replaceState(null, "", "#leak-ledger"); }} className="mt-8 block w-full rounded-xl bg-[#FF5A1F] px-6 py-4 text-center text-base font-bold text-white shadow-[0_0_34px_rgba(255,90,31,0.3)] transition-all duration-200 hover:bg-[#ff6b35] hover:shadow-[0_0_42px_rgba(255,90,31,0.4)] active:scale-[0.99]">
-        {isLowPressure ? "See How the Architecture Works ↓" : "See the Decision Layer ↓"}
+      <a href="#capabilities" data-tripwire-guard="true" onClick={(event) => { event.preventDefault(); document.getElementById("capabilities")?.scrollIntoView({ behavior: "smooth", block: "start" }); window.history.replaceState(null, "", "#capabilities"); }} className="mt-8 block w-full rounded-xl bg-[#FF5A1F] px-6 py-4 text-center text-base font-bold text-white shadow-[0_0_34px_rgba(255,90,31,0.3)] transition-all duration-200 hover:bg-[#ff6b35] hover:shadow-[0_0_42px_rgba(255,90,31,0.4)] active:scale-[0.99]">
+        {isLowPressure ? "See How the System Works ↓" : "Explore the Decision Layer ↓"}
       </a>
       <button type="button" onClick={onRecalculate} className="mx-auto mt-5 block text-sm text-white/50 underline decoration-white/20 underline-offset-4 transition-colors hover:text-white">Recalculate</button>
     </motion.div>
