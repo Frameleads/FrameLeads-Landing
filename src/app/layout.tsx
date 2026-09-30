@@ -19,19 +19,31 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FrameLeads | Autonomous Acquisition Architecture",
-  description: "Stop bleeding capital on manual outreach. Deploy an AI-driven routing infrastructure that scales volume without risking high-ticket brand safety.",
+  metadataBase: new URL("https://frameleads.io"),
+  applicationName: "FrameLeads",
+  title: "FrameLeads | Revenue Decision Intelligence for Outbound",
+  description: "FrameLeads understands prospect replies, applies your sales rules, and decides what should happen next — automate, approve, escalate, or route.",
+  alternates: { canonical: "https://frameleads.io/" },
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon-48x48.png", sizes: "48x48", type: "image/png" },
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
   openGraph: {
-    title: "FrameLeads | Autonomous Acquisition Architecture",
-    description: "The Velvet Rope Protocol for high-value deal flow.",
-    url: "https://frameleads.vercel.app",
+    title: "FrameLeads | Revenue Decision Intelligence for Outbound",
+    description: "FrameLeads understands prospect replies, applies your sales rules, and decides what should happen next — automate, approve, escalate, or route.",
+    url: "https://frameleads.io/",
     siteName: "FrameLeads",
     images: [
       {
-        url: "/hero-mockup-v2.jpg", // This will pull your high-res dashboard as the link preview
-        width: 1200,
-        height: 630,
-        alt: "FrameLeads Architecture",
+        url: "/hero-mockup-v2.png",
+        width: 1920,
+        height: 1080,
+        alt: "FrameLeads revenue decision intelligence platform",
       },
     ],
     locale: "en_US",
@@ -39,10 +51,10 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "FrameLeads | Autonomous Acquisition Architecture",
-    description: "The Velvet Rope Protocol for high-value deal flow.",
+    title: "FrameLeads | Revenue Decision Intelligence for Outbound",
+    description: "FrameLeads understands prospect replies, applies your sales rules, and decides what should happen next — automate, approve, escalate, or route.",
     creator: "@BrandFlowStudio",
-    images: ["/hero-mockup-v2.jpg"],
+    images: ["/hero-mockup-v2.png"],
   },
 };
 
@@ -54,6 +66,25 @@ export default function RootLayout({
   return (
     <html lang="en" className={`scroll-smooth ${spaceGrotesk.variable} ${oxanium.variable} ${jetbrainsMono.variable}`}>
       <body className="min-h-screen max-w-[100vw] overflow-x-hidden bg-[#1A1A1A] bg-grid-overlay font-sans text-white antialiased" suppressHydrationWarning>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify([
+          {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "@id": "https://frameleads.io/#organization",
+            name: "FrameLeads",
+            url: "https://frameleads.io/",
+            description: "FrameLeads is a B2B revenue decision intelligence platform for outbound sales teams. It understands prospect replies, applies company sales rules, and determines the next revenue action.",
+            logo: { "@type": "ImageObject", url: "https://frameleads.io/logo.png", width: 2000, height: 2000 },
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "@id": "https://frameleads.io/#website",
+            url: "https://frameleads.io/",
+            name: "FrameLeads",
+            publisher: { "@id": "https://frameleads.io/#organization" },
+          },
+        ]) }} />
         {children}
         <Script
           id="whop-pixel"

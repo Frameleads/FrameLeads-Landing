@@ -415,14 +415,14 @@ const compactFaqs = [
 ] as const;
 
 const pricingRows = {
-  core: [["Prospect volume", "500 / month"], ["Reply intelligence", "Included"], ["Outbound execution", "Included"], ["Routing", "Reply routing + meeting dispatch"], ["Governance", "Approval controls"]],
-  enterprise: [["Prospect volume", "20,000 / month"], ["Reply intelligence", "Triage + high-intent and why-now signals"], ["Outbound execution", "Included"], ["Routing", "Higher-volume routing architecture"], ["Governance", "Governance dashboard + approval analytics"]],
+  core: [["Prospect volume", "500 / month"], ["Reply intelligence", "Decision Engine + Inbox Triage"], ["Outbound execution", "Native Sandbox + Deploy"], ["Intelligence", "Scout + Memory + Brain + Playbook"], ["Control", "Human-reviewed workflow"]],
+  enterprise: [["Prospect volume", "20,000 / month"], ["Reply intelligence", "Full Decision Intelligence"], ["Outbound execution", "Native + governed automation"], ["Governance", "Constitution + governance controls"], ["Operations", "Risk + SLA + outcome learning"]],
 } as const;
 
 function PricingCard({ tier }: { tier: "core" | "enterprise" }) {
   const enterprise = tier === "enterprise";
   const rows = pricingRows[tier];
-  const extras = enterprise ? ["Omnichannel Sandbox", "AI reply regeneration", "Approve-and-send dispatch", "Signal scoring", "Institutional-memory metrics"] : ["Omnichannel Sandbox", "AI reply regeneration", "Approve-and-send dispatch", "Meeting booking and dispatch"];
+  const extras = enterprise ? ["Everything in FrameLeads Core", "Custom Market Profiles", "Governance Overview", "Sales Constitution", "Governed Automation / Autopilot", "Revenue-at-Risk", "Response SLA", "Decision Sandbox", "Outcome Learning"] : ["Onboarding + campaign setup", "Lead ingestion", "Native Sandbox + AI generation", "Deploy / native outbound", "Built-in Market-Aware Messaging", "Scout", "ICP Profile + qualification", "Deep prospect research", "Prospect Memory", "FrameLeads Brain", "Revenue Playbook", "Inbox Triage", "Decision Engine / reply intelligence", "Decision Replay"];
   const href = enterprise ? "https://whop.com/checkout/plan_jdy5Z44fMKMAz" : "https://whop.com/checkout/plan_sAEhr77rTrhX4";
   return <article className={`relative overflow-hidden rounded-2xl border bg-[#1A1A1A] p-6 shadow-[0_24px_48px_-18px_rgba(0,0,0,0.8)] sm:p-8 ${enterprise ? "border-[#FF5A1F]/40" : "border-white/[0.1]"}`}><div className="relative z-10"><p className="font-mono text-[9px] uppercase tracking-[0.18em] text-[#FF5A1F]">{enterprise ? "Higher-volume architecture" : "Core operation"}</p><h3 className="mt-4 text-2xl font-bold text-white">FrameLeads {enterprise ? "Enterprise" : "Core"}</h3><p className="mt-2 text-sm leading-relaxed text-[#888888]">{enterprise ? "For higher-volume or more complex outbound operations." : "For founder-led and smaller outbound teams."}</p><p className={`mt-6 text-4xl font-bold ${enterprise ? "text-[#FF5A1F]" : "text-white"}`}>${enterprise ? "697" : "147"}<span className="ml-1 font-mono text-sm font-normal text-[#888888]">/ month</span></p><dl className="mt-7 border-t border-white/[0.07]">{rows.map(([label, value]) => <div key={label} className="grid gap-1 border-b border-white/[0.06] py-3 sm:grid-cols-[8rem_1fr]"><dt className="font-mono text-[8px] uppercase tracking-wider text-[#888888]">{label}</dt><dd className="text-sm text-white/85">{value}</dd></div>)}</dl><details className="group mt-5"><summary className="cursor-pointer font-mono text-[9px] uppercase tracking-[0.14em] text-[#FF5A1F] focus-visible:outline-none">See everything included</summary><ul className="mt-4 space-y-2 border-l border-white/[0.1] pl-4 text-sm text-white/65">{extras.map((extra) => <li key={extra}>{extra}</li>)}</ul></details><Link href={href} target="_blank" rel="noopener noreferrer" data-tripwire-guard="true" className={`mt-8 block w-full rounded-xl px-5 py-4 text-center text-sm font-bold transition-colors ${enterprise ? "bg-[#FF5A1F] text-white hover:bg-[#ff6b35]" : "border border-white/20 text-white hover:bg-white hover:text-black"}`}>Deploy FrameLeads {enterprise ? "Enterprise" : "Core"}</Link></div></article>;
 }
@@ -950,6 +950,8 @@ export function LegacyHome() {
               © 2026 FrameLeads. A BrandFlow Studio Company.
             </span>
           </div>
+
+          <p className="sr-only">FrameLeads is a B2B revenue decision intelligence platform for outbound sales teams.</p>
 
           {/* Legal */}
           <div className="flex items-center gap-6 font-mono text-[10px] text-[#5A5A63] tracking-widest uppercase">
