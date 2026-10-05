@@ -456,7 +456,7 @@ export default function Home() {
 
       <section id="faq" className="mx-auto max-w-6xl scroll-mt-32 border-t border-white/[0.06] py-16 md:py-24"><SectionIntro eyebrow="Buying questions" heading="Clear before you deploy." className="max-w-3xl" /><div className="mt-10 space-y-3">{compactFaqs.map(([question, answer]) => <details key={question} className="group overflow-hidden rounded-xl border border-white/[0.1] bg-[#1A1A1A] [&_summary::-webkit-details-marker]:hidden"><summary className="flex cursor-pointer items-center justify-between gap-5 p-5 font-semibold text-white sm:p-6"><span>{question}</span><span className="shrink-0 text-[#FF5A1F] transition-transform group-open:rotate-180">↓</span></summary><p className="px-5 pb-5 text-sm leading-relaxed text-[#888888] sm:px-6 sm:pb-6">{answer}</p></details>)}</div></section>
 
-      <section className="mx-auto max-w-4xl border-t border-white/[0.06] py-16 text-center md:py-24"><SectionIntro eyebrow="Next step" heading="See where your reply workflow becomes manual." description="Run the 3-question Reply Workflow Audit and identify where FrameLeads would sit in your operation." /><motion.button initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: .3 }} transition={{ duration: .5, delay: .34, ease: "easeOut" }} type="button" data-tripwire-guard="true" onClick={launchAudit} className="mt-8 rounded-xl bg-[#FF5A1F] px-7 py-4 text-base font-bold text-white transition-colors hover:bg-[#ff6b35]">Diagnose My Reply Workflow</motion.button></section>
+      <section className="mx-auto max-w-4xl border-t border-white/[0.06] py-16 text-center md:py-24"><SectionIntro eyebrow="Next step" heading="See where your reply workflow becomes manual." description="Run the 5-question Reply Workflow Audit and identify where FrameLeads would sit in your operation." /><motion.button initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: .3 }} transition={{ duration: .5, delay: .34, ease: "easeOut" }} type="button" data-tripwire-guard="true" onClick={launchAudit} className="mt-8 rounded-xl bg-[#FF5A1F] px-7 py-4 text-base font-bold text-white transition-colors hover:bg-[#ff6b35]">Diagnose My Reply Workflow</motion.button></section>
     </main>
     <footer className="relative z-10 border-t border-white/[0.06] bg-[#0D0D0D] px-4 py-10 sm:px-6"><div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-5 md:flex-row"><p className="font-mono text-[10px] uppercase tracking-widest text-[#888888]">© 2026 FrameLeads. A BrandFlow Studio Company.</p><a href="mailto:akram@frameleads.io" aria-label="Email FrameLeads support at akram@frameleads.io" className="font-mono text-[10px] uppercase tracking-widest text-[#888888] transition-colors hover:text-white">Support &amp; inquiries · akram@frameleads.io</a><div className="flex gap-6 font-mono text-[10px] uppercase tracking-widest text-[#888888]"><Link href="/terms" className="hover:text-white">Terms</Link><Link href="/privacy" className="hover:text-white">Privacy</Link></div></div></footer><AuditModal open={isAuditModalOpen} onClose={() => setIsAuditModalOpen(false)} onComplete={setAuditResult} /><ExitIntentPopup />
   </div>;
@@ -638,9 +638,9 @@ export function LegacyHome() {
 
           <div className="relative z-10">
             {(auditResult ? [
-              ["Qualified conversations requiring a decision / month", auditResult.monthlyConversations.toLocaleString()],
-              ["Manual triage time / year", `${auditResult.annualTriageHours.toLocaleString()} hours`],
-              ["Pipeline value passing through the workflow / month", formatCurrency(auditResult.monthlyPipelineTouched)],
+              ["Qualified conversations / month", auditResult.answers.monthlyQualifiedConversations],
+              ["Weekly manual burden", auditResult.answers.weeklyManualBurden],
+              ["Typical deal value", auditResult.answers.dealValue],
             ] : [
               ["READ", "Understand what the prospect actually means."],
               ["DECIDE", "Choose priority, response, and next action."],
