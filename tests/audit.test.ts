@@ -8,6 +8,7 @@ const base: AuditAnswers = { monthlyQualifiedConversations: "16–30", dealValue
 const diagnose = (overrides: Partial<AuditAnswers>) => diagnoseReplyWorkflow({ ...base, ...overrides });
 const ingestUrl = "https://brandbrain-pi.vercel.app/api/marketing/audit-lead/ingest";
 const testSecret = "test-only-audit-secret-32-characters-long";
+const testOidcToken = `header.${Buffer.from(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 })).toString("base64url")}.signature`;
 const validLead = { workEmail: "alex@example.com", companyWebsite: "example.com", diagnosis: "HIGH_CONSEQUENCE_DECISION_WORKFLOW", signals: ["HIGH_VALUE"], answers: base, attribution: { utmSource: "linkedin" } };
 const requestLead = (body: unknown = validLead) => new Request("http://localhost/api/audit-lead", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 
@@ -64,23 +65,27 @@ test("API proxy forwards the validated payload with server-side bearer authentic
   const originalFetch = globalThis.fetch;
   process.env.BRAND_BRAIN_AUDIT_INGEST_URL = ingestUrl;
   process.env.BRAND_BRAIN_AUDIT_INGEST_SECRET = testSecret;
+  process.env.VERCEL_OIDC_TOKEN = testOidcToken;
   let captured: { input?: string; init?: RequestInit } = {};
   globalThis.fetch = async (input, init) => { captured = { input: String(input), init }; return Response.json({ ok: true, prospectId: "test-prospect" }); };
   const response = await POST(requestLead({ ...validLead, companyDomain: "client-must-not-forward-this" }));
   assert.equal(response.status, 201);
   assert.equal(captured.input, ingestUrl);
   assert.equal((captured.init?.headers as Record<string, string>).Authorization, `Bearer ${testSecret}`);
+  assert.equal((captured.init?.headers as Record<string, string>)["x-vercel-trusted-oidc-idp-token"], testOidcToken);
   assert.equal(captured.init?.redirect, "error");
   assert.equal((captured.init?.signal as AbortSignal).aborted, false);
   assert.deepEqual(JSON.parse(String(captured.init?.body)), validLead);
   globalThis.fetch = originalFetch;
   delete process.env.BRAND_BRAIN_AUDIT_INGEST_URL;
   delete process.env.BRAND_BRAIN_AUDIT_INGEST_SECRET;
+  delete process.env.VERCEL_OIDC_TOKEN;
 });
 test("API proxy reports upstream rejection, false success, and unavailability without accepting the lead", async () => {
   const originalFetch = globalThis.fetch;
   process.env.BRAND_BRAIN_AUDIT_INGEST_URL = ingestUrl;
   process.env.BRAND_BRAIN_AUDIT_INGEST_SECRET = testSecret;
+  process.env.VERCEL_OIDC_TOKEN = testOidcToken;
   try {
     for (const upstream of [new Response(null, { status: 401 }), Response.json({ ok: false }), new Response("not-json")]) {
       globalThis.fetch = async () => upstream;
@@ -93,6 +98,7 @@ test("API proxy reports upstream rejection, false success, and unavailability wi
     globalThis.fetch = originalFetch;
     delete process.env.BRAND_BRAIN_AUDIT_INGEST_URL;
     delete process.env.BRAND_BRAIN_AUDIT_INGEST_SECRET;
+    delete process.env.VERCEL_OIDC_TOKEN;
   }
 });
 test("existing homepage opens the five-question Audit submission flow", () => {

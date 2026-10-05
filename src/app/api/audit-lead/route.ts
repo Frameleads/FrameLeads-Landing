@@ -1,5 +1,6 @@
 import { hasAuditProxyConfiguration, validateAuditLeadPayload } from "../../../audit.ts";
 import { randomUUID } from "node:crypto";
+import { getVercelOidcToken } from "@vercel/oidc";
 
 export async function POST(request: Request) {
   const requestId = randomUUID();
@@ -10,8 +11,15 @@ export async function POST(request: Request) {
   const url = process.env.BRAND_BRAIN_AUDIT_INGEST_URL;
   const secret = process.env.BRAND_BRAIN_AUDIT_INGEST_SECRET;
   if (!hasAuditProxyConfiguration(url, secret)) return Response.json({ error: "Workflow map delivery is temporarily unavailable." }, { status: 503 });
+  let oidcToken: string;
   try {
-    const upstream = await fetch(url!, { method: "POST", cache: "no-store", redirect: "error", headers: { "Content-Type": "application/json", Authorization: `Bearer ${secret}` }, body: JSON.stringify(payload), signal: AbortSignal.timeout(10000) });
+    oidcToken = await getVercelOidcToken();
+  } catch {
+    console.error(JSON.stringify({ event: "audit_bridge_oidc_unavailable", requestId }));
+    return Response.json({ error: "Workflow map delivery is temporarily unavailable." }, { status: 503 });
+  }
+  try {
+    const upstream = await fetch(url!, { method: "POST", cache: "no-store", redirect: "error", headers: { "Content-Type": "application/json", Authorization: `Bearer ${secret}`, "x-vercel-trusted-oidc-idp-token": oidcToken }, body: JSON.stringify(payload), signal: AbortSignal.timeout(10000) });
     if (!upstream.ok) {
       console.error(JSON.stringify({ event: "audit_bridge_upstream_rejected", requestId, upstreamStatus: upstream.status, upstreamRequestId: upstream.headers.get("x-request-id") }));
       return Response.json({ error: "Unable to deliver workflow map." }, { status: 502 });
