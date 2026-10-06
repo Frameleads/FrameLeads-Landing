@@ -14,8 +14,6 @@ export async function POST(request: Request) {
   let oidcToken: string;
   try {
     oidcToken = await getVercelOidcToken();
-    const claims = JSON.parse(Buffer.from(oidcToken.split(".")[1], "base64url").toString("utf8"));
-    console.info(JSON.stringify({ event: "audit_bridge_oidc_claims", requestId, iss: claims.iss, aud: claims.aud, owner: claims.owner, owner_id: claims.owner_id, project: claims.project, project_id: claims.project_id, environment: claims.environment }));
   } catch {
     console.error(JSON.stringify({ event: "audit_bridge_oidc_unavailable", requestId }));
     return Response.json({ error: "Workflow map delivery is temporarily unavailable." }, { status: 503 });
