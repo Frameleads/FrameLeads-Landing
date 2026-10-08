@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import FirstPartyMeasurement from '../components/FirstPartyMeasurement';
 import { Space_Grotesk, Oxanium, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -85,6 +86,7 @@ export default function RootLayout({
             publisher: { "@id": "https://frameleads.io/#organization" },
           },
         ]) }} />
+        <FirstPartyMeasurement />
         {children}
         <Script
           id="whop-pixel"

@@ -1,3 +1,4 @@
+import {attributionFields,normalizeAttribution,type Attribution} from './measurement.ts';
 export const diagnosisTypes = ["LOW_CURRENT_PRESSURE", "FOUNDER_DECISION_BOTTLENECK", "FRAGMENTED_REPLY_WORKFLOW", "UNCONTROLLED_AUTOMATION", "HIGH_CONSEQUENCE_DECISION_WORKFLOW"] as const;
 export type DiagnosisType = (typeof diagnosisTypes)[number];
 export const auditOptions = {
@@ -65,7 +66,7 @@ export type AuditLeadPayload = {
   diagnosis: DiagnosisType;
   signals: AuditSignal[];
   answers: AuditAnswers;
-  attribution: Partial<Record<"utmSource" | "utmMedium" | "utmCampaign" | "utmContent" | "utmTerm" | "referrer" | "landingPath", string>>;
+  attribution: Partial<Record<"utmSource" | "utmMedium" | "utmCampaign" | "utmContent" | "utmTerm" | "referrer" | "landingPath", string>> & Attribution;
 };
 const signalSet = new Set<AuditSignal>(["HIGH_VALUE", "HIGH_VOLUME", "HIGH_MANUAL_BURDEN", "FOUNDER_OWNED", "AUTOMATION_RISK", "INCONSISTENT_OWNERSHIP"]);
 export function validateAuditLeadPayload(value: unknown): AuditLeadPayload | null {
@@ -84,6 +85,7 @@ export function validateAuditLeadPayload(value: unknown): AuditLeadPayload | nul
     const item = rawAttribution[key];
     if (typeof item === "string" && item.length <= 1000) attribution[key] = item;
   }
+  Object.assign(attribution,normalizeAttribution(Object.fromEntries(attributionFields.map(key=>[key,rawAttribution[key]]))));
   return { firstName: typeof body.firstName === "string" && body.firstName.trim() ? body.firstName.trim() : undefined, workEmail: body.workEmail.trim().toLowerCase(), companyWebsite, diagnosis: body.diagnosis as DiagnosisType, signals: body.signals as AuditSignal[], answers: body.answers, attribution };
 }
 export function hasAuditProxyConfiguration(url?: string, secret?: string) {

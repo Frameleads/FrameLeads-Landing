@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { auditOptions, diagnosisCopy, diagnoseReplyWorkflow, emailPattern, normalizeCompanyWebsite, type AuditAnswers, type AuditResult } from "../audit";
 import { getMarketingAttribution, trackLeadCaptureIfSuccessful, trackMarketingEvent } from "../marketing-events";
+import {getMeasurementAttribution,observeMeasurement} from '../measurement';
 
 export type { AuditResult } from "../audit";
 type Props = { onAuditComplete?: (result: AuditResult) => void; onClose: () => void };
@@ -23,9 +24,11 @@ export default function PipelineAudit({ onAuditComplete, onClose }: Props) {
   const [captured, setCaptured] = useState(false);
   const completionTracked = useRef(false);
   const workflowMapTracked = useRef(false);
+  const startTracked = useRef(false);
   const active = questions[index];
   const choose = (value: string) => {
     if (result || completionTracked.current) return;
+    if(!startTracked.current){startTracked.current=true;observeMeasurement('AUDIT_STARTED');}
     const next = { ...answers, [active.key]: value };
     setAnswers(next);
     if (index < questions.length - 1) {
@@ -35,6 +38,7 @@ export default function PipelineAudit({ onAuditComplete, onClose }: Props) {
     const diagnosis = diagnoseReplyWorkflow(next as AuditAnswers);
     completionTracked.current = true;
     setResult(diagnosis);
+    observeMeasurement('AUDIT_COMPLETED',false);
     trackMarketingEvent("AUDIT_COMPLETED", { source: "REPLY_WORKFLOW_AUDIT", diagnosis: diagnosis.diagnosis });
     onAuditComplete?.(diagnosis);
   };
@@ -68,7 +72,7 @@ function LeadCapture({ result, onCaptured }: { result: AuditResult; onCaptured: 
     if (!emailPattern.test(workEmail.trim()) || !companyWebsite) { setError("Enter a valid work email and company website."); return; }
     submitting.current = true; setBusy(true); setError("");
     try {
-      const response = await fetch("/api/audit-lead", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ firstName: firstName.trim() || undefined, workEmail: workEmail.trim().toLowerCase(), companyWebsite, diagnosis: result.diagnosis, signals: result.signals, answers: result.answers, attribution: getMarketingAttribution() }) });
+      const response = await fetch("/api/audit-lead", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ firstName: firstName.trim() || undefined, workEmail: workEmail.trim().toLowerCase(), companyWebsite, diagnosis: result.diagnosis, signals: result.signals, answers: result.answers, attribution: {...getMarketingAttribution(),...getMeasurementAttribution()} }) });
       if (!response.ok) {
         setError(response.status === 503 ? "Workflow map delivery is temporarily unavailable. Please try again shortly." : "We couldn't save your workflow map. Please try again.");
         return;
