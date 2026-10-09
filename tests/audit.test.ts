@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import test from "node:test";
 import { auditOptions, diagnoseReplyWorkflow, hasAuditProxyConfiguration, normalizeCompanyWebsite, validateAuditLeadPayload, type AuditAnswers } from "../src/audit.ts";
 import { POST } from "../src/app/api/audit-lead/route.ts";
@@ -11,6 +12,11 @@ const testSecret = "test-only-audit-secret-32-characters-long";
 const testOidcToken = `header.${Buffer.from(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 })).toString("base64url")}.signature`;
 const validLead = { workEmail: "alex@example.com", companyWebsite: "example.com", diagnosis: "HIGH_CONSEQUENCE_DECISION_WORKFLOW", signals: ["HIGH_VALUE"], answers: base, attribution: { utmSource: "linkedin" } };
 const requestLead = (body: unknown = validLead) => new Request("http://localhost/api/audit-lead", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+
+test("the public Audit bonus is the approved final PDF binary", () => {
+  const pdf = readFileSync(new URL("../public/resources/ai-sdr-prompt-framework.pdf", import.meta.url));
+  assert.equal(createHash("sha256").update(pdf).digest("hex").toUpperCase(), "B467D816001224AB5F39EBA508A0C53DEFDE6581DC9AAAC6FCF48726E9083A38");
+});
 
 test("all five audit questions expose their complete option sets", () => {
   assert.deepEqual(Object.fromEntries(Object.entries(auditOptions).map(([key, values]) => [key, values.length])), { monthlyQualifiedConversations: 5, dealValue: 5, weeklyManualBurden: 5, decisionOwner: 6, nonRoutineHandling: 5 });
@@ -106,6 +112,13 @@ test("existing homepage opens the five-question Audit submission flow", () => {
   const page = readFileSync(new URL("../src/app/page.tsx", import.meta.url), "utf8");
   const route = readFileSync(new URL("../src/app/api/audit-lead/route.ts", import.meta.url), "utf8");
   assert.ok(audit.indexOf("Your diagnosis") < audit.indexOf("Want your personalized Reply Workflow Map?"));
+  assert.ok(audit.indexOf("Want your personalized Reply Workflow Map?") < audit.indexOf("Bonus included"));
+  assert.match(audit, /AI SDR Prompt Framework/);
+  assert.match(audit, /5-prompt framework for classifying, deciding, controlling, prioritizing and escalating prospect replies safely/);
+  assert.match(audit, /label="Work email" type="email" required/);
+  assert.match(audit, /label="Company website" required/);
+  assert.match(audit, /label="First name \(optional\)"/);
+  assert.match(audit, /fetch\("\/api\/audit-lead"[\s\S]*?body: JSON\.stringify\(\{ firstName: firstName\.trim\(\) \|\| undefined, workEmail: workEmail\.trim\(\)\.toLowerCase\(\), companyWebsite, diagnosis: result\.diagnosis, signals: result\.signals, answers: result\.answers, attribution:/);
   assert.match(audit, /See How the System Works/); assert.match(audit, /See FrameLeads Handle This/);
   assert.match(audit, /getMarketingAttribution/);
   assert.match(route, /status: 503/); assert.match(route, /BRAND_BRAIN_AUDIT_INGEST_SECRET/);
