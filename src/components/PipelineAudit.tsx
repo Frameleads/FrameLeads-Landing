@@ -74,7 +74,9 @@ function LeadCapture({ result, onCaptured }: { result: AuditResult; onCaptured: 
     try {
       const response = await fetch("/api/audit-lead", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ firstName: firstName.trim() || undefined, workEmail: workEmail.trim().toLowerCase(), companyWebsite, diagnosis: result.diagnosis, signals: result.signals, answers: result.answers, attribution: {...getMarketingAttribution(),...getMeasurementAttribution()} }) });
       if (!response.ok) {
-        setError(response.status === 503 ? "Workflow map delivery is temporarily unavailable. Please try again shortly." : "We couldn't save your workflow map. Please try again.");
+        const code = response.headers.get("X-Audit-Bridge-Code");
+        const reference = code && /^AUDIT_BRIDGE_(CONFIG|UPSTREAM_AUTH|UPSTREAM_INVALID|UPSTREAM_UNAVAILABLE|TIMEOUT)$/.test(code) ? ` (${code})` : "";
+        setError((response.status === 503 ? "Workflow map delivery is temporarily unavailable. Please try again shortly." : "We couldn't save your workflow map. Please try again.") + reference);
         return;
       }
       trackLeadCaptureIfSuccessful(true, { source: "REPLY_WORKFLOW_AUDIT", diagnosis: result.diagnosis });

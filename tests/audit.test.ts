@@ -10,7 +10,7 @@ const diagnose = (overrides: Partial<AuditAnswers>) => diagnoseReplyWorkflow({ .
 const ingestUrl = "https://brandbrain-pi.vercel.app/api/marketing/audit-lead/ingest";
 const testSecret = "test-only-audit-secret-32-characters-long";
 const testOidcToken = `header.${Buffer.from(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 })).toString("base64url")}.signature`;
-const validLead = { workEmail: "alex@example.com", companyWebsite: "example.com", diagnosis: "HIGH_CONSEQUENCE_DECISION_WORKFLOW", signals: ["HIGH_VALUE"], answers: base, attribution: { utmSource: "linkedin" } };
+const validLead = { workEmail: "alex@example.com", companyWebsite: "example.com", diagnosis: "HIGH_CONSEQUENCE_DECISION_WORKFLOW", signals: ["HIGH_VALUE"], answers: base, attribution: { utmSource: "linkedin", anonymous_id: "11111111-1111-4111-8111-111111111111", session_id: "22222222-2222-4222-8222-222222222222", landing_path: "/" } };
 const requestLead = (body: unknown = validLead) => new Request("http://localhost/api/audit-lead", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 
 test("the public Audit bonus is the approved final PDF binary", () => {
@@ -87,19 +87,32 @@ test("API proxy forwards the validated payload with server-side bearer authentic
   delete process.env.BRAND_BRAIN_AUDIT_INGEST_SECRET;
   delete process.env.VERCEL_OIDC_TOKEN;
 });
-test("API proxy reports upstream rejection, false success, and unavailability without accepting the lead", async () => {
+test("API proxy maps upstream failures to bounded diagnostic codes without exposing secrets", async () => {
   const originalFetch = globalThis.fetch;
   process.env.BRAND_BRAIN_AUDIT_INGEST_URL = ingestUrl;
   process.env.BRAND_BRAIN_AUDIT_INGEST_SECRET = testSecret;
   process.env.VERCEL_OIDC_TOKEN = testOidcToken;
   try {
-    for (const upstream of [new Response(null, { status: 401 }), Response.json({ ok: false }), new Response("not-json")]) {
+    for (const [upstream, expectedStatus, expectedCode] of [
+      [new Response(null, { status: 401 }), 502, "AUDIT_BRIDGE_UPSTREAM_AUTH"],
+      [new Response(null, { status: 400 }), 502, "AUDIT_BRIDGE_UPSTREAM_INVALID"],
+      [new Response(null, { status: 503 }), 503, "AUDIT_BRIDGE_UPSTREAM_UNAVAILABLE"],
+      [Response.json({ ok: false }), 502, "AUDIT_BRIDGE_UPSTREAM_INVALID"],
+      [new Response("not-json"), 502, "AUDIT_BRIDGE_UPSTREAM_UNAVAILABLE"],
+    ] as const) {
       globalThis.fetch = async () => upstream;
       const response = await POST(requestLead());
-      assert.equal(response.status, 502);
+      assert.equal(response.status, expectedStatus);
+      assert.equal(response.headers.get("X-Audit-Bridge-Code"), expectedCode);
+      assert.equal((await response.json()).code, expectedCode);
+      assert.ok(response.headers.get("X-Request-Id"));
     }
     globalThis.fetch = async () => { throw new Error("network unavailable"); };
-    assert.equal((await POST(requestLead())).status, 502);
+    assert.equal((await POST(requestLead())).headers.get("X-Audit-Bridge-Code"), "AUDIT_BRIDGE_UPSTREAM_UNAVAILABLE");
+    globalThis.fetch = async () => { throw Object.assign(new Error("timed out"), { name: "TimeoutError" }); };
+    const timeout = await POST(requestLead());
+    assert.equal(timeout.status, 504);
+    assert.equal(timeout.headers.get("X-Audit-Bridge-Code"), "AUDIT_BRIDGE_TIMEOUT");
   } finally {
     globalThis.fetch = originalFetch;
     delete process.env.BRAND_BRAIN_AUDIT_INGEST_URL;
@@ -121,7 +134,7 @@ test("existing homepage opens the five-question Audit submission flow", () => {
   assert.match(audit, /fetch\("\/api\/audit-lead"[\s\S]*?body: JSON\.stringify\(\{ firstName: firstName\.trim\(\) \|\| undefined, workEmail: workEmail\.trim\(\)\.toLowerCase\(\), companyWebsite, diagnosis: result\.diagnosis, signals: result\.signals, answers: result\.answers, attribution:/);
   assert.match(audit, /See How the System Works/); assert.match(audit, /See FrameLeads Handle This/);
   assert.match(audit, /getMarketingAttribution/);
-  assert.match(route, /status: 503/); assert.match(route, /BRAND_BRAIN_AUDIT_INGEST_SECRET/);
+  assert.match(route, /AUDIT_BRIDGE_CONFIG/); assert.match(route, /BRAND_BRAIN_AUDIT_INGEST_SECRET/);
   assert.match(page, /<AuditModal open=\{isAuditModalOpen\}/);
   assert.match(page, /5-question Reply Workflow Audit/);
   assert.match(audit, /5 questions/);
