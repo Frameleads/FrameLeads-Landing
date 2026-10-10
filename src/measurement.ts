@@ -4,7 +4,7 @@ export const attributionFields=['anonymous_id','session_id','source','medium','u
 export type Attribution=Partial<Record<(typeof attributionFields)[number],string>>;
 export const opaqueId=/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/;
 type Pixel=((...args:unknown[])=>void)&{callMethod?:(...args:unknown[])=>void;queue:unknown[][];push?:Pixel;loaded:boolean;version:string};
-type Browser=Window&{fbq?:Pixel;_fbq?:Pixel;ttq?:{track?:(...args:unknown[])=>void};__b71Pixels?:Set<string>};
+type Browser=Window&{fbq?:Pixel;_fbq?:Pixel;ttq?:{track?:(...args:unknown[])=>void};__b71Pixels?:Set<string>;__b71LastPageViewPath?:string};
 let memoryAnonymous:{id:string;expires:number}|undefined;
 let memorySession:{id:string;last:number;attribution:Attribution}|undefined;
 const emitted=new Set<string>();
@@ -86,9 +86,16 @@ export function observeMeasurement(name:BrowserEvent,once=true){
  if(typeof window==='undefined'||!browserEvents.includes(name))return;
  try{
   const attribution=getMeasurementAttribution();if(!attribution.anonymous_id||!attribution.session_id)return;
-  const key=[attribution.session_id,window.location.pathname,name].join(':');if(once&&emitted.has(key))return;
-  if(once)try{if(window.sessionStorage.getItem('frameleads:b71:event:'+key))return;window.sessionStorage.setItem('frameleads:b71:event:'+key,'1');}catch{}
-  emitted.add(key);const observationId=crypto.randomUUID(),occurredAt=new Date().toISOString();
+  const key=[attribution.session_id,window.location.pathname,name].join(':');
+  if(name==='PAGE_VIEW'){
+   const browser=window as Browser;if(browser.__b71LastPageViewPath===window.location.pathname)return;
+   browser.__b71LastPageViewPath=window.location.pathname;
+  }else{
+   if(once&&emitted.has(key))return;
+   if(once)try{if(window.sessionStorage.getItem('frameleads:b71:event:'+key))return;window.sessionStorage.setItem('frameleads:b71:event:'+key,'1');}catch{}
+   emitted.add(key);
+  }
+  const observationId=crypto.randomUUID(),occurredAt=new Date().toISOString();
   void(async()=>{const canonical=await observationEventId(observationId);initializeMeasurementPixels();sendPixelCopy('META',mapping[name],await providerEventId('META',canonical));sendPixelCopy('TIKTOK',name==='PAGE_VIEW'?'ViewContent':mapping[name],await providerEventId('TIKTOK',canonical));await fetch('/api/measurement',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({observationId,eventName:name,occurredAt,attribution}),keepalive:true,signal:AbortSignal.timeout(10000)});})().catch(()=>{});
  }catch{}
 }

@@ -19,7 +19,7 @@ test('provider ID derivation matches PostgreSQL canonical byte representation; d
  assert.notEqual(await providerEventId('META',canonical),await providerEventId('TIKTOK',canonical));
  assert.notEqual(await providerEventId('META',canonical),await providerEventId('META',await observationEventId(randomUUID())));
 });
-test('first-party identifiers, 30-minute session rotation, cookies, pixel failures and one page observation',async()=>{
+test('first-party identifiers, 30-minute session rotation, cookies, pixel failures and navigation-scoped page views',async()=>{
  const prior=new Map(['window','document','fetch'].map(k=>[k,Object.getOwnPropertyDescriptor(globalThis,k)]));
  const keys=['NEXT_PUBLIC_META_TRACKING_ENABLED','NEXT_PUBLIC_META_PIXEL_ID','NEXT_PUBLIC_TIKTOK_TRACKING_ENABLED'];const env=Object.fromEntries(keys.map(k=>[k,process.env[k]]));
  const local=new Map<string,string>(),session=new Map<string,string>(),requests:unknown[]=[],pixelCalls:unknown[][]=[];
@@ -38,9 +38,20 @@ test('first-party identifiers, 30-minute session rotation, cookies, pixel failur
   a=getMeasurementAttribution();assert.equal(a.fbp,'fb.1.1700000000000.12345');assert.equal(a.fbc,'fb.1.1700000000000.click_1');assert.equal(a.ttp,'tiktok_cookie');
   assert.doesNotThrow(()=>initializeMeasurementPixels());
   observeMeasurement('PAGE_VIEW');observeMeasurement('PAGE_VIEW');await wait();assert.equal(requests.length,1);assert.equal((requests[0] as {eventName:string}).eventName,'PAGE_VIEW');
-  const id=await providerEventId('META','a'.repeat(64));sendPixelCopy('META','Lead',id);sendPixelCopy('META','Lead',id);assert.equal((pixelCalls.at(-1)?.[3] as {eventID:string}).eventID,id);
-  process.env.NEXT_PUBLIC_META_TRACKING_ENABLED='false';const before=pixelCalls.length;sendPixelCopy('META','Lead',id);assert.equal(pixelCalls.length,before);
-  observeMeasurement('PURCHASE' as never);await wait();assert.equal(requests.length,1);
+  location.pathname='/privacy';observeMeasurement('PAGE_VIEW');observeMeasurement('PAGE_VIEW');await wait();
+  location.pathname='/';observeMeasurement('PAGE_VIEW');observeMeasurement('PAGE_VIEW');await wait();
+  assert.equal(requests.length,3);
+  assert.equal(pixelCalls.filter(call=>call[0]==='track'&&call[1]==='PageView').length,3);
+  const refreshedPixelCalls:unknown[][]=[];
+  Object.defineProperty(globalThis,'window',{configurable:true,value:{...w,__b71Pixels:undefined,__b71LastPageViewPath:undefined,fbq:(...args:unknown[])=>refreshedPixelCalls.push(args)}});
+  observeMeasurement('PAGE_VIEW');await wait();
+  assert.equal(requests.length,4);
+  assert.equal(refreshedPixelCalls.filter(call=>call[0]==='track'&&call[1]==='PageView').length,1);
+  observeMeasurement('AUDIT_STARTED');observeMeasurement('AUDIT_STARTED');await wait();
+  assert.equal(requests.length,5,'non-PageView events remain deduplicated once per session and pathname');
+  const id=await providerEventId('META','a'.repeat(64));sendPixelCopy('META','Lead',id);sendPixelCopy('META','Lead',id);assert.equal((refreshedPixelCalls.at(-1)?.[3] as {eventID:string}).eventID,id);
+  process.env.NEXT_PUBLIC_META_TRACKING_ENABLED='false';const before=refreshedPixelCalls.length;sendPixelCopy('META','Lead',id);assert.equal(refreshedPixelCalls.length,before);
+  observeMeasurement('PURCHASE' as never);await wait();assert.equal(requests.length,5);
  }finally{for(const [key,descriptor] of prior){if(descriptor)Object.defineProperty(globalThis,key,descriptor);else Reflect.deleteProperty(globalThis,key);}for(const key of keys){if(env[key]===undefined)delete process.env[key];else process.env[key]=env[key];}}
 });
 test('VSL requires real forward playback; pause and seeking never count as engagement',()=>{
