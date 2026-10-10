@@ -19,6 +19,18 @@ export default function ExitIntentPopup() {
   const hasTriggered = useRef(false);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const isAuditEmailCoreVisit =
+      params.get("utm_source") === "website_audit" &&
+      params.get("utm_medium") === "email" &&
+      window.location.hash === "#core";
+
+    if (isAuditEmailCoreVisit) {
+      hasTriggered.current = true;
+      try { sessionStorage.setItem(SESSION_KEY, "true"); } catch { /* Session storage is optional. */ }
+      return;
+    }
+
     let pricingViewed = false;
     let finalCloseViewed = false;
     let pricingObserver: IntersectionObserver | null = null;
