@@ -1,6 +1,6 @@
 import type { AuditLeadPayload, DiagnosisType } from "./audit";
 import {initializeMeasurementPixels} from './measurement.ts';
-import {getPrivacyConsent} from './privacy-consent';
+import {getPrivacyConsent} from './privacy-consent.ts';
 
 export const marketingEventNames = [
   "LANDING_VIEW",

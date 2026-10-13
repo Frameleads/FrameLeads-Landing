@@ -19,6 +19,11 @@ function withBrowser<T>(run: (events: MarketingEvent[], storage: Map<string, str
   const fakeWindow = {
     location,
     document: { referrer: "" },
+    localStorage: {
+      getItem: (key: string) => key === "frameleads:privacy-consent:v1"
+        ? JSON.stringify({ analytics: true, advertising: true, savedAt: "2026-10-13T00:00:00.000Z" })
+        : null,
+    },
     sessionStorage: {
       getItem: (key: string) => storage.get(key) ?? null,
       setItem: (key: string, value: string) => storage.set(key, value),
