@@ -1,5 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {randomUUID,createHash} from 'node:crypto';
 import {getMeasurementAttribution,normalizeAttribution,validateObservation,observeMeasurement,observationEventId,providerEventId,sendPixelCopy,initializeMeasurementPixels} from '../src/measurement.ts';
+import {savePrivacyConsent} from '../src/privacy-consent.ts';
 import {playbackProgress} from '../src/vsl-engagement.ts';
 const wait=()=>new Promise(resolve=>setTimeout(resolve,20));
 test('strict observation contract accepts opaque PAGE_VIEW and rejects canonical events, unknown fields and PII',()=>{
@@ -23,14 +24,15 @@ test('consent-gated identifiers, 30-minute session rotation, cookies, pixel fail
  const prior=new Map(['window','document','fetch'].map(k=>[k,Object.getOwnPropertyDescriptor(globalThis,k)]));
  const keys=['NEXT_PUBLIC_META_TRACKING_ENABLED','NEXT_PUBLIC_META_PIXEL_ID','NEXT_PUBLIC_TIKTOK_TRACKING_ENABLED'];const env=Object.fromEntries(keys.map(k=>[k,process.env[k]]));
  const local=new Map<string,string>(),session=new Map<string,string>(),requests:unknown[]=[],pixelCalls:unknown[][]=[];
- const storage=(m:Map<string,string>)=>({getItem:(k:string)=>m.get(k)??null,setItem:(k:string,v:string)=>m.set(k,v)});
- const location={search:'?utm_source=meta&campaign_id=campaign_1&fbclid=click_1&ttclid=tiktok_1',pathname:'/'};
+ const storage=(m:Map<string,string>)=>({getItem:(k:string)=>m.get(k)??null,setItem:(k:string,v:string)=>m.set(k,v),removeItem:(k:string)=>m.delete(k)});
+ const location={search:'?utm_source=meta&campaign_id=campaign_1&fbclid=click_1&ttclid=tiktok_1',pathname:'/',hostname:'frameleads.io'};
  const doc={cookie:'_fbp=fb.1.1700000000000.12345; _fbc=fb.1.1700000000000.click_1; _ttp=tiktok_cookie',referrer:'https://ref.example/path?private=data',createElement(){throw Error('Pixel intentionally unavailable');},head:{appendChild(){throw Error('Pixel unavailable');}}};
- const w={location,localStorage:storage(local),sessionStorage:storage(session),fbq:(...args:unknown[])=>pixelCalls.push(args)};
+ const w={location,localStorage:storage(local),sessionStorage:storage(session),fbq:(...args:unknown[])=>pixelCalls.push(args),dispatchEvent:()=>true};
  Object.defineProperty(globalThis,'window',{configurable:true,value:w});Object.defineProperty(globalThis,'document',{configurable:true,value:doc});Object.defineProperty(globalThis,'fetch',{configurable:true,value:async(_url:unknown,options:{body:string})=>{requests.push(JSON.parse(options.body));return Response.json({ok:true});}});
  try{
   delete process.env.NEXT_PUBLIC_META_TRACKING_ENABLED;delete process.env.NEXT_PUBLIC_TIKTOK_TRACKING_ENABLED;
   let a=getMeasurementAttribution();assert.deepEqual(a,{});observeMeasurement('PAGE_VIEW');await wait();assert.equal(requests.length,0);assert.equal(pixelCalls.length,0);
+  savePrivacyConsent({analytics:false,advertising:false});observeMeasurement('PAGE_VIEW');await wait();assert.equal(requests.length,0);assert.equal(pixelCalls.length,0);
   local.set('frameleads:privacy-consent:v1',JSON.stringify({analytics:true,advertising:true,savedAt:new Date().toISOString()}));
   a=getMeasurementAttribution();assert.match(a.anonymous_id!,/^[a-f0-9-]{36}$/);assert.match(a.session_id!,/^[a-f0-9-]{36}$/);assert.equal(a.referrer_host,'ref.example');assert.equal(a.fbclid,'click_1');assert.equal(a.ttclid,'tiktok_1');assert.equal(a.fbp,undefined);
   const anonymous=a.anonymous_id,oldSession=a.session_id;
@@ -46,6 +48,7 @@ test('consent-gated identifiers, 30-minute session rotation, cookies, pixel fail
   const id=await providerEventId('META','a'.repeat(64));sendPixelCopy('META','Lead',id);sendPixelCopy('META','Lead',id);assert.equal((pixelCalls.at(-1)?.[3] as {eventID:string}).eventID,id);
   process.env.NEXT_PUBLIC_META_TRACKING_ENABLED='false';const before=pixelCalls.length;sendPixelCopy('META','Lead',id);assert.equal(pixelCalls.length,before);
   const browserObservationCount=requests.length;observeMeasurement('PURCHASE' as never);await wait();assert.equal(requests.length,browserObservationCount);
+  savePrivacyConsent({analytics:false,advertising:false});observeMeasurement('AUDIT_STARTED');await wait();assert.equal(requests.length,browserObservationCount);assert.equal(pixelCalls.length,before);assert.equal(local.has('frameleads:b71:anonymous'),false);assert.equal(session.has('frameleads:b71:session'),false);
  }finally{for(const [key,descriptor] of prior){if(descriptor)Object.defineProperty(globalThis,key,descriptor);else Reflect.deleteProperty(globalThis,key);}for(const key of keys){if(env[key]===undefined)delete process.env[key];else process.env[key]=env[key];}}
 });
 test('VSL requires real forward playback; pause and seeking never count as engagement',()=>{
