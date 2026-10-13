@@ -92,7 +92,7 @@ test("first-touch session attribution survives later empty URLs and is added to 
   });
 });
 
-test("failed lead capture emits no Lead event and successful capture emits exactly one", () => {
+test("failed capture emits no local capture notification and successful capture emits exactly one", () => {
   withBrowser((events) => {
     assert.equal(trackLeadCaptureIfSuccessful(false, { source: "REPLY_WORKFLOW_AUDIT" }), false);
     assert.equal(events.length, 0);

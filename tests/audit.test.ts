@@ -73,7 +73,7 @@ test("API proxy forwards the validated payload with server-side bearer authentic
   process.env.BRAND_BRAIN_AUDIT_INGEST_SECRET = testSecret;
   process.env.VERCEL_OIDC_TOKEN = testOidcToken;
   let captured: { input?: string; init?: RequestInit } = {};
-  globalThis.fetch = async (input, init) => { captured = { input: String(input), init }; return Response.json({ ok: true, prospectId: "test-prospect" }); };
+  globalThis.fetch = async (input, init) => { captured = { input: String(input), init }; return Response.json({ ok: true, source: "WEBSITE_AUDIT", prospectId: "11111111-1111-4111-8111-111111111111" }); };
   const response = await POST(requestLead({ ...validLead, companyDomain: "client-must-not-forward-this" }));
   assert.equal(response.status, 201);
   assert.equal(captured.input, ingestUrl);
@@ -131,11 +131,11 @@ test("existing homepage opens the five-question Audit submission flow", () => {
   assert.match(audit, /label="Work email" type="email" required/);
   assert.match(audit, /label="Company website" required/);
   assert.match(audit, /label="First name \(optional\)"/);
-  assert.match(audit, /fetch\("\/api\/audit-lead"[\s\S]*?body: JSON\.stringify\(\{ firstName: firstName\.trim\(\) \|\| undefined, workEmail: workEmail\.trim\(\)\.toLowerCase\(\), companyWebsite, diagnosis: result\.diagnosis, signals: result\.signals, answers: result\.answers, attribution:/);
+  assert.match(audit, /fetch\("\/api\/audit-lead"[\s\S]*?body: JSON\.stringify\(\{ advertisingConsent: hasAdvertisingConsent\(\), firstName: firstName\.trim\(\) \|\| undefined, workEmail: workEmail\.trim\(\)\.toLowerCase\(\), companyWebsite, diagnosis: result\.diagnosis, signals: result\.signals, answers: result\.answers, attribution:/);
   assert.match(audit, /See How the System Works/); assert.match(audit, /See FrameLeads Handle This/);
   assert.match(audit, /getMarketingAttribution/);
   assert.match(route, /AUDIT_BRIDGE_CONFIG/); assert.match(route, /BRAND_BRAIN_AUDIT_INGEST_SECRET/);
-  assert.match(page, /<AuditModal open=\{isAuditModalOpen\}/);
+  assert.match(page, /<AuditModal returnFocusRef=\{auditTrigger\} open=\{isAuditModalOpen\}/);
   assert.match(page, /5-question Reply Workflow Audit/);
   assert.match(audit, /5 questions/);
   assert.equal((audit.match(/\{ key: "/g) ?? []).length, 5);

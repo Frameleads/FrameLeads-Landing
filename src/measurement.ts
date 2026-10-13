@@ -74,6 +74,8 @@ export function getMeasurementAttribution(): Attribution {
         delete attribution.fbp;
         delete attribution.fbc;
         delete attribution.ttp;
+        delete attribution.fbclid;
+        delete attribution.ttclid;
       }
       attribution.anonymous_id = anonymous.id;
       attribution.session_id = session.id;
@@ -87,6 +89,7 @@ export function getMeasurementAttribution(): Attribution {
     const params = new URLSearchParams(window.location.search);
     for (const key of attributionFields) {
       if (["anonymous_id", "session_id", "fbp", "fbc", "ttp", "referrer_host", "landing_path"].includes(key)) continue;
+      if (!consent.advertising && ["fbclid", "ttclid"].includes(key)) continue;
       const v = bounded(params.get(key), key);
       if (v) attribution[key] = v;
     }
