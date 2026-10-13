@@ -1,5 +1,6 @@
 import type { AuditLeadPayload, DiagnosisType } from "./audit";
 import {initializeMeasurementPixels} from './measurement.ts';
+import {getPrivacyConsent} from './privacy-consent';
 
 export const marketingEventNames = [
   "LANDING_VIEW",
@@ -73,6 +74,8 @@ export function mergeMarketingAttribution(
 export function captureMarketingAttribution(): MarketingAttribution {
   const currentWindow = browserWindow();
   if (!currentWindow) return {};
+  const consent = getPrivacyConsent();
+  if (!consent || (!consent.analytics && !consent.advertising)) return {};
 
   let existing: MarketingAttribution = {};
   try {

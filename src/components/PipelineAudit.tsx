@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { auditOptions, diagnosisCopy, diagnoseReplyWorkflow, emailPattern, normalizeCompanyWebsite, type AuditAnswers, type AuditResult } from "../audit";
 import { getMarketingAttribution, trackLeadCaptureIfSuccessful, trackMarketingEvent } from "../marketing-events";
 import {getMeasurementAttribution,observeMeasurement} from '../measurement';
 
 export type { AuditResult } from "../audit";
-type Props = { onAuditComplete?: (result: AuditResult) => void; onClose: () => void };
+type Props = { onAuditComplete?: (result: AuditResult) => void; onClose: () => void; standalone?: boolean };
 type Key = keyof AuditAnswers;
 const questions: { key: Key; question: string; helper?: string; options: readonly string[] }[] = [
   { key: "monthlyQualifiedConversations", question: "How many qualified prospect conversations does outbound create in a typical month?", options: auditOptions.monthlyQualifiedConversations },
@@ -17,7 +18,7 @@ const questions: { key: Key; question: string; helper?: string; options: readonl
   { key: "nonRoutineHandling", question: "What happens when the reply isn't routine?", helper: "For example: pricing, objections, custom terms, or unusual questions.", options: auditOptions.nonRoutineHandling },
 ];
 
-export default function PipelineAudit({ onAuditComplete, onClose }: Props) {
+export default function PipelineAudit({ onAuditComplete, onClose, standalone = false }: Props) {
   const [answers, setAnswers] = useState<Partial<AuditAnswers>>({});
   const [index, setIndex] = useState(0);
   const [result, setResult] = useState<AuditResult | null>(null);
@@ -49,7 +50,7 @@ export default function PipelineAudit({ onAuditComplete, onClose }: Props) {
   }, [captured, result]);
   return <div>
     <header className="mb-7 flex items-start justify-between gap-4 border-b border-white/5 pb-6 sm:items-center"><div><p className="font-heading text-sm font-bold uppercase tracking-[0.16em] text-[#FF5A1F]">Reply Workflow Audit</p><p className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[#8A8A93]">5 questions · Instant diagnosis</p></div><button type="button" onClick={onClose} aria-label="Close reply workflow audit" className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-white/10 text-lg text-white/45 hover:border-white/20 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F]">×</button></header>
-    {!result ? <Question active={active} index={index} selected={answers[active.key]} onChoose={choose} onBack={() => setIndex((current) => Math.max(0, current - 1))} /> : captured ? <WorkflowMap result={result} onClose={onClose} /> : <Diagnosis result={result} onCaptured={() => setCaptured(true)} />}
+    {!result ? <Question active={active} index={index} selected={answers[active.key]} onChoose={choose} onBack={() => setIndex((current) => Math.max(0, current - 1))} /> : captured ? <WorkflowMap result={result} onClose={onClose} standalone={standalone} /> : <Diagnosis result={result} onCaptured={() => setCaptured(true)} />}
   </div>;
 }
 
@@ -91,10 +92,10 @@ function LeadCapture({ result, onCaptured }: { result: AuditResult; onCaptured: 
   return <form onSubmit={submit} aria-busy={busy} className="mt-8 border-t border-white/[0.08] pt-7"><h4 className="text-xl font-semibold text-white">Want your personalized Reply Workflow Map?</h4><p className="mt-2 text-sm leading-relaxed text-[#888888]">Enter your work email and company website and we&apos;ll map where FrameLeads would sit in your current workflow.</p><div data-audit-bonus="true" className="mt-5 rounded-lg border border-white/[0.08] bg-white/[0.02] px-4 py-3"><p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#FF5A1F]">Bonus included</p><p className="mt-1 text-sm font-semibold text-white">AI SDR Prompt Framework</p><p className="mt-1 text-xs leading-relaxed text-[#888888]">We&apos;ll also send the 5-prompt framework for classifying, deciding, controlling, prioritizing and escalating prospect replies safely.</p></div><div className="mt-5 grid gap-3 sm:grid-cols-2"><Field label="Work email" type="email" required value={workEmail} onChange={setWorkEmail} placeholder="you@company.com" /><Field label="Company website" required value={websiteInput} onChange={setWebsiteInput} placeholder="company.com" /><div className="sm:col-span-2"><Field label="First name (optional)" value={firstName} onChange={setFirstName} placeholder="Alex" /></div></div><p className="mt-4 text-xs leading-relaxed text-white/40">We&apos;ll send your workflow result and relevant FrameLeads follow-up. Unsubscribe anytime.</p>{error && <p role="alert" className="mt-3 text-sm text-red-300">{error}</p>}<button type="submit" disabled={busy} className="mt-5 w-full rounded-xl bg-[#FF5A1F] px-6 py-4 font-bold text-white hover:bg-[#ff6b35] disabled:cursor-wait disabled:opacity-60">{busy ? <span role="status" aria-live="polite">Creating your map…</span> : "Get My Workflow Map"}</button></form>;
 }
 
-function WorkflowMap({ result, onClose }: { result: AuditResult; onClose: () => void }) {
+function WorkflowMap({ result, onClose, standalone }: { result: AuditResult; onClose: () => void; standalone: boolean }) {
   const low = result.diagnosis === "LOW_CURRENT_PRESSURE"; const target = low ? "capabilities" : "simulation"; const copy = diagnosisCopy[result.diagnosis];
   const go = () => { onClose(); window.setTimeout(() => document.getElementById(target)?.scrollIntoView({ behavior: "smooth", block: "start" }), 150); };
-  return <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}><p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#FF5A1F]">Your Reply Workflow Map</p><h3 className="mt-3 text-3xl font-bold text-white">{copy.title}</h3><div className="mt-7 grid gap-3"><State label="Current state" text={`Reply decisions currently route through: ${currentOwner(result)}.`} /><State label="Gap" text={copy.gap} /><State label="Recommended operating state" text="Reply → FrameLeads Decision Layer → Routine continues / Consequential human review" accent /><State label="Why" text={`${result.answers.monthlyQualifiedConversations} qualified conversations per month · ${result.answers.dealValue} typical engagement · ${result.answers.weeklyManualBurden} of weekly manual decision work.`} /></div><button type="button" onClick={go} className="mt-7 w-full rounded-xl bg-[#FF5A1F] px-6 py-4 font-bold text-white hover:bg-[#ff6b35]">{low ? "See How the System Works" : "See FrameLeads Handle This"}</button></motion.div>;
+  return <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}><p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#FF5A1F]">Your Reply Workflow Map</p><h3 className="mt-3 text-3xl font-bold text-white">{copy.title}</h3><div className="mt-7 grid gap-3"><State label="Current state" text={`Reply decisions currently route through: ${currentOwner(result)}.`} /><State label="Gap" text={copy.gap} /><State label="Recommended operating state" text="Reply → FrameLeads Decision Layer → Routine continues / Consequential human review" accent /><State label="Why" text={`${result.answers.monthlyQualifiedConversations} qualified conversations per month · ${result.answers.dealValue} typical engagement · ${result.answers.weeklyManualBurden} of weekly manual decision work.`} /></div>{standalone ? <Link href={`/#${target}`} className="mt-7 flex w-full items-center justify-center rounded-xl bg-[#FF5A1F] px-6 py-4 text-center font-bold text-white hover:bg-[#ff6b35]">{low ? "See How the System Works" : "See FrameLeads Handle This"}</Link> : <button type="button" onClick={go} className="mt-7 w-full rounded-xl bg-[#FF5A1F] px-6 py-4 font-bold text-white hover:bg-[#ff6b35]">{low ? "See How the System Works" : "See FrameLeads Handle This"}</button>}</motion.div>;
 }
 
 function currentOwner(result: AuditResult) { if (result.diagnosis === "FOUNDER_DECISION_BOTTLENECK") return "Founder"; if (result.diagnosis === "UNCONTROLLED_AUTOMATION") return "AI / Automation"; if (result.diagnosis === "FRAGMENTED_REPLY_WORKFLOW" && result.signals.includes("INCONSISTENT_OWNERSHIP")) return "Inconsistent owner"; if (result.answers.decisionOwner === "SDR / salesperson" || result.answers.decisionOwner === "VA / assistant") return "Team / Individual operator"; return "Human workflow"; }
