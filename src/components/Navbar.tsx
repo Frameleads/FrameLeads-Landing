@@ -8,6 +8,8 @@ type NavbarProps = {
   onAuditClick: () => void;
 };
 
+const loginHref = "https://app.frameleads.io/login";
+
 const sectionLinks = [
   { label: "How It Works", href: "#capabilities" },
   { label: "Product", href: "#simulation" },
@@ -33,9 +35,12 @@ export default function Navbar({ onAuditClick }: NavbarProps) {
       <nav aria-label="Primary navigation" className="ml-auto hidden items-center gap-6 lg:flex">
         <button type="button" data-tripwire-guard="true" onClick={openAudit} className="text-sm text-gray-400 transition-colors hover:text-white">Audit</button>
         {sectionLinks.map((item) => <Link key={item.href} href={item.href} className="text-sm text-gray-400 transition-colors hover:text-white">{item.label}</Link>)}
+        <Link href={loginHref} className="ml-1 inline-flex h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-lg bg-[#FF5A1F] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#e8511b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F]">Log In</Link>
       </nav>
 
-      <button type="button" onClick={() => setIsMenuOpen((open) => !open)} className="ml-auto grid h-10 w-10 place-items-center rounded-lg border border-white/10 text-white lg:hidden" aria-expanded={isMenuOpen} aria-controls="mobile-navigation" aria-label={isMenuOpen ? "Close navigation" : "Open navigation"}>
+      <Link href={loginHref} className="ml-auto inline-flex h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-lg bg-[#FF5A1F] px-3 text-xs font-semibold text-white transition-colors hover:bg-[#e8511b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F] sm:px-4 sm:text-sm lg:hidden">Log In</Link>
+
+      <button type="button" onClick={() => setIsMenuOpen((open) => !open)} className="ml-2 grid h-10 w-10 place-items-center rounded-lg border border-white/10 text-white lg:hidden" aria-expanded={isMenuOpen} aria-controls="mobile-navigation" aria-label={isMenuOpen ? "Close navigation" : "Open navigation"}>
         <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path strokeLinecap="round" d={isMenuOpen ? "M6 6l12 12M18 6 6 18" : "M4 7h16M4 12h16M4 17h16"} /></svg>
       </button>
 
