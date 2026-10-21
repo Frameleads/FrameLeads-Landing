@@ -37,7 +37,7 @@ const attributionStorageKey = "frameleads:marketing-attribution:v1";
 const eventStoragePrefix = "frameleads:marketing-event:v1:";
 const trackedInMemory = new Set<string>();
 const utmKeys = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"] as const;
-const attributionKeys = ["utmSource", "utmMedium", "utmCampaign", "utmContent", "utmTerm", "referrer", "landingPath"] as const;
+const attributionKeys = ["utmSource", "utmMedium", "utmCampaign", "utmContent", "utmTerm", "referrer", "landingPath", "affiliateCode"] as const;
 
 function browserWindow(): Window | null {
   return typeof window === "undefined" ? null : window;
@@ -59,6 +59,11 @@ function safeReferrer(referrer: string): string | undefined {
   }
 }
 
+export function captureAffiliateCode(value: string | null, advertisingConsent: boolean, affiliateReferralApproved = false): string | undefined {
+  const code = value?.trim();
+  return advertisingConsent && affiliateReferralApproved && code && /^[A-Za-z0-9_-]{1,64}$/.test(code) ? code : undefined;
+}
+
 export function mergeMarketingAttribution(
   existing: MarketingAttribution,
   incoming: MarketingAttribution,
@@ -66,6 +71,10 @@ export function mergeMarketingAttribution(
   const merged: MarketingAttribution = { ...existing };
   for (const key of attributionKeys) {
     const value = cleanString(incoming[key]);
+    if (key === "affiliateCode") {
+      if (value && /^[A-Za-z0-9_-]{1,64}$/.test(value)) merged.affiliateCode = value;
+      continue;
+    }
     if (!cleanString(merged[key]) && value) merged[key] = value;
   }
   return merged;
@@ -98,6 +107,9 @@ export function captureMarketingAttribution(): MarketingAttribution {
     utm_term: "utmTerm",
   } as const;
   for (const key of utmKeys) incoming[mapping[key]] = cleanString(params.get(key));
+  const affiliateReferralApproved = process.env.NEXT_PUBLIC_AFFILIATE_REFERRAL_PRIVACY_APPROVED === "true";
+  const affiliateCode = captureAffiliateCode(params.get("a"), consent.advertising, affiliateReferralApproved);
+  if (affiliateCode) incoming.affiliateCode = affiliateCode;
   incoming.referrer = safeReferrer(currentWindow.document.referrer);
 
   const merged = mergeMarketingAttribution(existing, incoming);
@@ -131,6 +143,8 @@ export function sanitizeMarketingEventProperties(input: Record<string, unknown>)
     const raw = input.attribution as Record<string, unknown>;
     const attribution: MarketingAttribution = {};
     for (const key of attributionKeys) {
+      // Affiliate identifiers are restricted to the audit referral payload and never sent to generic analytics events.
+      if (key === "affiliateCode") continue;
       const value = cleanString(raw[key]);
       if (!value) continue;
       attribution[key] = key === "landingPath" ? value.split(/[?#]/, 1)[0] : key === "referrer" ? safeReferrer(value) : value;
