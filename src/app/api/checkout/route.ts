@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-
-const cookieName = '__Host_frameleads_checkout';
+import { CHECKOUT_SESSION_COOKIE_NAME } from '../../../checkout-session-cookie';
 function brandBrainUrl(): URL | null {
   const raw = process.env.BRAND_BRAIN_AUDIT_INGEST_URL;
   const secret = process.env.BRAND_BRAIN_AUDIT_INGEST_SECRET;
@@ -20,7 +19,7 @@ function findCookie(request: Request, name: string): string | null {
 
 export async function POST(request: Request) {
   const fail = (state: string, status = 303) => NextResponse.redirect(new URL(`/checkout/continue?state=${encodeURIComponent(state)}`, request.url), status);
-  const sessionToken = findCookie(request, cookieName);
+  const sessionToken = findCookie(request, CHECKOUT_SESSION_COOKIE_NAME);
   if (!sessionToken) return fail('expired');
   let form: FormData;
   try { form = await request.formData(); } catch { return fail('invalid'); }

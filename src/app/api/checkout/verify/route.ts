@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-
-const sessionCookie = '__Host_frameleads_checkout';
+import { CHECKOUT_SESSION_COOKIE_NAME } from '../../../../checkout-session-cookie';
 
 function configuredBrandBrainUrl(): URL | null {
   const raw = process.env.BRAND_BRAIN_AUDIT_INGEST_URL;
@@ -35,7 +34,7 @@ export async function POST(request: Request) {
     if (typeof sessionToken !== 'string' || !/^[a-f0-9]{64}$/.test(sessionToken)) return respond(503, 'UNAVAILABLE');
     const result = NextResponse.json({ ok: true });
     result.headers.set('Cache-Control', 'no-store');
-    result.headers.set('Set-Cookie', `${sessionCookie}=${sessionToken}; Path=/; Max-Age=1800; HttpOnly; Secure; SameSite=Lax`);
+    result.headers.set('Set-Cookie', `${CHECKOUT_SESSION_COOKIE_NAME}=${sessionToken}; Path=/; Max-Age=1800; HttpOnly; Secure; SameSite=Lax`);
     return result;
   } catch { return respond(503, 'UNAVAILABLE'); }
 }
