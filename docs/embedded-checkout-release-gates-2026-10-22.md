@@ -151,3 +151,11 @@ No checkout-session bridge, real Sandbox payment, affiliate commission, SaaS ent
 - Existing delayed email-verified Audit checkout can create the provider checkout configuration when Brand Brain's independent Sandbox bridge flag is enabled; its existing authenticated route preserves the response field. **Immediate landing-page purchase without an Audit is not implemented** and remains an independent P0 release requirement.
 - No Vercel variables, Whop Sandbox/production credentials, Supabase database, affiliate policy flags or payments have been altered. The experimental payment flag **must not be enabled without authorized provider Sandbox setup and stage-gate review**.
 - CI and visual tests intentionally intercept Whop/external network calls, so passing them proves dependency + component compilation and conditional integration, not that a Whop payment session will render on an authorized HTTPS preview or produce a valid webhook, commission or SaaS entitlement.
+
+## Direct buyer contract counterpart — 2026-10-22
+
+Brand Brain's linked [PR #12](https://github.com/Frameleads/Brand-Brain/pull/12) includes a new **source-only**, non-routed `lib/brand-brain/direct-checkout.ts` with an independently persisted/direct `frameleads_direct_checkout_attempt_id` concept. The detailed non-executable design and release gates are in `docs/direct-buyer-checkout-review-2026-10-22.md` on that branch. It does **not** reuse or synthesize `audit_checkout_continuations`, does not call a production/Sandbox Whop API, and has no database adapter or production flag enabled.
+
+Do **not** wire the current Landing pricing buttons to this module yet: there is no authorized direct-attempt ledger, trusted anonymous nonce issuance/receipt, independently verified referral disposition contract, or signed Whop webhook reconciliation. An Audit-continuation session remains separate from a direct-purchase session. A browser opt-out must preserve ordinary purchasing, while an affirmative but unverified affiliate referral must not silently lose commission.
+
+The existing hosted production Whop CTAs remain the active fallback and V3 layout remains owner-approved. No schema migration or real checkout may be activated until the previously refused hosted migration and privacy/policy approvals are resolved through legitimate review.
