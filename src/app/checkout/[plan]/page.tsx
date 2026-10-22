@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import CheckoutOrderSummary from "../../../components/CheckoutOrderSummary";
 import EmbeddedWhopCheckout from "../../../components/EmbeddedWhopCheckout";
 import { checkoutTier, embeddedCheckoutPolicy, tierInformation } from "../../../checkout-embed-policy";
+import { EMBED_SESSION_COOKIE_NAME, embeddedSessionBridgeEnabled, readVerifiedEmbedSession } from "../../../checkout-embedded-session";
 
 export const dynamic = "force-dynamic";
 type Props = {
@@ -28,6 +30,14 @@ export default async function FrameLeadsCheckout({ params, searchParams }: Props
   // This flag is a consent-review hint, never payable attribution.
   const publicReferralPresent = Object.prototype.hasOwnProperty.call(query, "a");
   const config = embeddedCheckoutPolicy(plan, process.env);
+  // When a server-created Whop session bridge is selected, never render a
+  // payable plan-only embed. The official sessionId React component has not
+  // yet been installed, reviewed or cleared for real Sandbox purchases.
+  const bridgeMode = embeddedSessionBridgeEnabled(process.env);
+  const sessionToken = bridgeMode ? (await cookies()).get(EMBED_SESSION_COOKIE_NAME)?.value : undefined;
+  const verifiedSession = bridgeMode ? readVerifiedEmbedSession(
+    sessionToken, plan, process.env.FRAMELEADS_EMBED_SESSION_SIGNING_SECRET,
+  ) : null;
 
   return (
     <main className="grid min-h-screen min-w-0 overflow-x-hidden bg-white font-sans lg:grid-cols-2">
@@ -42,7 +52,21 @@ export default async function FrameLeadsCheckout({ params, searchParams }: Props
             Complete your purchase
           </h2>
 
-          {config.available ? (
+          {config.available && bridgeMode ? (
+            <div role="status" className="rounded-lg border border-[#E4E4E4] bg-[#F7F7F7] p-5 text-sm leading-6 text-[#444444]">
+              <p className="font-semibold text-[#1A1A1A]">
+                {verifiedSession ? "Verified Sandbox session prepared" : "Verified checkout session required"}
+              </p>
+              <p className="mt-2">
+                {verifiedSession
+                  ? "The payment session is securely linked to your verified checkout attempt. Embedded session payments are not yet enabled in this preview."
+                  : "Return to your email-verified checkout continuation to request a Sandbox session."}
+              </p>
+              <Link href="/checkout/continue" className="mt-4 inline-block underline underline-offset-4">
+                Return to verified checkout
+              </Link>
+            </div>
+          ) : config.available ? (
             <EmbeddedWhopCheckout
               planId={config.planId}
               returnUrl={config.returnUrl}
