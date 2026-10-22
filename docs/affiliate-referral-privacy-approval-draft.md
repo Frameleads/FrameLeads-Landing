@@ -11,6 +11,18 @@
 
 **Data minimization:** Do not add residential address, phone number, birth date, verification documents, or screenshots of verification to the repository or website. Owner approval is limited to publishing their name and the above operator-identification language; it is **not** blanket approval of compensated referral tracking, policy text, retention dates, processing operations, flag changes, migrations, or deployment. Keep final controller identification subject to applicable legal review.
 
+## Owner decision — advertising/referral disclosure approach (approved in principle 22 October 2026)
+
+**Business approval only, subject to independent policy/legal review:** The owner approves proposed expanded optional privacy-choice text explaining that advertising/conversion measurement and compensated partner referrals may be linked to an Audit and later purchase. For the current launch design, the owner maintains advertising consent as a prerequisite for initial Audit-based affiliate referral attribution, while maintaining a fully usable Audit and ordinary purchase route for non-consenting visitors. Whether these are sufficiently related purposes to share one checkbox remains explicitly **NOT LEGALLY APPROVED**; if granular consent is required, use distinct choices before launch. No flags may be enabled on the strength of this owner decision alone.
+
+**Proposed expanded consent control copy, not approved for publication:**
+
+> **Advertising, conversion measurement and partner referrals (optional)**
+>
+> Allow optional advertising measurement through supported providers, including Meta, TikTok and Whop. If you arrived through a partner link, FrameLeads may also connect that referral to your Reply Workflow Audit and a later purchase to determine whether the partner qualifies for a commission. You can use the Audit and purchase FrameLeads without accepting this tracking. You can change your preferences later.
+
+**Attribution economics and UX caveat explicitly raised by the owner:** If the person declines optional tracking, the Audit cannot pass a captured affiliate code into FrameLeads' later affiliate-aware checkout; Whop cannot be assumed to reconstruct that missing Audit origin simply because the buyer uses the same email days later. A separate qualifying Whop-tracked link may establish native platform attribution independently, subject to its actual provider mechanics and the visitor's choices. Current Brand Brain `isAuditCheckoutContinuationAvailable()` additionally requires `UNVERIFIED` affiliate evidence, which can exclude non-consent visitors from the special delayed checkout flow even though regular purchase remains accessible. **Before launch, propose a separate reviewed functional change to allow ordinary non-attributed delayed checkout continuation regardless of optional advertising consent.** This proposal does not authorize changes to checkout logic or promise affiliate credit without valid referral evidence. Do not claim Whop provides a fixed multi-day cookie window without account-specific provider evidence and a controlled sandbox test.
+
 ## Why this is required
 The current published Privacy Policy discusses optional advertising measurement and campaign/referral information, but it does **not clearly disclose compensation-bearing affiliate attribution** through an Audit followed by a later purchase. The currently implemented candidate requires both advertising consent and a separate disabled-by-default privacy flag to store the affiliate code.
 
