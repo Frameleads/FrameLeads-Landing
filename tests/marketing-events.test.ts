@@ -133,9 +133,8 @@ test("attribution merging never replaces known campaign values with empty values
 
 test("advertising withdrawal removes session affiliate data and URL referral while preserving analytics attribution", () => {
   withBrowser((_events, storage, location) => {
-    process.env.NEXT_PUBLIC_AFFILIATE_REFERRAL_PRIVACY_APPROVED = "true";
     location.search = "?a=partner_alpha&utm_source=partner&utm_campaign=spring";
-    const captured = captureMarketingAttribution();
+    const captured = captureMarketingAttribution(true);
     assert.equal(captured.affiliateCode, "partner_alpha");
     assert.equal(captured.utmSource, "partner");
 
@@ -149,28 +148,24 @@ test("advertising withdrawal removes session affiliate data and URL referral whi
     savePrivacyConsent({ analytics: true, advertising: true });
     assert.equal(captureMarketingAttribution().affiliateCode, undefined);
     location.search = "?a=partner_beta&utm_source=partner";
-    assert.equal(captureMarketingAttribution().affiliateCode, "partner_beta");
-    delete process.env.NEXT_PUBLIC_AFFILIATE_REFERRAL_PRIVACY_APPROVED;
+    assert.equal(captureMarketingAttribution(true).affiliateCode, "partner_beta");
   });
 });
 
 test("analytics-only consent retains allowed UTM attribution but never captures affiliate referrals", () => {
   withBrowser((_events, _storage, location) => {
-    process.env.NEXT_PUBLIC_AFFILIATE_REFERRAL_PRIVACY_APPROVED = "true";
     savePrivacyConsent({ analytics: true, advertising: false });
     location.search = "?a=partner_alpha&utm_source=partner";
     const attribution = captureMarketingAttribution();
     assert.equal(attribution.affiliateCode, undefined);
     assert.equal(attribution.utmSource, "partner");
-    delete process.env.NEXT_PUBLIC_AFFILIATE_REFERRAL_PRIVACY_APPROVED;
   });
 });
 
 test("a consent withdrawal in another tab clears this tab's referral and leaves its UTM attribution", () => {
   withBrowser((_events, storage, location, local, fireStorageChange) => {
-    process.env.NEXT_PUBLIC_AFFILIATE_REFERRAL_PRIVACY_APPROVED = "true";
     location.search = "?a=partner_alpha&utm_source=partner";
-    captureMarketingAttribution();
+    captureMarketingAttribution(true);
     const unsubscribe = subscribePrivacyConsent(() => {});
     const changedChoice = JSON.stringify({ analytics: true, advertising: false, savedAt: "2026-10-22T12:00:00.000Z" });
     local.set("frameleads:privacy-consent:v1", changedChoice);
@@ -180,6 +175,19 @@ test("a consent withdrawal in another tab clears this tab's referral and leaves 
     assert.equal(saved.utmSource, "partner");
     assert.equal(new URL(location.href).searchParams.has("a"), false);
     unsubscribe();
-    delete process.env.NEXT_PUBLIC_AFFILIATE_REFERRAL_PRIVACY_APPROVED;
+  });
+});
+
+test("undecided first visit keeps the referral URL but neither stores nor returns affiliate attribution before opt-in", () => {
+  withBrowser((_events, storage, location, local) => {
+    local.delete("frameleads:privacy-consent:v1");
+    location.search = "?a=partner_first&utm_source=partner";
+
+    assert.deepEqual(captureMarketingAttribution(), {});
+    assert.equal(storage.has("frameleads:marketing-attribution:v1"), false);
+    assert.equal(new URL(location.href).searchParams.get("a"), "partner_first");
+
+    savePrivacyConsent({ analytics: true, advertising: true });
+    assert.equal(captureMarketingAttribution(true).affiliateCode, "partner_first");
   });
 });

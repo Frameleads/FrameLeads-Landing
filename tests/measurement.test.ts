@@ -33,7 +33,8 @@ test('consent-gated identifiers, 30-minute session rotation, cookies, pixel fail
   delete process.env.NEXT_PUBLIC_META_TRACKING_ENABLED;delete process.env.NEXT_PUBLIC_TIKTOK_TRACKING_ENABLED;
   let a=getMeasurementAttribution();assert.deepEqual(a,{});observeMeasurement('PAGE_VIEW');await wait();assert.equal(requests.length,0);assert.equal(pixelCalls.length,0);
   savePrivacyConsent({analytics:false,advertising:false});observeMeasurement('PAGE_VIEW');await wait();assert.equal(requests.length,0);assert.equal(pixelCalls.length,0);
-  local.set('frameleads:privacy-consent:v1',JSON.stringify({analytics:true,advertising:true,savedAt:new Date().toISOString()}));
+  local.set('frameleads:privacy-consent:v1',JSON.stringify({analytics:true,advertising:true,savedAt:new Date(Date.now()+1000).toISOString()}));
+  doc.cookie='_fbp=fb.1.1700000000000.12345; _fbc=fb.1.1700000000000.click_1; _ttp=tiktok_cookie';
   a=getMeasurementAttribution();assert.match(a.anonymous_id!,/^[a-f0-9-]{36}$/);assert.match(a.session_id!,/^[a-f0-9-]{36}$/);assert.equal(a.referrer_host,'ref.example');assert.equal(a.fbclid,'click_1');assert.equal(a.ttclid,'tiktok_1');assert.equal(a.fbp,undefined);
   const anonymous=a.anonymous_id,oldSession=a.session_id;
   session.set('frameleads:b71:session',JSON.stringify({id:oldSession,last:Date.now()-31*60000,attribution:{}}));

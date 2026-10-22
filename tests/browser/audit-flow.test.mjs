@@ -45,7 +45,7 @@ before(async () => {
   const executable = [process.env.CHROME_PATH, 'C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', '/usr/bin/google-chrome', '/usr/bin/chromium'].find(value => value && existsSync(value));
   assert.ok(executable, 'Set CHROME_PATH to an installed Chrome/Chromium/Edge binary');
   const profile = mkdtempSync(path.join(tmpdir(), 'frameleads-audit-browser-'));
-  chrome = spawn(executable, ['--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check', '--remote-debugging-port=0', '--user-data-dir=' + profile, 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
+  chrome = spawn(executable, ['--headless=new', '--no-sandbox', '--disable-gpu', '--disable-crash-reporter', '--disable-breakpad', '--no-first-run', '--no-default-browser-check', '--remote-debugging-port=0', '--user-data-dir=' + profile, 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
   const endpoint = await new Promise((resolve, reject) => {
     const timeout = setTimeout(() => reject(Error('Chromium CDP startup timed out')), 15000);
     chrome.stderr.on('data', data => { const match = String(data).match(/DevTools listening on (ws:\/\/\S+)/); if (match) { clearTimeout(timeout); resolve(match[1]); } });
@@ -64,7 +64,10 @@ async function page(width = 1280, consent = false) {
   const { sessionId } = await browser.send('Target.attachToTarget', { targetId, flatten: true });
   const send = (method, params) => browser.send(method, params, sessionId);
   const captures = [], observations = [], errors = [];
-  let outcome = { success: true }, status = 201;
+  let outcome = { success: true, prospectId: '11111111-1111-4111-8111-111111111111', checkoutContinuationAvailable: true }, status = 201;
+  const seedConsent = consent === null
+    ? `localStorage.removeItem('frameleads:privacy-consent:v1');`
+    : `localStorage.setItem('frameleads:privacy-consent:v1', JSON.stringify({analytics:${consent},advertising:${consent},savedAt:new Date().toISOString()}));`;
   browser.on('Fetch.requestPaused', async message => {
     if (message.sessionId !== sessionId) return;
     const { requestId, request } = message.params;
@@ -82,7 +85,7 @@ async function page(width = 1280, consent = false) {
   await send('Page.addScriptToEvaluateOnNewDocument', { source: `
     if (location.origin === ${JSON.stringify(base)}) {
       localStorage.clear(); sessionStorage.clear();
-      localStorage.setItem('frameleads:privacy-consent:v1', JSON.stringify({analytics:${consent},advertising:${consent},savedAt:new Date().toISOString()}));
+      ${seedConsent}
       window.__events=[]; window.__pixels=[];
       window.addEventListener('frameleads:marketing-event', e => window.__events.push(e.detail));
       const pixel=(...args)=>window.__pixels.push(args); pixel.queue=[]; pixel.loaded=true; pixel.version='2.0'; window.fbq=pixel;
@@ -144,6 +147,35 @@ test('normal homepage, button entry, Escape, Back/Forward, focus and scroll rest
     assert.equal(await p.evaluate('scrollY'), scroll);
     assert.equal(await p.evaluate('document.activeElement.textContent'), 'Diagnose My Reply Workflow');
     assert.equal(await p.evaluate('location.search'), '?utm_source=meta&fbclid=fixture');
+    assert.deepEqual(p.errors, []);
+  } finally { await p.close(); }
+});
+
+test('first-visit referral stays unstored before consent and is captured after accepting', async () => {
+  const p = await page(390, null);
+  try {
+    await p.goto('/?a=partner_alpha');
+    assert.equal(await p.evaluate(`localStorage.getItem('frameleads:privacy-consent:v1')`), null, 'this is a first visit with no saved choice');
+    assert.equal(await p.evaluate(`new URLSearchParams(location.search).get('a')`), 'partner_alpha');
+
+    await p.evaluate(`${diagnoseButton}.click()`); await p.wait(`!!${dialog}`);
+    await diagnose(p); await submit(p); await p.wait(`${dialog}.textContent.includes('Your Reply Workflow Map')`);
+    assert.equal(p.captures.length, 1);
+    assert.equal(p.captures[0].advertisingConsent, false);
+    assert.equal(p.captures[0].attribution?.affiliateCode, undefined, 'pre-choice Audit request must not send the affiliate code');
+    assert.equal(await p.evaluate(`JSON.parse(sessionStorage.getItem('frameleads:marketing-attribution:v1') || '{}').affiliateCode`), undefined, 'pre-choice capture must not store the affiliate code');
+    assert.equal(await p.evaluate(`JSON.stringify(window.__events).includes('partner_alpha')`), false, 'generic marketing events must not attribute the referral');
+    assert.equal(await p.evaluate(`new URLSearchParams(location.search).get('a')`), 'partner_alpha', 'undecided state preserves the referral URL until a choice');
+
+    await p.evaluate(`Array.from(document.querySelectorAll('button')).find(button=>button.textContent.includes('Accept optional')).click()`);
+    await p.wait(`JSON.parse(localStorage.getItem('frameleads:privacy-consent:v1') || '{}').advertising === true`);
+    assert.equal(await p.evaluate(`new URLSearchParams(location.search).get('a')`), 'partner_alpha');
+    await p.evaluate(`${dialog}.querySelector('button[aria-label="Close reply workflow audit"]').click()`); await p.wait(`!${dialog}`);
+    await p.evaluate(`${diagnoseButton}.click()`); await p.wait(`!!${dialog}`);
+    await diagnose(p); await submit(p); await p.wait(`${dialog}.textContent.includes('Your Reply Workflow Map')`);
+    assert.equal(p.captures.length, 2);
+    assert.equal(p.captures[1].advertisingConsent, true);
+    assert.equal(p.captures[1].attribution.affiliateCode, undefined, 'with affiliate privacy flags kept off, the preserved referral remains gated');
     assert.deepEqual(p.errors, []);
   } finally { await p.close(); }
 });
@@ -219,7 +251,7 @@ test('failed capture, retry, consent denial, backdrop close and legacy links', a
     await diagnose(p);
     p.setOutcome({ error: 'Fixture failure' }, 503); await submit(p); await p.wait(`!!${dialog}.querySelector('[role=alert]')`);
     assert.equal(await p.evaluate(`window.__events.filter(e=>e.event==='LEAD_CAPTURED').length`), 0);
-    p.setOutcome({ success: true }); await submit(p); await p.wait(`${dialog}.textContent.includes('Your Reply Workflow Map')`);
+    p.setOutcome({ success: true, prospectId: '11111111-1111-4111-8111-111111111111', checkoutContinuationAvailable: true }); await submit(p); await p.wait(`${dialog}.textContent.includes('Your Reply Workflow Map')`);
     assert.equal(p.captures.length, 2); assert.equal(p.captures[1].advertisingConsent, false);
     assert.deepEqual(p.captures[1].attribution, {}); assert.deepEqual(p.observations, []);
     assert.equal(await p.evaluate(`window.__pixels.length`), 0);

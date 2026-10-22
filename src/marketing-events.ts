@@ -1,6 +1,6 @@
 import type { AuditLeadPayload, DiagnosisType } from "./audit";
 import {initializeMeasurementPixels} from './measurement.ts';
-import {discardAffiliateReferral, getPrivacyConsent, isAffiliateCaptureBlockedForCurrentPage} from './privacy-consent.ts';
+import {clearStoredAffiliateReferral, discardAffiliateReferral, getPrivacyConsent, isAffiliateCaptureBlockedForCurrentPage} from './privacy-consent.ts';
 
 export const marketingEventNames = [
   "LANDING_VIEW",
@@ -80,12 +80,20 @@ export function mergeMarketingAttribution(
   return merged;
 }
 
-export function captureMarketingAttribution(): MarketingAttribution {
+export function captureMarketingAttribution(
+  affiliateReferralApproved = process.env.NEXT_PUBLIC_AFFILIATE_REFERRAL_PRIVACY_APPROVED === "true",
+): MarketingAttribution {
   const currentWindow = browserWindow();
   if (!currentWindow) return {};
   const consent = getPrivacyConsent();
-  if (!consent?.advertising) discardAffiliateReferral();
-  if (!consent || (!consent.analytics && !consent.advertising)) return {};
+  if (!consent) {
+    // No choice yet: don't persist or expose referral data, but retain the
+    // incoming URL parameter so a later affirmative choice can qualify it.
+    clearStoredAffiliateReferral();
+    return {};
+  }
+  if (!consent.advertising) discardAffiliateReferral();
+  if (!consent.analytics && !consent.advertising) return {};
 
   let existing: MarketingAttribution = {};
   try {
@@ -113,7 +121,6 @@ export function captureMarketingAttribution(): MarketingAttribution {
     utm_term: "utmTerm",
   } as const;
   for (const key of utmKeys) incoming[mapping[key]] = cleanString(params.get(key));
-  const affiliateReferralApproved = process.env.NEXT_PUBLIC_AFFILIATE_REFERRAL_PRIVACY_APPROVED === "true";
   if (!affiliateReferralApproved) discardAffiliateReferral();
   const queryAffiliateCode = params.get("a");
   const affiliateCode = isAffiliateCaptureBlockedForCurrentPage(queryAffiliateCode ?? undefined)

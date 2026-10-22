@@ -18,6 +18,7 @@ export function getPrivacyConsent(): PrivacyConsent | null {
   try {
     const stored = window.localStorage.getItem(storageKey);
     if (stored === cachedStorageValue) return cachedStorageConsent ?? memoryConsent;
+    const previousStoredValue = cachedStorageValue;
     cachedStorageValue = stored;
     cachedStorageConsent = null;
     if (stored) {
@@ -34,6 +35,7 @@ export function getPrivacyConsent(): PrivacyConsent | null {
         }
       }
     }
+    if (!stored && previousStoredValue) memoryConsent = null;
     return memoryConsent;
   } catch {
     // Memory state keeps the current choice effective when browser storage is unavailable.
@@ -71,7 +73,7 @@ export function savePrivacyConsent(preferences: Pick<PrivacyConsent, "analytics"
       // Clearing optional identifiers is best effort when storage is blocked.
     }
   }
-  if (previous?.advertising && !next.advertising) {
+  if (!next.advertising) {
     clearAdvertisingAttribution();
   }
   window.dispatchEvent(new CustomEvent(eventName, { detail: next }));
@@ -133,6 +135,22 @@ function clearAdvertisingAttribution(): void {
 /** Remove prior referral evidence from this tab without touching permitted analytics fields. */
 export function discardAffiliateReferral(): void {
   affiliateCaptureBlockedForCurrentPage = true;
+  clearStoredAffiliateReferral();
+  try {
+    const url = new URL(window.location.href);
+    if (url.searchParams.has("a")) {
+      const code = url.searchParams.get("a");
+      if (code) blockedAffiliateCodes.add(code);
+      url.searchParams.delete("a");
+      window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+    }
+  } catch {
+    // Keep affiliate recapture blocked for this page if the old URL cannot be removed.
+  }
+}
+
+/** Clear stored referral data without blocking a still-undecided URL referral. */
+export function clearStoredAffiliateReferral(): void {
   try {
     const saved = window.sessionStorage.getItem(attributionStorageKey);
     if (saved) {
@@ -145,18 +163,7 @@ export function discardAffiliateReferral(): void {
       }
     }
   } catch {
-    // The URL is also scrubbed below; unavailable storage never restores consent.
-  }
-  try {
-    const url = new URL(window.location.href);
-    if (url.searchParams.has("a")) {
-      const code = url.searchParams.get("a");
-      if (code) blockedAffiliateCodes.add(code);
-      url.searchParams.delete("a");
-      window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
-    }
-  } catch {
-    // Keep affiliate recapture blocked for this page if the old URL cannot be removed.
+    // Unavailable storage never creates or returns affiliate attribution.
   }
 }
 
