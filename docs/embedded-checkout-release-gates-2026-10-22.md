@@ -75,3 +75,20 @@ Never apply refused migration `20261004202441_website_audit_ingestion.sql` via S
 - **Still required:** Final active plan price/Whop reconciliation, authorized real Whop Sandbox Core and Enterprise payment tests, commission and consent-proof review, signed-webhook reconciliation, subscription access and returning-user verification, plus owner authorization for production release.
 - **Safety unchanged:** No modification to main checkout CTAs or existing hosted links, no new products, production flags, database migrations, pixel configuration, outbound data, or live payments. PR #7 remains a draft based on Landing PR #5; the blocked Brand Brain migration stays blocked.
 - The separate-workspace report is not verification of this branch. Use the GitHub Actions run triggered by the V3 commit for validation; do not report green until confirmed.
+
+## Stage-gate decision — owner UI sign-off on 2026-10-22
+
+**UI/UX stage CLOSED — V3 visually accepted for now.** The owner reviewed the combined Core/Enterprise desktop/mobile previews and confirmed the V3 layout "looks good for now," explicitly reserving simple visual adjustments for a later pass. This sign-off is for **the minimal page shell only**, not Whop's actual payment fields (intentionally blocked in synthetic screenshots), payments, pricing, merchant terms, affiliate commission, deployment, or production launch. Do not reopen UI design work without a new specific request or a functional/accessibility issue uncovered in genuine Sandbox tests.
+
+**Baseline:** PR #7 at `1d72f8268764d226f1ee662722f001016587135f`, GitHub Actions `39812830764`: 62/62 Node tests, 6/6 isolated Chromium scenarios, TypeScript and production build passed; test/browser externals were stubbed. Subsequent documentation-only commits do not constitute new runtime verification.
+
+**Next phase: Whop Sandbox E2E / release-readiness validation (OPEN).** Follow the gates below in order:
+1. Read-only inventory of the exact FrameLeads Vercel preview deployment, team scope, permitted Sandbox Core account/product/plan and nonproduction return URL; **do not reauthorize through unsafe bypasses**. A successful GitHub preview build is not proof the runtime environment has the required Sandbox variables.
+2. Verify real Whop loader visibility and payment methods (desktop/mobile and Safari where available) **only** on a controlled HTTPS Sandbox preview with `data-whop-checkout-environment="sandbox"`. Ensure the generated checkout targets the expected Sandbox account/plan, not any live plan.
+3. Perform a genuine **Sandbox Core test purchase** using sanctioned test payment means, then validate Whop-signed webhook intake, signature verification, idempotent processing, order/subscription reconciliation, plan-specific entitlement issuance, `app.frameleads.io` redirect and returning-customer login. A `/checkout/complete` page alone never proves success.
+4. Establish a separate verified **Sandbox Enterprise** product/plan before enabling or purchasing that tier. Do not repurpose production Enterprise IDs.
+5. Complete the existing affiliate privacy/consent-proof, immediate-affiliate and delayed Audit continuation contracts (Landing PR #5 / Brand Brain PR #12). Test accepted, declined and withdrawn consent; verify real provider-confirmed commission evidence without trusting raw query strings or client-provided events.
+6. Confirm Apple Pay domain registration, payment fallbacks, real UI/accessibility errors, cancellation/refunds, and price/currency/renewal disclosures. Any layout adjustments discovered are narrowly scoped functional fixes, not a V4 redesign.
+7. Only after all gates pass and separately explicit owner release approval: resolve dependent PRs, coordinate backend before landing deployment, switch live CTAs with rollback available, and run production consent-safe smoke tests.
+
+**No authorization was given to merge PR #7, deploy production, modify Vercel/Whop/Supabase, change prices, apply the refused migration `20261004202441_website_audit_ingestion.sql`, or enable affiliate tracking.**
