@@ -1,6 +1,16 @@
 # FrameLeads — affiliate-referral privacy approval draft
 **STATUS: NOT APPROVED / DO NOT PUBLISH OR ENABLE FLAGS.** Prepared for owner/policy review using `src/app/privacy/page.tsx`, `src/privacy-consent.ts`, `src/audit-capture.ts`, and `docs/affiliate-referral-privacy-gate.md` on the isolated Landing PR #5 branch.
 
+## Owner decision — public operator identification (approved 22 October 2026)
+
+**Approved business-owner choice:** The individual operator's legal name may appear publicly in the FrameLeads Privacy Policy. Whop's provided verification screenshot shows individual identity verification as **Verified**, with the name **Akram Walid**, country **United Arab Emirates**. The Whop business UI shows **BrandFlow Studio** as a display/trading name; separate business verification was not completed in the shared screen. This decision **does not** establish business licensing, company registration, tax status, or final legal sufficiency.
+
+**Proposed Section 1 replacement — exact public wording approved in principle, still held for legal/policy review and publication authorization:**
+
+> **About FrameLeads.** FrameLeads is offered under the BrandFlow Studio name and is operated by Akram Walid, based in the United Arab Emirates. For questions about how personal information is collected, used, retained, or shared, or to exercise applicable privacy rights, contact akram@frameleads.io.
+
+**Data minimization:** Do not add residential address, phone number, birth date, verification documents, or screenshots of verification to the repository or website. Owner approval is limited to publishing their name and the above operator-identification language; it is **not** blanket approval of compensated referral tracking, policy text, retention dates, processing operations, flag changes, migrations, or deployment. Keep final controller identification subject to applicable legal review.
+
 ## Why this is required
 The current published Privacy Policy discusses optional advertising measurement and campaign/referral information, but it does **not clearly disclose compensation-bearing affiliate attribution** through an Audit followed by a later purchase. The currently implemented candidate requires both advertising consent and a separate disabled-by-default privacy flag to store the affiliate code.
 
