@@ -36,3 +36,11 @@ jobs:
         run: npm run build
       - name: Isolated Chromium checkout smoke (all external requests stubbed)
         run: node --test --test-concurrency=1 tests/browser/checkout-preview.test.mjs
+      - name: Upload synthetic checkout screenshots for owner design review
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: frameleads-checkout-synthetic-layouts
+          path: .next/checkout-review/*.png
+          if-no-files-found: warn
+          retention-days: 7
