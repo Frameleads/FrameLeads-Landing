@@ -5,6 +5,9 @@ on:
     paths:
       - "src/app/checkout/**"
       - "src/components/EmbeddedWhopCheckout.tsx"
+      - "src/components/VerifiedWhopSessionCheckout.tsx"
+      - "package.json"
+      - "package-lock.json"
       - "src/components/CheckoutOrderSummary.tsx"
       - "src/checkout-embed-policy.ts"
       - "src/checkout-embedded-session.ts"
