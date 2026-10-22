@@ -88,7 +88,15 @@ test("existing hosted checkout remains default; embedded path is server-only and
   assert.match(route, /secure: true, httpOnly: true, sameSite: 'lax', path: '\/'/);
   assert.match(route, /const result = NextResponse.redirect\(checkoutUrl, 303\)/);
   assert.match(page, /bridgeMode \? \(/);
-  assert.match(page, /Embedded session payments are not yet enabled/);
+  assert.match(page, /Sandbox payment is disabled until the separate integration release gate is approved/);
+  assert.match(page, /FRAMELEADS_WHOP_SESSION_PAYMENT_ENABLED/);
+  assert.match(page, /<VerifiedWhopSessionCheckout/);
+  const checkout = fs.readFileSync(new URL("../src/components/VerifiedWhopSessionCheckout.tsx", import.meta.url), "utf8");
+  assert.match(checkout, /from "@whop\/checkout\/react"/);
+  assert.match(checkout, /sessionId=\{sessionId\}/);
+  assert.match(checkout, /environment="sandbox"/);
+  assert.match(checkout, /theme="light"/);
+  assert.doesNotMatch(checkout, /affiliate_code|data-whop-affiliate|\bPurchase\b/);
   assert.match(page, /readVerifiedEmbedSession/);
   assert.doesNotMatch(page, /searchParams\.session/);
   assert.doesNotMatch(backend, /\bfetch\(/);
