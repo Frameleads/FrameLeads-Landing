@@ -5,6 +5,7 @@ on:
     paths:
       - "src/app/checkout/**"
       - "src/components/EmbeddedWhopCheckout.tsx"
+      - "src/components/CheckoutOrderSummary.tsx"
       - "src/checkout-embed-policy.ts"
       - "tests/embedded-checkout-policy.test.ts"
       - "tests/browser/checkout-preview.test.mjs"
