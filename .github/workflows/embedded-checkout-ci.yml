@@ -7,6 +7,7 @@ on:
       - "src/components/EmbeddedWhopCheckout.tsx"
       - "src/checkout-embed-policy.ts"
       - "tests/embedded-checkout-policy.test.ts"
+      - "tests/browser/checkout-preview.test.mjs"
       - ".github/workflows/embedded-checkout-ci.yml"
   workflow_dispatch:
 
@@ -33,3 +34,5 @@ jobs:
         run: npm test
       - name: Build Next.js
         run: npm run build
+      - name: Isolated Chromium checkout smoke (all external requests stubbed)
+        run: node --test --test-concurrency=1 tests/browser/checkout-preview.test.mjs
