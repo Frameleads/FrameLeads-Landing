@@ -14,7 +14,24 @@ function loadRoute(path: string) {
   const source = fs.readFileSync(new URL(path, import.meta.url), 'utf8');
   const code = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2023 } }).outputText;
   const cjsModule = { exports: {} as Record<string, unknown> };
-  const response = { redirect: (url: URL | string, status: number) => new Response(null, { status, headers: { location: String(url) } }), json: (body: unknown, init?: ResponseInit) => Response.json(body, init) };
+  const response = {
+    redirect: (url: URL | string, status: number) => {
+      const out = new Response(null, { status, headers: { location: String(url) } });
+      // Model only the NextResponse cookie API used in the checked Sandbox
+      // handoff. Real payment/Whop APIs are not invoked by this fixture.
+      Object.defineProperty(out, 'cookies', { value: {
+        set: (name: string, value: string, options: { maxAge?: number; secure?: boolean; httpOnly?: boolean; sameSite?: string; path?: string }) => {
+          const parts = [name + '=' + value, 'Path=' + (options.path ?? '/'), 'Max-Age=' + options.maxAge];
+          if (options.secure) parts.push('Secure');
+          if (options.httpOnly) parts.push('HttpOnly');
+          if (options.sameSite) parts.push('SameSite=' + options.sameSite);
+          out.headers.append('set-cookie', parts.join('; '));
+        },
+      } });
+      return out;
+    },
+    json: (body: unknown, init?: ResponseInit) => Response.json(body, init),
+  };
   const context = vm.createContext({
     module: cjsModule, exports: cjsModule.exports, process, Request, Response, FormData, URL, Headers, AbortSignal,
     fetch: globalThis.fetch,
@@ -166,4 +183,77 @@ test('sandbox rejects production plan, production host, production environment, 
     purchaseUrl: 'https://sandbox.whop.com/checkout/ch_4/', planId: 'plan_UnverifiedSandboxEnterprise', environment: 'sandbox',
   }, 'ENTERPRISE');
   assert.equal(new URL(enterprise.headers.get('location')!).pathname, '/checkout/continue');
+});
+
+
+test('optional Sandbox Audit bridge accepts only server-issued session and sets host-only short-lived cookie', async () => {
+  const keys = [
+    'FRAMELEADS_EMBED_SESSION_BRIDGE_ENABLED',
+    'FRAMELEADS_EMBEDDED_CHECKOUT_ENABLED',
+    'FRAMELEADS_EMBED_SESSION_SIGNING_SECRET',
+    'VERCEL_ENV', 'WHOP_ENVIRONMENT',
+    'WHOP_SANDBOX_CORE_PLAN_ID', 'WHOP_SANDBOX_ACCOUNT_ID',
+    'WHOP_SANDBOX_PRODUCT_ID', 'WHOP_SANDBOX_RETURN_URL',
+    'BRAND_BRAIN_AUDIT_INGEST_URL', 'BRAND_BRAIN_AUDIT_INGEST_SECRET',
+  ] as const;
+  const previous = keys.map(key => process.env[key]);
+  const transport = globalThis.fetch;
+  let requested = 0;
+  try {
+    Object.assign(process.env, {
+      FRAMELEADS_EMBED_SESSION_BRIDGE_ENABLED: 'true',
+      FRAMELEADS_EMBEDDED_CHECKOUT_ENABLED: 'true',
+      FRAMELEADS_EMBED_SESSION_SIGNING_SECRET: 'test-key-that-is-longer-than-32-characters',
+      VERCEL_ENV: 'preview', WHOP_ENVIRONMENT: 'sandbox',
+      WHOP_SANDBOX_CORE_PLAN_ID: 'plan_kgrX8LpuAH2Ba',
+      WHOP_SANDBOX_ACCOUNT_ID: 'biz_6YudF3G7nc8Wdw',
+      WHOP_SANDBOX_PRODUCT_ID: 'prod_2RDEl6d8jhM9W',
+      WHOP_SANDBOX_RETURN_URL: 'https://preview.example/checkout/complete',
+      BRAND_BRAIN_AUDIT_INGEST_URL: 'https://brain-preview.example/api/marketing/audit-lead/ingest',
+      BRAND_BRAIN_AUDIT_INGEST_SECRET: 'test-bridge-auth-secret-32-chars-minimum',
+    });
+    globalThis.fetch = async () => {
+      requested++;
+      return Response.json({
+        purchaseUrl: 'https://sandbox.whop.com/checkout/ch_Verified1234/',
+        planId: 'plan_kgrX8LpuAH2Ba', environment: 'sandbox',
+        embeddedSessionId: 'ch_Verified1234',
+      });
+    };
+    const post = (origin: string, plan: string) => {
+      const body = new FormData();
+      body.set('plan', plan);
+      return new Request('https://preview.example/api/checkout', {
+        method: 'POST',
+        headers: { origin, cookie: `${CHECKOUT_SESSION_COOKIE_NAME}=${'a'.repeat(64)}` },
+        body,
+      });
+    };
+    const route = loadRoute('../src/app/api/checkout/route.ts');
+    const accepted = await route(post('https://preview.example', 'CORE'));
+    assert.equal(accepted.status, 303);
+    assert.equal(accepted.headers.get('location'), 'https://preview.example/checkout/core');
+    const setCookie = accepted.headers.get('set-cookie') ?? '';
+    assert.ok(setCookie.startsWith(EMBED_SESSION_COOKIE_NAME + '='));
+    assert.match(setCookie, /Max-Age=600/);
+    assert.match(setCookie, /HttpOnly/);
+    assert.match(setCookie, /Secure/);
+    assert.match(setCookie, /SameSite=lax/i);
+    assert.doesNotMatch(setCookie, /Domain=/);
+    assert.equal(requested, 1);
+
+    const rejectedCrossOrigin = await route(post('https://attacker.example', 'CORE'));
+    assert.equal(new URL(rejectedCrossOrigin.headers.get('location')!).searchParams.get('state'), 'unavailable');
+    assert.equal(requested, 1);
+
+    const rejectedEnterprise = await route(post('https://preview.example', 'ENTERPRISE'));
+    assert.equal(new URL(rejectedEnterprise.headers.get('location')!).searchParams.get('state'), 'unavailable');
+    assert.equal(requested, 2);
+  } finally {
+    globalThis.fetch = transport;
+    keys.forEach((key, idx) => {
+      if (previous[idx] === undefined) delete process.env[key];
+      else process.env[key] = previous[idx]!;
+    });
+  }
 });
