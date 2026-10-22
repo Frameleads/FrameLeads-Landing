@@ -63,11 +63,12 @@ export function readVerifiedEmbedSession(
   catch { return null; }
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
   const value = payload as Partial<VerifiedEmbedSession>;
+  const expiresAt = value.expiresAt;
   if (!isProviderSessionId(value.sessionId) || value.tier !== tier
-    || !Number.isSafeInteger(value.expiresAt)
-    || value.expiresAt <= Math.floor(now / 1000)
-    || value.expiresAt > Math.floor(now / 1000) + EMBED_SESSION_TTL_SECONDS) return null;
-  return { sessionId: value.sessionId, tier, expiresAt: value.expiresAt };
+    || typeof expiresAt !== "number" || !Number.isSafeInteger(expiresAt)
+    || expiresAt <= Math.floor(now / 1000)
+    || expiresAt > Math.floor(now / 1000) + EMBED_SESSION_TTL_SECONDS) return null;
+  return { sessionId: value.sessionId, tier, expiresAt };
 }
 
 /** Protect the state-changing Audit continuation even on a sandbox preview. */
