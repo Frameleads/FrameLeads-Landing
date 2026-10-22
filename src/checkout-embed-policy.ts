@@ -10,6 +10,18 @@ export type CheckoutTier = "core" | "enterprise";
 
 export const WHOP_EMBED_LOADER = "https://js.whop.com/static/checkout/loader.js";
 
+/** Never turn a public referral parameter into a payable affiliate ID. */
+export type ReferralCheckoutDecision = "pending" | "review" | "allowed";
+export function referralCheckoutDecision(input: {
+  rawReferralPresent: boolean;
+  advertisingConsent: boolean | null;
+  storedReferralPresent: boolean;
+}): ReferralCheckoutDecision {
+  if (input.rawReferralPresent && input.advertisingConsent === null) return "pending";
+  if (input.advertisingConsent === true && (input.rawReferralPresent || input.storedReferralPresent)) return "review";
+  return "allowed";
+}
+
 const tiers = {
   core: {
     title: "FrameLeads Core",
@@ -38,7 +50,7 @@ export function tierInformation(tier: CheckoutTier) {
 }
 
 export type EmbedPolicy =
-  | { available: false; reason: "disabled" | "production_not_approved" | "wrong_environment" | "sandbox_plan_missing" | "sandbox_unconfigured" }
+  | { available: false; reason: "disabled" | "production_not_approved" | "preview_only" | "wrong_environment" | "sandbox_plan_missing" | "sandbox_unconfigured" }
   | { available: true; environment: "sandbox"; planId: string; returnUrl: string; hostedFallback: null };
 
 const SANDBOX_CORE_PLAN = "plan_kgrX8LpuAH2Ba";
@@ -51,6 +63,7 @@ const SANDBOX_CORE_PLAN = "plan_kgrX8LpuAH2Ba";
 export function embeddedCheckoutPolicy(tier: CheckoutTier, values: Record<string, string | undefined>): EmbedPolicy {
   if (values.FRAMELEADS_EMBEDDED_CHECKOUT_ENABLED !== "true") return { available: false, reason: "disabled" };
   if (values.VERCEL_ENV === "production") return { available: false, reason: "production_not_approved" };
+  if (values.VERCEL_ENV !== "preview") return { available: false, reason: "preview_only" };
   if (values.WHOP_ENVIRONMENT !== "sandbox") return { available: false, reason: "wrong_environment" };
   if (tier !== "core") return { available: false, reason: "sandbox_plan_missing" };
   if (values.WHOP_SANDBOX_CORE_PLAN_ID !== SANDBOX_CORE_PLAN
