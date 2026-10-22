@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { before, after, test } from "node:test";
 import { spawn } from "node:child_process";
-import { existsSync, mkdtempSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -145,7 +145,13 @@ async function page(url, choice = null, width = 1280) {
     throw Error("Browser condition timed out: " + label);
   };
   await wait('document.readyState === "complete" && !!document.querySelector("main")', "checkout page hydrated");
-  return { evaluate, wait, errors, close: () => cdp.send("Target.closeTarget", { targetId }) };
+  const screenshot = async name => {
+    if (!/^[a-z0-9-]+$/.test(name)) throw Error("Unsafe screenshot name");
+    mkdirSync(".next/checkout-review", { recursive: true });
+    const response = await send("Page.captureScreenshot", { format: "png", captureBeyondViewport: true });
+    writeFileSync(".next/checkout-review/" + name + ".png", Buffer.from(response.data, "base64"));
+  };
+  return { evaluate, wait, screenshot, errors, close: () => cdp.send("Target.closeTarget", { targetId }) };
 }
 
 const embed = 'document.querySelector("[data-whop-checkout-plan-id]")';
@@ -159,6 +165,7 @@ test("Sandbox Core mounts Whop's isolated embed on the FrameLeads domain without
     assert.equal(await p.evaluate(`${embed}.getAttribute("data-whop-checkout-theme")`), "dark");
     assert.equal(await p.evaluate(`${embed}.getAttribute("data-whop-affiliate")`), null);
     assert.equal(await p.evaluate('location.host'), "127.0.0.1:3168");
+    await p.screenshot("core-desktop-sandbox-shell");
     assert.deepEqual(p.errors, []);
   } finally { await p.close(); }
 });
@@ -179,6 +186,7 @@ test("Declining optional referral tracking permits checkout; no affiliate identi
     await p.wait(`!!${embed}`, "declined referral can buy");
     assert.equal(await p.evaluate(`${embed}.getAttribute("data-whop-affiliate")`), null);
     assert.equal(await p.evaluate(`${embed}.getAttribute("data-whop-checkout-environment")`), "sandbox");
+    await p.screenshot("core-mobile-sandbox-shell");
     assert.deepEqual(p.errors, []);
   } finally { await p.close(); }
 });
