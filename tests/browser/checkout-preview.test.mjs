@@ -164,12 +164,22 @@ test("Sandbox Core mounts Whop's isolated embed on the FrameLeads domain without
     assert.equal(await p.evaluate(`${embed}.getAttribute("data-whop-checkout-plan-id")`), "plan_kgrX8LpuAH2Ba");
     assert.equal(await p.evaluate(`${embed}.getAttribute("data-whop-checkout-theme")`), "light");
     assert.equal(await p.evaluate('getComputedStyle(document.querySelector("section[aria-label=\\\"Secure Whop payment\\\"]")).backgroundColor'), "rgb(255, 255, 255)");
-    assert.equal(await p.evaluate('getComputedStyle(document.querySelector("section[aria-labelledby=\\\"order-heading\\\"]")).backgroundColor'), "rgb(26, 26, 26)");
-    assert.equal(await p.evaluate('document.body.textContent.includes("Total due today")'), true);
-    assert.equal(await p.evaluate('document.body.textContent.includes("Confirmed in Whop checkout")'), true);
-    assert.equal(await p.evaluate('document.body.textContent.includes("Published production price")'), true);
-    assert.equal(await p.evaluate('document.body.textContent.includes("Promo codes, if available")'), true);
+    assert.equal(await p.evaluate('getComputedStyle(document.querySelector("section[aria-labelledby=\\\"order-heading\\\"]")).backgroundColor'), "rgb(36, 36, 36)");
+
+
+
+
     assert.equal(await p.evaluate('document.querySelector("a[href=\\\"https://whop.com/buyer-terms/\\\"]") !== null'), true);
+    assert.equal(await p.evaluate('document.body.textContent.includes("by BrandFlow Studio")'), true);
+    assert.equal(await p.evaluate('document.body.textContent.includes("Reply decision intelligence for outbound teams.")'), true);
+    assert.equal(await p.evaluate('document.body.textContent.includes("Billed monthly")'), true);
+    assert.equal(await p.evaluate('document.body.textContent.includes("Included in this plan")'), false);
+    assert.equal(await p.evaluate('document.body.textContent.includes("View order details")'), false);
+    assert.equal(await p.evaluate('document.body.textContent.includes("Promo codes, if available")'), false);
+    assert.equal(await p.evaluate('document.body.textContent.includes("Total due today")'), false);
+    assert.equal(await p.evaluate('document.querySelectorAll("[aria-label=\\\"Published subscription price\\\"]").length'), 1);
+    assert.equal(await p.evaluate('document.querySelector("header") === null'), true);
+    assert.equal(await p.evaluate('getComputedStyle(document.querySelector("main")).backgroundColor'), "rgb(255, 255, 255)");
     assert.equal(await p.evaluate('document.querySelectorAll("input[type=card], input[name=promo]").length'), 0);
     assert.equal(await p.evaluate(`${embed}.getAttribute("data-whop-affiliate")`), null);
     assert.equal(await p.evaluate('location.host'), "127.0.0.1:3168");
@@ -194,7 +204,8 @@ test("Declining optional referral tracking permits checkout; no affiliate identi
     await p.wait(`!!${embed}`, "declined referral can buy");
     assert.equal(await p.evaluate(`${embed}.getAttribute("data-whop-affiliate")`), null);
     assert.equal(await p.evaluate(`${embed}.getAttribute("data-whop-checkout-environment")`), "sandbox");
-    assert.equal(await p.evaluate('document.body.textContent.includes("View order details")'), true);
+    assert.equal(await p.evaluate('document.body.textContent.includes("View order details")'), false);
+    assert.equal(await p.evaluate('document.querySelector("header") === null'), true);
     assert.equal(await p.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'), true, "mobile page must not overflow horizontally");
     assert.equal(await p.evaluate('getComputedStyle(document.querySelector("section[aria-label=\\\"Secure Whop payment\\\"]")).backgroundColor'), "rgb(255, 255, 255)");
     await p.screenshot("core-mobile-sandbox-shell");
@@ -214,8 +225,31 @@ test("Consented but unverified referral cannot be silently sold as a direct chec
 test("Enterprise lacks a verified Sandbox plan and stays disabled", async () => {
   const p = await page("/checkout/enterprise", false);
   try {
-    await p.wait('document.body.textContent.includes("Checkout preview is not available")');
+    await p.wait('document.body.textContent.includes("Checkout preview unavailable")');
     assert.equal(await p.evaluate(`!!${embed}`), false);
     assert.deepEqual(p.errors, []);
   } finally { await p.close(); }
+});
+
+test("Both tiers stay minimal and overflow-free at tablet and desktop widths", async () => {
+  for (const [route, width] of [
+    ["/checkout/core", 768],
+    ["/checkout/enterprise", 1024],
+    ["/checkout/enterprise", 1440],
+    ["/checkout/enterprise", 390],
+  ]) {
+    const p = await page(route, false, width);
+    try {
+      await p.wait('document.body.textContent.includes("Billed monthly")');
+      assert.equal(await p.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'), true, route + " " + width + "px overflow");
+      assert.equal(await p.evaluate('document.querySelectorAll("[aria-label=\\\"Published subscription price\\\"]").length'), 1);
+      assert.equal(await p.evaluate('document.body.textContent.includes("Included in this plan")'), false);
+      assert.equal(await p.evaluate('document.body.textContent.includes("View order details")'), false);
+      assert.equal(await p.evaluate('getComputedStyle(document.querySelector("section[aria-labelledby=\\\"order-heading\\\"]")).backgroundColor'), "rgb(36, 36, 36)");
+      assert.equal(await p.evaluate('getComputedStyle(document.querySelector("section[aria-label=\\\"Secure Whop payment\\\"]")).backgroundColor'), "rgb(255, 255, 255)");
+      if (route.endsWith("enterprise") && width === 1440) await p.screenshot("enterprise-desktop-preview-shell");
+      if (route.endsWith("enterprise") && width === 390) await p.screenshot("enterprise-mobile-preview-shell");
+      assert.deepEqual(p.errors, []);
+    } finally { await p.close(); }
+  }
 });
