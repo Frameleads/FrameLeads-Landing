@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import fs from "node:fs";
-import { checkoutTier, embeddedCheckoutPolicy, tierInformation, WHOP_EMBED_LOADER } from "../src/checkout-embed-policy.ts";
+import { checkoutTier, embeddedCheckoutPolicy, tierInformation, referralCheckoutDecision, WHOP_EMBED_LOADER } from "../src/checkout-embed-policy.ts";
 
 const sandbox = {
   FRAMELEADS_EMBEDDED_CHECKOUT_ENABLED: "true",
@@ -28,6 +28,8 @@ test("Whop native loader is pinned to the documented provider origin", () => {
 test("disabled by default; never enables production payments", () => {
   assert.deepEqual(embeddedCheckoutPolicy("core", {}), { available: false, reason: "disabled" });
   assert.deepEqual(embeddedCheckoutPolicy("core", { ...sandbox, VERCEL_ENV: "production" }), { available: false, reason: "production_not_approved" });
+  assert.deepEqual(embeddedCheckoutPolicy("core", { ...sandbox, VERCEL_ENV: undefined }), { available: false, reason: "preview_only" });
+  assert.deepEqual(embeddedCheckoutPolicy("core", { ...sandbox, VERCEL_ENV: "development" }), { available: false, reason: "preview_only" });
   assert.deepEqual(embeddedCheckoutPolicy("core", { ...sandbox, WHOP_ENVIRONMENT: "production" }), { available: false, reason: "wrong_environment" });
   assert.deepEqual(embeddedCheckoutPolicy("core", { ...sandbox, WHOP_ENVIRONMENT: undefined }), { available: false, reason: "wrong_environment" });
 });
@@ -61,4 +63,26 @@ test("embedded component contains no browser-provided payable affiliate or purch
   assert.doesNotMatch(component, /track\(\s*["']purchase/i);
   assert.match(component, /getPrivacyConsent/);
   assert.match(component, /observeMeasurement\("CHECKOUT_INITIATED"\)/);
+});
+
+test("raw referral must not block buyers who decline optional tracking", () => {
+  assert.equal(referralCheckoutDecision({ rawReferralPresent: true, advertisingConsent: null, storedReferralPresent: false }), "pending");
+  assert.equal(referralCheckoutDecision({ rawReferralPresent: true, advertisingConsent: false, storedReferralPresent: false }), "allowed");
+  assert.equal(referralCheckoutDecision({ rawReferralPresent: true, advertisingConsent: true, storedReferralPresent: false }), "review");
+  assert.equal(referralCheckoutDecision({ rawReferralPresent: false, advertisingConsent: true, storedReferralPresent: true }), "review");
+  assert.equal(referralCheckoutDecision({ rawReferralPresent: false, advertisingConsent: false, storedReferralPresent: false }), "allowed");
+  assert.equal(referralCheckoutDecision({ rawReferralPresent: false, advertisingConsent: null, storedReferralPresent: false }), "allowed");
+});
+
+test("browser markup explicitly selects Sandbox and uses documented Whop embed attributes", () => {
+  const component = fs.readFileSync(new URL("../src/components/EmbeddedWhopCheckout.tsx", import.meta.url), "utf8");
+  const page = fs.readFileSync(new URL("../src/app/checkout/[plan]/page.tsx", import.meta.url), "utf8");
+  assert.match(component, /data-whop-checkout-environment="sandbox"/);
+  assert.match(component, /data-whop-checkout-theme-accent-color="orange"/);
+  assert.match(component, /data-whop-checkout-return-url=\{returnUrl\}/);
+  assert.doesNotMatch(component, /data-whop-color-scheme|data-whop-color=/);
+  assert.doesNotMatch(component, /data-whop-affiliate\s*=/);
+  assert.match(component, /useSyncExternalStore\(subscribePrivacyConsent, getPrivacyConsent/);
+  assert.match(page, /referralHintPresent=\{publicReferralPresent\}/);
+  assert.doesNotMatch(page, /config\.available && !publicReferralPresent/);
 });
