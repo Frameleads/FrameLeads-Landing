@@ -1,6 +1,6 @@
 import type { AuditLeadPayload, DiagnosisType } from "./audit";
 import {initializeMeasurementPixels} from './measurement.ts';
-import {getPrivacyConsent} from './privacy-consent.ts';
+import {discardAffiliateReferral, getPrivacyConsent, isAffiliateCaptureBlockedForCurrentPage} from './privacy-consent.ts';
 
 export const marketingEventNames = [
   "LANDING_VIEW",
@@ -84,6 +84,7 @@ export function captureMarketingAttribution(): MarketingAttribution {
   const currentWindow = browserWindow();
   if (!currentWindow) return {};
   const consent = getPrivacyConsent();
+  if (!consent?.advertising) discardAffiliateReferral();
   if (!consent || (!consent.analytics && !consent.advertising)) return {};
 
   let existing: MarketingAttribution = {};
@@ -97,6 +98,11 @@ export function captureMarketingAttribution(): MarketingAttribution {
     // Storage may be unavailable in private browsing; the current URL still works.
   }
 
+  // A withdrawal invalidates the previously stored referral for this page even
+  // if sessionStorage removal was unavailable. A different fresh referral URL
+  // can still qualify after consent is restored.
+  if (isAffiliateCaptureBlockedForCurrentPage()) delete existing.affiliateCode;
+
   const params = new URLSearchParams(currentWindow.location.search);
   const incoming: MarketingAttribution = { landingPath: currentWindow.location.pathname };
   const mapping = {
@@ -108,7 +114,11 @@ export function captureMarketingAttribution(): MarketingAttribution {
   } as const;
   for (const key of utmKeys) incoming[mapping[key]] = cleanString(params.get(key));
   const affiliateReferralApproved = process.env.NEXT_PUBLIC_AFFILIATE_REFERRAL_PRIVACY_APPROVED === "true";
-  const affiliateCode = captureAffiliateCode(params.get("a"), consent.advertising, affiliateReferralApproved);
+  if (!affiliateReferralApproved) discardAffiliateReferral();
+  const queryAffiliateCode = params.get("a");
+  const affiliateCode = isAffiliateCaptureBlockedForCurrentPage(queryAffiliateCode ?? undefined)
+    ? undefined
+    : captureAffiliateCode(queryAffiliateCode, consent.advertising, affiliateReferralApproved);
   if (affiliateCode) incoming.affiliateCode = affiliateCode;
   incoming.referrer = safeReferrer(currentWindow.document.referrer);
 

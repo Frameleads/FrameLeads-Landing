@@ -6,9 +6,12 @@ export type PrivacyConsent = {
 
 const storageKey = "frameleads:privacy-consent:v1";
 const eventName = "frameleads:privacy-consent-change";
+const attributionStorageKey = "frameleads:marketing-attribution:v1";
 let memoryConsent: PrivacyConsent | null = null;
 let cachedStorageValue: string | null | undefined;
 let cachedStorageConsent: PrivacyConsent | null = null;
+let affiliateCaptureBlockedForCurrentPage = false;
+const blockedAffiliateCodes = new Set<string>();
 
 export function getPrivacyConsent(): PrivacyConsent | null {
   if (typeof window === "undefined") return null;
@@ -69,21 +72,7 @@ export function savePrivacyConsent(preferences: Pick<PrivacyConsent, "analytics"
     }
   }
   if (previous?.advertising && !next.advertising) {
-    clearAdvertisingCookies();
-    try {
-      const saved = window.sessionStorage.getItem("frameleads:b71:session");
-      if (saved) {
-        const session = JSON.parse(saved) as { attribution?: Record<string, unknown> };
-        if (session.attribution) {
-          delete session.attribution.fbp;
-          delete session.attribution.fbc;
-          delete session.attribution.ttp;
-          window.sessionStorage.setItem("frameleads:b71:session", JSON.stringify(session));
-        }
-      }
-    } catch {
-      // Removing optional ad identifiers is best effort when storage is blocked.
-    }
+    clearAdvertisingAttribution();
   }
   window.dispatchEvent(new CustomEvent(eventName, { detail: next }));
   return next;
@@ -95,12 +84,80 @@ export function privacyConsentEventName(): string {
 
 export function subscribePrivacyConsent(onChange: () => void): () => void {
   if (typeof window === "undefined") return () => {};
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === storageKey) {
+      let advertising = false;
+      try {
+        const value: unknown = event.newValue ? JSON.parse(event.newValue) : null;
+        advertising = Boolean(value && typeof value === "object" && (value as Record<string, unknown>).advertising === true);
+      } catch {
+        // An unreadable changed preference fails closed for referral capture.
+      }
+      if (!advertising) clearAdvertisingAttribution();
+    }
+    onChange();
+  };
   window.addEventListener(eventName, onChange);
-  window.addEventListener("storage", onChange);
+  window.addEventListener("storage", onStorage);
   return () => {
     window.removeEventListener(eventName, onChange);
-    window.removeEventListener("storage", onChange);
+    window.removeEventListener("storage", onStorage);
   };
+}
+
+/** Used by attribution capture to fail closed if the current URL could not be scrubbed. */
+export function isAffiliateCaptureBlockedForCurrentPage(code?: string): boolean {
+  return affiliateCaptureBlockedForCurrentPage && (!code || blockedAffiliateCodes.has(code));
+}
+
+function clearAdvertisingAttribution(): void {
+  affiliateCaptureBlockedForCurrentPage = true;
+  clearAdvertisingCookies();
+  try {
+    const saved = window.sessionStorage.getItem("frameleads:b71:session");
+    if (saved) {
+      const session = JSON.parse(saved) as { attribution?: Record<string, unknown> };
+      if (session.attribution) {
+        delete session.attribution.fbp;
+        delete session.attribution.fbc;
+        delete session.attribution.ttp;
+        window.sessionStorage.setItem("frameleads:b71:session", JSON.stringify(session));
+      }
+    }
+  } catch {
+    // Removing optional ad identifiers is best effort when storage is blocked.
+  }
+  discardAffiliateReferral();
+}
+
+/** Remove prior referral evidence from this tab without touching permitted analytics fields. */
+export function discardAffiliateReferral(): void {
+  affiliateCaptureBlockedForCurrentPage = true;
+  try {
+    const saved = window.sessionStorage.getItem(attributionStorageKey);
+    if (saved) {
+      const attribution: unknown = JSON.parse(saved);
+      if (attribution && typeof attribution === "object") {
+        const code = (attribution as Record<string, unknown>).affiliateCode;
+        if (typeof code === "string") blockedAffiliateCodes.add(code);
+        delete (attribution as Record<string, unknown>).affiliateCode;
+        window.sessionStorage.setItem(attributionStorageKey, JSON.stringify(attribution));
+      }
+    }
+  } catch {
+    // The URL is also scrubbed below; unavailable storage never restores consent.
+  }
+  try {
+    const url = new URL(window.location.href);
+    if (url.searchParams.has("a")) {
+      const code = url.searchParams.get("a");
+      if (code) blockedAffiliateCodes.add(code);
+      url.searchParams.delete("a");
+      window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+    }
+  } catch {
+    // Keep affiliate recapture blocked for this page if the old URL cannot be removed.
+  }
 }
 
 function clearAdvertisingCookies(): void {
