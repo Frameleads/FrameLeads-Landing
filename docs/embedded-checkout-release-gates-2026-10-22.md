@@ -11,14 +11,14 @@
 - Existing PrivacyChoices from Landing PR #5 loads `https://t.whop.tw/s.js` only with advertising consent. Do not install an additional Whop pixel, overwrite consent handling, or emit a synthetic Purchase event.
 - Existing Meta/TikTok and first-party measurement policy is reused. This checkout records consent-gated `CHECKOUT_INITIATED` only; verified purchase and entitlement must continue from Whop signed webhooks and reconciliation in Brand Brain. `/checkout/complete` is informational and not purchase evidence.
 - Existing secure email-verified Audit continuation (Landing PR #5, Brand Brain PR #12) is deliberately not replaced. PR #12 creates checkout configurations containing validated affiliate code and purchase metadata; the native standalone Whop plan embed cannot be assumed to preserve those records.
-- This release deliberately never copies `?a=` into `data-whop-affiliate`. URL referrals are refused server-side and consenting recorded referrals trigger a fail-closed client notice, not a direct/uncredited payment.
+- This release deliberately never copies `?a=` into `data-whop-affiliate`. Incoming raw referrals with undecided consent hold at the privacy-choice gate; a **consented** referral triggers a fail-closed review message instead of an uncredited sale. A buyer who **declines optional tracking** may still use the Sandbox checkout without payable attribution. Referral decisions here are browser display gates only, not durable verified commission evidence.
 - Official Whop documentation references: https://docs.whop.com/third-party-integrations/embedded-checkouts/framer-checkout and https://docs.whop.com/third-party-integrations/embedded-checkouts/attribute-affiliates-embedded-checkout. The second guide's arbitrary URL affiliate script is **not** acceptable as a substitute for FrameLeads' validated consent-proof contract.
 
 ## Environment gates
 
 `FRAMELEADS_EMBEDDED_CHECKOUT_ENABLED` defaults OFF. Only when set to `true` on an authorized preview, and `WHOP_ENVIRONMENT=sandbox` with the exact existing sandbox Core account/product/plan and an approved `WHOP_SANDBOX_RETURN_URL`, does the real embed render. Enterprise is deliberately blocked because no verified disposable Sandbox Enterprise plan exists.
 
-**Production is hard-blocked in code** whenever `VERCEL_ENV=production`, regardless of flag value. A later reviewed change must implement the authorized validated immediate-affiliate checkout contract before any production enablement.
+**Production is hard-blocked in code** whenever `VERCEL_ENV=production`, regardless of flag value. The embed also requires `VERCEL_ENV=preview` exactly; unset/local-development values fail closed. The Whop HTML element explicitly declares `data-whop-checkout-environment="sandbox"` to prevent the JavaScript loader from defaulting to live Whop. A later reviewed change must implement the authorized validated immediate-affiliate checkout contract before any production enablement.
 
 Never apply refused migration `20261004202441_website_audit_ingestion.sql` via SQL Editor, CLI, another connector, renamed SQL, or another path. Do not modify Vercel deployment/team settings, Supabase data, or production Whop in this PR.
 
@@ -40,3 +40,16 @@ Never apply refused migration `20261004202441_website_audit_ingestion.sql` via S
 - The CI result is **not** a real browser, Whop Sandbox payment, commission, signed webhook, reconciliation, or SaaS access verification.
 - Vercel account connector lists no authorized teams, so deployment environment inspection and enabling the Sandbox preview are blocked.
 - Sandbox Enterprise: **blocked**. Production: **intentionally not deployed**.
+
+## GitHub-only hardening checkpoint — 2026-10-22
+
+- Corrected the embed to explicitly set `data-whop-checkout-environment="sandbox"`, matching the checkout attribute documented for embedded Sandbox usage. This is essential: a Sandbox plan ID alone does not authorize assuming a Sandbox browser payment environment.
+- Switched the checkout accent configuration to the documented `data-whop-checkout-theme-accent-color="orange"` and removed unsupported data attributes. The outer page retains the precise FrameLeads orange `#FF5A1F`; internal Whop payment iframe styling stays under Whop's control.
+- Preview policy fails closed unless `VERCEL_ENV=preview` **and** the Sandbox flag, verified Sandbox Core IDs and approved non-FrameLeads return URL match.
+- Consent-aware referral decisions cover undecided, accepted, rejected and previously observed referrals. Buyers who reject optional tracking are not blocked solely by a raw URL parameter; buyers with accepted but unverified referrals cannot silently become direct affiliate-uncredited payments.
+- Added an isolated Chromium suite `tests/browser/checkout-preview.test.mjs`: verifies real DOM routes for Sandbox Core / blocked Enterprise, referral consent states, correct Sandbox embed attributes, no raw affiliate passthrough, and absence of JavaScript exceptions. **External Whop/pixel calls are always stubbed**, and no payment can occur from this browser suite.
+- GitHub Actions `embedded-checkout-ci.yml` now runs typecheck, Node regression tests, production build, then the isolated Chromium checks. Do not report these tests passing until the corresponding workflow concludes successfully.
+- Whop guidance consulted: https://webflow.com/integrations/whop (embedded environment and accent attributes), https://whop.com/blog/whop-sandbox/ (Sandbox isolation, distinct plan IDs and browser `environment`), https://whop.com/blog/add-checkout-to-nextjs-app/ (Next.js and signed payment verification).
+- Connected Vercel plugin can discover project metadata, but the `frameleads` team scope still returns 403; no Vercel modifications are attempted. GitHub-only CI can continue independently.
+- The current `CHECKOUT_INITIATED` browser observation is emitted on first allowed checkout embed presentation, not as a payment-authorized or purchase event. Final measurement naming and attribution must be validated before sending paid traffic.
+- **Still blocked:** real Whop Sandbox payment, Enterprise Sandbox provision, durable consent-proof backend, provider-confirmed affiliate commission, signed webhook processing against Sandbox, actual SaaS entitlement, and Safari/Apple Pay verification.
