@@ -27,7 +27,7 @@ export default async function FrameLeadsCheckout({ params, searchParams }: Props
   // association requires an approved server-side consent/validation contract.
   const publicReferralPresent = Object.prototype.hasOwnProperty.call(query, "a");
   const config = embeddedCheckoutPolicy(plan, process.env);
-  const canEmbed = config.available && !publicReferralPresent;
+  const canEmbed = config.available;
 
   return <main className="min-h-screen bg-[#111111] text-white">
     <header className="border-b border-white/[0.07] bg-[#0D0D0D]">
@@ -70,9 +70,7 @@ export default async function FrameLeadsCheckout({ params, searchParams }: Props
           <div><p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#FF5A1F]">Payment</p><h2 className="mt-1 text-lg font-semibold">Complete your subscription</h2></div>
           <span className="rounded-md border border-white/10 px-2 py-1 font-mono text-[9px] uppercase text-white/50">Whop</span>
         </div>
-        {publicReferralPresent ? <div role="status" className="rounded-lg border border-[#FF5A1F]/40 bg-[#FF5A1F]/[0.05] p-5 text-sm leading-relaxed text-white/75">
-          This link contains an unverified affiliate referral. Checkout is paused to protect referral credit; the referral cannot be passed to Whop until the approved verification path is available. Please contact FrameLeads support.
-        </div> : canEmbed ? <EmbeddedWhopCheckout planId={config.planId} returnUrl={config.returnUrl} /> : <div role="status" className="rounded-lg border border-white/15 bg-[#242424] p-6 text-sm leading-relaxed text-white/75">
+        {canEmbed ? <EmbeddedWhopCheckout planId={config.planId} returnUrl={config.returnUrl} referralHintPresent={publicReferralPresent} /> : <div role="status" className="rounded-lg border border-white/15 bg-[#242424] p-6 text-sm leading-relaxed text-white/75">
           <h3 className="text-lg font-semibold text-white">Checkout preview is not available</h3>
           <p className="mt-3">This checkout has not been released. Only the explicitly configured Sandbox Core plan may be previewed. Production payments and the unfinished affiliate workflow remain unchanged.</p>
           <Link href="/#pricing" className="mt-5 inline-block rounded-lg border border-white/20 px-4 py-3 font-semibold text-white hover:border-white/50">Return to FrameLeads pricing</Link>
