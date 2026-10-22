@@ -38,6 +38,14 @@
 
 **Known present limitation:** `isAuditCheckoutContinuationAvailable` in Brand Brain currently requires `readAffiliateEvidence(...).status === 'UNVERIFIED'`. No evidence establishes that ordinary nurture emails automatically pass an affiliate code into Whop checkout. Verify and repair the customer path in a separately scoped development review before partner promises are made. Neither this note nor prior owner approvals authorizes bypassing the hosted Migration 16 safety refusal, changing live Whop, publishing policies, sending invitations or enabling feature flags.
 
+## Priority finding — immediate purchases via ordinary pricing buttons (22 October 2026)
+
+**Source-inspected, not a completed provider end-to-end test:** Landing `src/app/page.tsx` currently uses direct static URLs for its ordinary Core and Enterprise pricing CTAs (e.g. `https://whop.com/checkout/plan_sAEhr77rTrhX4` and `https://whop.com/checkout/plan_jdy5Z44fMKMAz`). The inspected CTA URLs do **not** carry an affiliate identifier or invoke the Brand Brain affiliate-aware checkout path. This is a critical mismatch with the owner's stated priority to convert video-driven hot interest **immediately**: a visitor who bypasses the Audit and clicks Buy Now could purchase through a normal Whop checkout without an established referral linkage. Any possible independent Whop-native prior-link recognition is **unverified** and must not be promised to partners.
+
+**Before launching partner links:** separately design and Sandbox-test a purchase-now route that honors applicable visitor choice, validates one eligible referral and passes it to the supported Whop checkout attribution mechanism, while keeping ordinary purchasing available without consent and without affiliate credit. Do not covertly retain referral identifiers, retrofit generic ad consent or infer a sale from a raw query string. Preserve no-referral direct checkout. Test immediate, Audit-to-same-day, Audit-to-days-later, declined, conflict and provider-reversed cases; confirm actual commissions in Whop Sandbox. No live Whop changes or feature enablement authorized by this note.
+
+Whop documents passing the external affiliate code as checkout attribution for its embedded checkout flow; it does not promise reconstructing missing attribution from an earlier site visit. See https://docs.whop.com/third-party-integrations/embedded-checkouts/attribute-affiliates-embedded-checkout and https://whop.com/earnings-terms/ .
+
 ## Why this is required
 The current published Privacy Policy discusses optional advertising measurement and campaign/referral information, but it does **not clearly disclose compensation-bearing affiliate attribution** through an Audit followed by a later purchase. The currently implemented candidate requires both advertising consent and a separate disabled-by-default privacy flag to store the affiliate code.
 
