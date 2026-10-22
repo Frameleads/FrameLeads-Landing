@@ -32,8 +32,11 @@ Never apply refused migration `20261004202441_website_audit_ingestion.sql` via S
 6. Compare/resolve PR #5 / PR #12 conflicts; only after signed owner approval and authorized Vercel access, remove production release block in a separate reviewed PR and switch pricing CTAs to same-domain routes.
 7. Finalize accurate displayed prices in the landing page, Whop plans, checkout, and product description together; no silent pricing/billing changes.
 
-## Test status at authoring
+## Verification checkpoint — 2026-10-22
 
-- Structural policy test suite added (`tests/embedded-checkout-policy.test.ts`).
-- No local build, real browser payment test or real Whop Sandbox checkout has been run yet; results must not be invented.
+- Read-only GitHub and Vercel status inspection confirms Vercel preview deployment checks completed successfully for the draft branch; this is not proof of checkout rendering or a successful payment.
+- GitHub Actions job `39788077480` passed: `npx tsc --noEmit`, all **60/60** existing and new Node tests (`npm test`), and `npm run build` on Next.js 16.2.10, including the dynamic `/checkout/[plan]` route.
+- Structural policy tests live in `tests/embedded-checkout-policy.test.ts`. Workflow: `.github/workflows/embedded-checkout-ci.yml`.
+- The CI result is **not** a real browser, Whop Sandbox payment, commission, signed webhook, reconciliation, or SaaS access verification.
+- Vercel account connector lists no authorized teams, so deployment environment inspection and enabling the Sandbox preview are blocked.
 - Sandbox Enterprise: **blocked**. Production: **intentionally not deployed**.
