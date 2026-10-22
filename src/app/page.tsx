@@ -477,7 +477,8 @@ export default function Home() {
   </div>;
 }
 
-export function LegacyHome() {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- retained inactive page component; App Router pages cannot export helpers.
+function LegacyHome() {
   const [isAuditExpanded, setIsAuditExpanded] = useState(false);
   const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
   const [activeStep, setActiveStep] = useState(0);
@@ -488,6 +489,7 @@ export function LegacyHome() {
     window.setTimeout(() => auditRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- retained with the inactive legacy page.
   const formatCurrency = (value: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
 
   return (

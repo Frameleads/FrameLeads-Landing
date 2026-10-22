@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   const validated = validateAuditLeadPayload(input);
   const consent = input && typeof input === "object" ? (input as Record<string, unknown>).advertisingConsent : undefined;
   if (!validated || (consent !== undefined && typeof consent !== "boolean")) return Response.json({ error: "Invalid audit lead payload." }, { status: 400 });
-  const payload = captureAttribution(validated, consent === true);
+  const payload = captureAttribution(validated, consent === true, process.env.AFFILIATE_REFERRAL_PRIVACY_APPROVED === "true");
   const url = process.env.BRAND_BRAIN_AUDIT_INGEST_URL;
   const secret = process.env.BRAND_BRAIN_AUDIT_INGEST_SECRET;
   if (!hasAuditProxyConfiguration(url, secret)) return bridgeFailure(requestId, "AUDIT_BRIDGE_CONFIG", 503);
@@ -43,7 +43,8 @@ export async function POST(request: Request) {
       console.error(JSON.stringify({ event: "audit_bridge_invalid_upstream_response", requestId, upstreamStatus: upstream.status, upstreamRequestId: upstream.headers.get("x-request-id") }));
       return bridgeFailure(requestId, "AUDIT_BRIDGE_UPSTREAM_INVALID", 502);
     }
-    return Response.json({ success: true }, { status: 201, headers: { "X-Request-Id": requestId } });
+    const checkoutContinuationAvailable = "checkoutContinuationAvailable" in result && result.checkoutContinuationAvailable === true;
+    return Response.json({ success: true, prospectId: result.prospectId, checkoutContinuationAvailable }, { status: 201, headers: { "X-Request-Id": requestId } });
   } catch (error) {
     console.error(JSON.stringify({ event: "audit_bridge_fetch_failed", requestId, errorClass: error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError") ? "timeout" : "network_or_response" }));
     const timeout = error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
