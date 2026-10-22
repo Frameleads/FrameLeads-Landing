@@ -72,6 +72,5 @@ export default function EmbeddedWhopCheckout({
         data-whop-checkout-return-url={returnUrl}
       />
     </>}
-    <p className="mt-4 text-center text-xs leading-relaxed text-[#666666]">Secure payment fields are provided by Whop. Your final charge and available payment methods are shown in Whop's checkout.</p>
   </div>;
 }
