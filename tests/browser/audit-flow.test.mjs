@@ -45,7 +45,7 @@ before(async () => {
   const executable = [process.env.CHROME_PATH, 'C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', '/usr/bin/google-chrome', '/usr/bin/chromium'].find(value => value && existsSync(value));
   assert.ok(executable, 'Set CHROME_PATH to an installed Chrome/Chromium/Edge binary');
   const profile = mkdtempSync(path.join(tmpdir(), 'frameleads-audit-browser-'));
-  chrome = spawn(executable, ['--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check', '--remote-debugging-port=0', '--user-data-dir=' + profile, 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
+  chrome = spawn(executable, ['--headless=new', '--no-sandbox', '--disable-dev-shm-usage', '--disable-crash-reporter', '--disable-gpu', '--no-first-run', '--no-default-browser-check', '--remote-debugging-port=0', '--user-data-dir=' + profile, 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
   const endpoint = await new Promise((resolve, reject) => {
     const timeout = setTimeout(() => reject(Error('Chromium CDP startup timed out')), 15000);
     chrome.stderr.on('data', data => { const match = String(data).match(/DevTools listening on (ws:\/\/\S+)/); if (match) { clearTimeout(timeout); resolve(match[1]); } });
@@ -64,6 +64,7 @@ async function page(width = 1280, consent = false) {
   const { sessionId } = await browser.send('Target.attachToTarget', { targetId, flatten: true });
   const send = (method, params) => browser.send(method, params, sessionId);
   const captures = [], observations = [], errors = [];
+  let measurementAttempts = 0, failMeasurements = false;
   let outcome = { success: true }, status = 201;
   browser.on('Fetch.requestPaused', async message => {
     if (message.sessionId !== sessionId) return;
@@ -71,7 +72,11 @@ async function page(width = 1280, consent = false) {
     const url = new URL(request.url);
     let body = '', type = 'application/javascript', code = 200;
     if (url.pathname === '/api/audit-lead') { captures.push(JSON.parse(request.postData)); await pause(180); body = JSON.stringify(outcome); type = 'application/json'; code = status; }
-    else if (url.pathname === '/api/measurement') { observations.push(JSON.parse(request.postData)); body = JSON.stringify({ ok: true }); type = 'application/json'; code = 201; }
+    else if (url.pathname === '/api/measurement') {
+      measurementAttempts++;
+      if (failMeasurements) { await send('Fetch.failRequest', { requestId, errorReason: 'Failed' }).catch(() => {}); return; }
+      observations.push(JSON.parse(request.postData)); body = JSON.stringify({ ok: true }); type = 'application/json'; code = 201;
+    }
     // External scripts/media are inert in these browser tests.
     await send('Fetch.fulfillRequest', { requestId, responseCode: code, responseHeaders: [{ name: 'Content-Type', value: type }], body: Buffer.from(body).toString('base64') }).catch(() => {});
   });
@@ -79,10 +84,11 @@ async function page(width = 1280, consent = false) {
   await send('Runtime.enable'); await send('Page.enable');
   await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 700 });
   await send('Fetch.enable', { patterns: [{ urlPattern: base + '/api/*' }, { urlPattern: 'https://*' }] });
+  const initialConsent = consent === null ? '' : `localStorage.setItem('frameleads:privacy-consent:v1', JSON.stringify({analytics:${consent},advertising:${consent},savedAt:new Date().toISOString()}));`;
   await send('Page.addScriptToEvaluateOnNewDocument', { source: `
     if (location.origin === ${JSON.stringify(base)}) {
       localStorage.clear(); sessionStorage.clear();
-      localStorage.setItem('frameleads:privacy-consent:v1', JSON.stringify({analytics:${consent},advertising:${consent},savedAt:new Date().toISOString()}));
+      ${initialConsent}
       window.__events=[]; window.__pixels=[];
       window.addEventListener('frameleads:marketing-event', e => window.__events.push(e.detail));
       const pixel=(...args)=>window.__pixels.push(args); pixel.queue=[]; pixel.loaded=true; pixel.version='2.0'; window.fbq=pixel;
@@ -99,6 +105,8 @@ async function page(width = 1280, consent = false) {
   };
   return {
     captures, observations, errors, evaluate, wait,
+    failMeasurementRequests: () => { failMeasurements = true; },
+    get measurementAttempts() { return measurementAttempts; },
     setOutcome: (value, code = 201) => { outcome = value; status = code; },
     goto: async route => { await send('Page.navigate', { url: base + route }); await wait(`document.querySelector('#top') && document.readyState === 'complete'`); await pause(400); },
     key: async (key, shift = false) => { const params = {key, code: key === ' ' ? 'Space' : key, windowsVirtualKeyCode: key === 'Tab' ? 9 : key === 'Escape' ? 27 : 32, modifiers: shift ? 8 : 0}; await send('Input.dispatchKeyEvent', {type:'keyDown',...params}); await send('Input.dispatchKeyEvent', {type:'keyUp',...params}); },
@@ -186,6 +194,68 @@ for (const width of [1280, 390]) test(`paid homepage deep link: five questions, 
     assert.equal(await p.evaluate(`new URLSearchParams(location.search).get('fbclid')`), 'fixture');
     assert.equal(await p.evaluate(`new URLSearchParams(location.search).has('audit')`), false);
     assert.deepEqual(p.errors, []);
+  } finally { await p.close(); }
+});
+
+for (const width of [1280, 390]) test(`pricing exposure uses a visible heading, explicit analytics consent and deduplication at ${width}px`, async () => {
+  const p = await page(width, null);
+  const waitForObservation = async name => {
+    for (let attempt = 0; attempt < 100; attempt++) {
+      if (p.observations.some(event => event.eventName === name)) return;
+      await pause(30);
+    }
+    throw Error(`Timed out waiting for ${name} ingestion`);
+  };
+  try {
+    await p.goto('/');
+    assert.equal(p.observations.length, 0, 'an undecided visitor is not measured');
+    assert.equal(await p.evaluate(`!!document.querySelector('#pricing h2')`), true);
+    await p.evaluate(`document.querySelector('#pricing h2').scrollIntoView({block:'center',behavior:'instant'})`);
+    await p.wait(`(() => { const h=document.querySelector('#pricing h2').getBoundingClientRect(); return Math.max(0,Math.min(h.bottom,innerHeight)-Math.max(h.top,0))/h.height >= 0.5; })()`);
+    const isNarrowSection = await p.evaluate(`document.querySelector('#pricing').getBoundingClientRect().height > innerHeight`);
+    if (width < 700) assert.equal(isNarrowSection, true, 'mobile fixture must have a pricing section taller than the viewport');
+    await pause(700);
+    assert.equal(p.observations.filter(event => event.eventName === 'PRICING_VIEW').length, 0, 'visibility alone does not bypass undecided consent');
+
+    await p.evaluate(`Array.from(document.querySelectorAll('button')).find(button=>button.textContent==='Reject optional').click()`);
+    await pause(150);
+    assert.equal(p.observations.length, 0, 'rejecting optional measurement keeps the visible pricing heading unrecorded');
+    await p.evaluate(`Array.from(document.querySelectorAll('button')).find(button=>button.textContent==='Privacy settings').click()`);
+    await p.evaluate(`document.querySelector('input[type=checkbox]').click(); Array.from(document.querySelectorAll('button')).find(button=>button.textContent==='Save preferences').click()`);
+    await p.wait(`JSON.parse(localStorage.getItem('frameleads:privacy-consent:v1')).analytics === true && JSON.parse(localStorage.getItem('frameleads:privacy-consent:v1')).advertising === false`);
+    await waitForObservation('PRICING_VIEW');
+    assert.equal(p.observations.filter(event => event.eventName === 'PRICING_VIEW').length, 1, 'a qualifying pricing-heading exposure is recorded once after analytics consent');
+    assert.equal(await p.evaluate(`window.__pixels.length`), 0, 'analytics-only consent does not emit advertising tags');
+
+    await p.evaluate(`window.scrollTo({top:0,behavior:'instant'}); document.querySelector('#pricing h2').scrollIntoView({block:'center',behavior:'instant'})`);
+    await pause(700);
+    assert.equal(p.observations.filter(event => event.eventName === 'PRICING_VIEW').length, 1, 'scrolling and rerendering do not repeat the exposure');
+    const checkout = `document.querySelector('a[href*="whop.com/checkout/plan_"]')`;
+    await p.evaluate(`${checkout}.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true})); ${checkout}.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true}))`);
+    await waitForObservation('CHECKOUT_CLICK');
+    assert.equal(p.observations.filter(event => event.eventName === 'CHECKOUT_CLICK').length, 1, 'outbound clicks are recorded once and remain distinct from checkout confirmation');
+
+    await p.evaluate(`Array.from(document.querySelectorAll('button')).find(button=>button.textContent==='Privacy settings').click()`);
+    await p.evaluate(`document.querySelector('input[type=checkbox]').click(); Array.from(document.querySelectorAll('button')).find(button=>button.textContent==='Save preferences').click()`);
+    await pause(100);
+    const beforeWithdrawalClick = p.observations.length;
+    await p.evaluate(`${checkout}.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true}))`);
+    await pause(250);
+    assert.equal(p.observations.length, beforeWithdrawalClick, 'withdrawn analytics consent prevents subsequent event ingestion');
+    assert.deepEqual(p.errors, []);
+  } finally { await p.close(); }
+});
+
+test('measurement network failures do not interrupt the page or Audit flow', async () => {
+  const p = await page(1280, true);
+  p.failMeasurementRequests();
+  try {
+    await p.goto('/');
+    assert.ok(p.measurementAttempts > 0, 'the consented page view attempted ingestion');
+    assert.deepEqual(p.observations, [], 'failed requests are not treated as durably ingested');
+    await p.evaluate(`${diagnoseButton}.click()`);
+    await p.wait(`!!${dialog}`);
+    assert.deepEqual(p.errors, [], 'measurement transport failure does not throw into page code');
   } finally { await p.close(); }
 });
 
