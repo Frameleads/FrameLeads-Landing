@@ -4,6 +4,11 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import ts from 'typescript';
 import { CHECKOUT_SESSION_COOKIE_NAME } from '../src/checkout-session-cookie.ts';
+import { embeddedCheckoutPolicy } from '../src/checkout-embed-policy.ts';
+import {
+  EMBED_SESSION_COOKIE_NAME, EMBED_SESSION_TTL_SECONDS,
+  embeddedSessionBridgeEnabled, sameOriginCheckoutPost, sealVerifiedEmbedSession,
+} from '../src/checkout-embedded-session.ts';
 
 function loadRoute(path: string) {
   const source = fs.readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -15,6 +20,11 @@ function loadRoute(path: string) {
     fetch: globalThis.fetch,
     require: (name: string) => name === 'next/server' ? { NextResponse: response }
       : name.endsWith('checkout-session-cookie') ? { CHECKOUT_SESSION_COOKIE_NAME }
+      : name.endsWith('checkout-embed-policy') ? { embeddedCheckoutPolicy }
+      : name.endsWith('checkout-embedded-session') ? {
+          EMBED_SESSION_COOKIE_NAME, EMBED_SESSION_TTL_SECONDS,
+          embeddedSessionBridgeEnabled, sameOriginCheckoutPost, sealVerifiedEmbedSession,
+        }
         : (() => { throw new Error(`Unexpected import ${name}`); })(),
   });
   vm.runInContext(code, context);
