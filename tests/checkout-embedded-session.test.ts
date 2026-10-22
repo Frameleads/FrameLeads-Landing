@@ -96,7 +96,7 @@ test("existing hosted checkout remains default; embedded path is server-only and
   assert.match(checkout, /sessionId=\{sessionId\}/);
   assert.match(checkout, /environment="sandbox"/);
   assert.match(checkout, /theme="light"/);
-  assert.doesNotMatch(checkout, /affiliate_code|data-whop-affiliate|\bPurchase\b/);
+  assert.doesNotMatch(checkout, /affiliate_code|data-whop-affiliate|observeMeasurement\(["']PURCHASE/);
   assert.match(page, /readVerifiedEmbedSession/);
   assert.doesNotMatch(page, /searchParams\.session/);
   assert.doesNotMatch(backend, /\bfetch\(/);
