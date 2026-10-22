@@ -32,7 +32,9 @@ export async function POST(request: Request) {
   // preview. Never downgrade to a production hosted path on bridge failure.
   const bridgeRequested = process.env.FRAMELEADS_EMBED_SESSION_BRIDGE_ENABLED === 'true';
   if (bridgeRequested && (!embeddedSessionBridgeEnabled(process.env)
-    || !sameOriginCheckoutPost(request.url, request.headers.get('origin')))) return fail('unavailable');
+    || !sameOriginCheckoutPost(request.url, request.headers.get('origin'))
+    || !process.env.FRAMELEADS_EMBED_SESSION_SIGNING_SECRET
+    || process.env.FRAMELEADS_EMBED_SESSION_SIGNING_SECRET.length < 32)) return fail('unavailable');
   const sessionToken = findCookie(request, CHECKOUT_SESSION_COOKIE_NAME);
   if (!sessionToken) return fail('expired');
   let form: FormData;
