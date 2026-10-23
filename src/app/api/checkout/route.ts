@@ -1,5 +1,13 @@
 import { NextResponse } from 'next/server';
 import { CHECKOUT_SESSION_COOKIE_NAME } from '../../../checkout-session-cookie';
+import { embeddedCheckoutPolicy } from '../../../checkout-embed-policy';
+import {
+  EMBED_SESSION_COOKIE_NAME,
+  EMBED_SESSION_TTL_SECONDS,
+  embeddedSessionBridgeEnabled,
+  sameOriginCheckoutPost,
+  sealVerifiedEmbedSession,
+} from '../../../checkout-embedded-session';
 function brandBrainUrl(): URL | null {
   const raw = process.env.BRAND_BRAIN_AUDIT_INGEST_URL;
   const secret = process.env.BRAND_BRAIN_AUDIT_INGEST_SECRET;
@@ -19,6 +27,14 @@ function findCookie(request: Request, name: string): string | null {
 
 export async function POST(request: Request) {
   const fail = (state: string, status = 303) => NextResponse.redirect(new URL(`/checkout/continue?state=${encodeURIComponent(state)}`, request.url), status);
+  // The existing hosted continuation remains the default. When the optional
+  // session bridge is selected, it must be a genuinely authorized Sandbox
+  // preview. Never downgrade to a production hosted path on bridge failure.
+  const bridgeRequested = process.env.FRAMELEADS_EMBED_SESSION_BRIDGE_ENABLED === 'true';
+  if (bridgeRequested && (!embeddedSessionBridgeEnabled(process.env)
+    || !sameOriginCheckoutPost(request.url, request.headers.get('origin'))
+    || !process.env.FRAMELEADS_EMBED_SESSION_SIGNING_SECRET
+    || process.env.FRAMELEADS_EMBED_SESSION_SIGNING_SECRET.length < 32)) return fail('unavailable');
   const sessionToken = findCookie(request, CHECKOUT_SESSION_COOKIE_NAME);
   if (!sessionToken) return fail('expired');
   let form: FormData;
@@ -55,6 +71,23 @@ export async function POST(request: Request) {
       : ['sandbox.whop.com'];
     if (!planId || returnedPlan !== planId || checkoutUrl.protocol !== 'https:' || checkoutUrl.username || checkoutUrl.password
       || !allowedHosts.includes(checkoutUrl.hostname.toLowerCase())) return fail('unavailable');
+    if (bridgeRequested) {
+      // Sandbox Enterprise has no verified provider plan yet.
+      if (plan !== 'CORE') return fail('unavailable');
+      const policy = embeddedCheckoutPolicy('core', process.env);
+      if (!policy.available || policy.planId !== planId) return fail('unavailable');
+      const embeddedSessionId = value && typeof value === 'object' && 'embeddedSessionId' in value
+        ? value.embeddedSessionId : null;
+      const sealed = sealVerifiedEmbedSession(embeddedSessionId, 'core', process.env.FRAMELEADS_EMBED_SESSION_SIGNING_SECRET);
+      if (!sealed) return fail('unavailable');
+      const preview = NextResponse.redirect(new URL('/checkout/core', request.url), 303);
+      preview.headers.set('Cache-Control', 'no-store');
+      preview.cookies.set(EMBED_SESSION_COOKIE_NAME, sealed, {
+        secure: true, httpOnly: true, sameSite: 'lax', path: '/',
+        maxAge: EMBED_SESSION_TTL_SECONDS,
+      });
+      return preview;
+    }
     const result = NextResponse.redirect(checkoutUrl, 303);
     result.headers.set('Cache-Control', 'no-store');
     return result;
