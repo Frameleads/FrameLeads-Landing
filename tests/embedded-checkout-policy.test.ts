@@ -86,3 +86,22 @@ test("browser markup explicitly selects Sandbox and uses documented Whop embed a
   assert.match(page, /referralHintPresent=\{publicReferralPresent\}/);
   assert.doesNotMatch(page, /config\.available && !publicReferralPresent/);
 });
+
+
+test("payment authentication remains inside native Whop checkout, not a FrameLeads imitation", () => {
+  const embedded = fs.readFileSync(new URL("../src/components/EmbeddedWhopCheckout.tsx", import.meta.url), "utf8");
+  const verified = fs.readFileSync(new URL("../src/components/VerifiedWhopSessionCheckout.tsx", import.meta.url), "utf8");
+  const page = fs.readFileSync(new URL("../src/app/checkout/[plan]/page.tsx", import.meta.url), "utf8");
+  assert.match(embedded, /https?:\/\/|WHOP_EMBED_LOADER/);
+  assert.match(embedded, /data-whop-checkout-environment="sandbox"/);
+  assert.match(verified, /<WhopCheckoutEmbed/);
+  assert.match(verified, /environment="sandbox"/);
+  assert.match(page, /Powered by/);
+  // Whop alone owns payment fields, 3DS challenges and authorization.
+  // Neither page shell may collect CVC/OTP/password or claim a 3DS result.
+  for (const source of [embedded, verified, page]) {
+    assert.doesNotMatch(source, /type=["'](?:password|tel)["']|name=["'](?:cvc|cvv|card_number|otp|3ds)["']/i);
+    assert.doesNotMatch(source, /(?:authenticate3ds|confirm3DS|force3DS|threeDSecureChallenge)\s*\(/i);
+    assert.doesNotMatch(source, /\b3ds[_-]?(?:passed|verified|liability_shift)\s*[:=]/i);
+  }
+});
