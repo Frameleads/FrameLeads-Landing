@@ -1,22 +1,31 @@
 import type { Metadata } from "next";
 import FirstPartyMeasurement from '../components/FirstPartyMeasurement';
 import PrivacyChoices from '../components/PrivacyChoices';
-import { Space_Grotesk, Oxanium, JetBrains_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const spaceGrotesk = Space_Grotesk({ 
-  subsets: ["latin"], 
-  variable: "--font-space-grotesk" 
+const spaceGrotesk = localFont({
+  src: "../../node_modules/@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2",
+  weight: "300 700",
+  style: "normal",
+  display: "swap",
+  variable: "--font-space-grotesk",
 });
 
-const oxanium = Oxanium({ 
-  subsets: ["latin"], 
-  variable: "--font-oxanium" 
+const oxanium = localFont({
+  src: "../../node_modules/@fontsource-variable/oxanium/files/oxanium-latin-wght-normal.woff2",
+  weight: "200 800",
+  style: "normal",
+  display: "swap",
+  variable: "--font-oxanium",
 });
 
-const jetbrainsMono = JetBrains_Mono({ 
-  subsets: ["latin"], 
-  variable: "--font-jetbrains-mono" 
+const jetbrainsMono = localFont({
+  src: "../../node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2",
+  weight: "100 800",
+  style: "normal",
+  display: "swap",
+  variable: "--font-jetbrains-mono",
 });
 
 export const metadata: Metadata = {

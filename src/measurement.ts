@@ -1,6 +1,6 @@
 import { getPrivacyConsent, hasAdvertisingConsent } from "./privacy-consent.ts";
 
-export const browserEvents = ["PAGE_VIEW", "VSL_ENGAGED", "AUDIT_STARTED", "AUDIT_COMPLETED", "CHECKOUT_INITIATED"] as const;
+export const browserEvents = ["PAGE_VIEW", "VSL_ENGAGED", "AUDIT_STARTED", "AUDIT_COMPLETED", "PRICING_VIEW", "CHECKOUT_CLICK"] as const;
 export type BrowserEvent = (typeof browserEvents)[number];
 export const attributionFields = ["anonymous_id", "session_id", "source", "medium", "utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "campaign_id", "adset_id", "ad_id", "creative_id", "creative_concept", "creative_angle", "creative_format", "landing_variant", "referrer_host", "landing_path", "fbclid", "fbp", "fbc", "ttclid", "ttp"] as const;
 export type Attribution = Partial<Record<(typeof attributionFields)[number], string>>;
@@ -158,7 +158,7 @@ export function sendPixelCopy(provider: "META" | "TIKTOK", eventName: string, ev
   } catch { /* Optional pixel failures never block product use. */ }
 }
 
-const mapping: Record<BrowserEvent, string> = { PAGE_VIEW: "PageView", VSL_ENGAGED: "FrameLeadsVslEngaged", AUDIT_STARTED: "AuditStarted", AUDIT_COMPLETED: "AuditCompleted", CHECKOUT_INITIATED: "InitiateCheckout" };
+const mapping: Record<BrowserEvent, string> = { PAGE_VIEW: "PageView", VSL_ENGAGED: "FrameLeadsVslEngaged", AUDIT_STARTED: "AuditStarted", AUDIT_COMPLETED: "AuditCompleted", PRICING_VIEW: "FrameLeadsPricingView", CHECKOUT_CLICK: "FrameLeadsCheckoutClick" };
 export function observeMeasurement(name: BrowserEvent, once = true) {
   if (typeof window === "undefined" || !browserEvents.includes(name)) return;
   const consent = getPrivacyConsent();

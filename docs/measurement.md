@@ -14,9 +14,14 @@ referrer is a hostname. PII-like/URL/control-character values are rejected.
 PAGE_VIEW fires once per path/session. AUDIT_STARTED fires on the first actual
 answer. AUDIT_COMPLETED fires when diagnosis completes, independently of work
 email capture; it is not CAPTURED_LEAD. VSL_ENGAGED requires 30 cumulative seconds
-of verified YouTube playback, excluding pauses and seek jumps. CHECKOUT_INITIATED
-is deliberately uninstrumented: this landing's CTA links do not confirm an actual
-checkout start. Existing visual design and Audit form behavior are retained.
+of verified YouTube playback, excluding pauses and seek jumps. Existing visual
+design and Audit form behavior are retained.
+
+PRICING_VIEW is emitted once per session/path when at least 50% of the pricing
+section is in the viewport. CHECKOUT_CLICK records a click on a Whop plan link;
+it does not claim a checkout session started or a payment completed. Historical
+CHECKOUT_INITIATED observations are retained server-side for compatibility and
+must be interpreted as the old click-derived signal, not verified checkout.
 
 Provider cookies are read only when present and that provider's browser gate is
 exactly `true`. `_fbp`/`_fbc` map to fbp/fbc, `_ttp` to ttp; fbclid/ttclid are
@@ -27,9 +32,9 @@ No email/name advanced matching is implemented. First-party collection works
 without Pixels; provider failures never block Audit submission.
 
 Meta browser mapping: PageView, FrameLeadsVslEngaged (custom), AuditStarted
-(custom), AuditCompleted (custom), InitiateCheckout (actual start only).
-TikTok PAGE_VIEW maps to ViewContent; remaining observations use distinct custom
-names or InitiateCheckout. No browser Purchase, captured Lead or qualified Lead
+(custom), AuditCompleted (custom), FrameLeadsPricingView (custom), and
+FrameLeadsCheckoutClick (custom). TikTok PAGE_VIEW maps to ViewContent; remaining
+observations use distinct custom names. No browser Purchase, captured Lead or qualified Lead
 is automatically sent. Legacy marketing notifications remain local UI events.
 
 `observationEventId` and `providerEventId` reproduce B7/PostgreSQL SHA-256 JSON

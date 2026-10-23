@@ -58,7 +58,7 @@ export default function PrivacyChoices() {
       {managing && <div className="mt-4 space-y-3 border-y border-white/10 py-4">
         <label className="flex cursor-pointer items-start gap-3 text-sm text-white/85">
           <input type="checkbox" checked={analytics} onChange={(event) => setAnalytics(event.target.checked)} className="mt-1 h-4 w-4 accent-[#FF5A1F]" />
-          <span><span className="block font-semibold text-white">Analytics and attribution</span><span className="mt-1 block text-xs leading-relaxed text-white/55">First-party page, video, Audit, and checkout-start observations, plus session and campaign attribution.</span></span>
+          <span><span className="block font-semibold text-white">Analytics and attribution</span><span className="mt-1 block text-xs leading-relaxed text-white/55">First-party page, video, Audit, pricing-exposure, and outbound checkout-click observations, plus session and campaign attribution.</span></span>
         </label>
         <label className="flex cursor-pointer items-start gap-3 text-sm text-white/85">
           <input type="checkbox" checked={advertising} onChange={(event) => setAdvertising(event.target.checked)} className="mt-1 h-4 w-4 accent-[#FF5A1F]" />
