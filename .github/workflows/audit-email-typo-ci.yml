@@ -1,0 +1,38 @@
+name: Audit email correction nonproduction release checks
+on:
+  push:
+    branches:
+      - fix/audit-email-typo-20261023
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: audit-email-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit-form-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install locked dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts
+      - name: Run full Landing regression suite including typo suggestion
+        run: npm test
+      - name: Type check
+        run: npx tsc --noEmit
+      - name: Lint full Landing source
+        run: npm run lint
+      - name: Build isolated Next.js application
+        run: npm run build
+      - name: Run real Chromium audit flow with synthetic intercepted capture and measurement requests
+        run: node --test --test-concurrency=1 tests/browser/audit-flow.test.mjs
