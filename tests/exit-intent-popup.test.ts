@@ -43,3 +43,12 @@ test("preserves the existing Micro-Pilot session key and Core checkout", () => {
   assert.match(landingSource, /https:\/\/whop\.com\/checkout\/plan_sAEhr77rTrhX4/);
   assert.match(popupSource, /https:\/\/whop\.com\/checkout\/plan_8qLWfJZHQUYZf/);
 });
+
+test("Micro-Pilot offer describes its finite verified limits and preserves raw-message access", () => {
+  assert.match(popupSource, /25 TOTAL PROSPECTS/);
+  assert.match(popupSource, /Up to 3 AI reply decisions, one per prospect/);
+  assert.match(popupSource, /Research up to 3 qualified prospects once each/);
+  assert.match(popupSource, /One company context, 2 sales rules, and 1 governance rule/);
+  assert.match(popupSource, /Raw inbound messages stay readable after analyses run out/);
+  assert.doesNotMatch(popupSource, /25 PROSPECTS \/ MONTH/);
+});
