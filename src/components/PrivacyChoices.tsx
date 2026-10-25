@@ -14,6 +14,8 @@ declare global {
       setScope?: (...args: unknown[]) => void;
       scope?: (...args: unknown[]) => { track: (...args: unknown[]) => void };
       __frameleadsDisabled?: boolean;
+      __frameleadsPausedTrack?: (...args: unknown[]) => void;
+      __frameleadsPausedSetScope?: (...args: unknown[]) => void;
     };
   }
 }
@@ -83,7 +85,11 @@ export default function PrivacyChoices() {
 function WhopAnalytics({ enabled }: { enabled: boolean }) {
   useEffect(() => {
     if (!enabled) {
-      if (window.whop) {
+      if (window.whop && !window.whop.__frameleadsDisabled) {
+        // Pause the provider interface without permanently destroying its methods.
+        // An explicit later opt-in must restore tracking, not leave a no-op behind.
+        window.whop.__frameleadsPausedTrack = window.whop.track;
+        window.whop.__frameleadsPausedSetScope = window.whop.setScope;
         window.whop.__frameleadsDisabled = true;
         window.whop.q = [];
         window.whop.track = () => {};
@@ -92,6 +98,12 @@ function WhopAnalytics({ enabled }: { enabled: boolean }) {
       return;
     }
     if (window.whop) {
+      if (window.whop.__frameleadsDisabled) {
+        window.whop.track = window.whop.__frameleadsPausedTrack ?? (() => {});
+        window.whop.setScope = window.whop.__frameleadsPausedSetScope ?? (() => {});
+        delete window.whop.__frameleadsPausedTrack;
+        delete window.whop.__frameleadsPausedSetScope;
+      }
       window.whop.__frameleadsDisabled = false;
       window.whop.track?.("page");
       return;
