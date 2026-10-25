@@ -52,3 +52,12 @@ test("Micro-Pilot offer describes its finite verified limits and preserves raw-m
   assert.match(popupSource, /Raw inbound messages stay readable after analyses run out/);
   assert.doesNotMatch(popupSource, /25 PROSPECTS \/ MONTH/);
 });
+
+test("mobile exit offer is anchored to the current homepage final CTA", () => {
+  const currentHome = landingSource.split("export function LegacyHome()")[0];
+  assert.match(currentHome, /<section id="commercial-close"/);
+  assert.match(popupSource, /const finalCloseSection = document\.getElementById\("commercial-close"\)/);
+  assert.match(popupSource, /if \(!pricingViewed\) return;/);
+  assert.match(popupSource, /entry\.intersectionRatio >= 0\.5/);
+  assert.match(popupSource, /window\.matchMedia\("\(pointer: coarse\)"\)\.matches\) openOffer\(\)/);
+});
