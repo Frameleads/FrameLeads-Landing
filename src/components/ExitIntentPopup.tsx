@@ -70,8 +70,11 @@ export default function ExitIntentPopup() {
     if (finalCloseSection && !hasTriggered.current) {
       finalCloseObserver = new IntersectionObserver(([entry]) => {
         if (!pricingViewed) return;
-        if (entry.isIntersecting) {
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
           finalCloseViewed = true;
+          // A touch user cannot express desktop exit intent. Show the offer
+          // after Pricing has been viewed and the final CTA is reached.
+          if (window.matchMedia("(pointer: coarse)").matches) openOffer();
           return;
         }
         if (finalCloseViewed && entry.boundingClientRect.top < 0 && window.matchMedia("(pointer: coarse)").matches) openOffer();
