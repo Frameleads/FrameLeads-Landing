@@ -1,9 +1,8 @@
 "use client";
 
 import Script from "next/script";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { getPrivacyConsent, subscribePrivacyConsent } from "../privacy-consent";
-import { observeMeasurement } from "../measurement";
 import { referralCheckoutDecision, WHOP_EMBED_LOADER } from "../checkout-embed-policy";
 
 /** Whop renders and processes payment fields; a return is never entitlement proof. */
@@ -29,10 +28,6 @@ export default function EmbeddedWhopCheckout({
     rawReferralPresent: referralHintPresent,
     advertisingConsent: consent?.advertising ?? null,
   });
-
-  useEffect(() => {
-    if (decision === "allowed" && hostedFallback) observeMeasurement("CHECKOUT_CLICK");
-  }, [decision, hostedFallback]);
 
   if (!hostedFallback) {
     return <section role="status" className="rounded-xl border border-[#E4E4E4] bg-[#F7F7F7] p-6 text-sm leading-relaxed text-[#444444]">
