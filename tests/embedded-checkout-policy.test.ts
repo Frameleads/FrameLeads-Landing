@@ -142,7 +142,7 @@ test("native form uses Whop fields and contains no custom payment or ledger rout
   assert.match(component, /data-whop-checkout-environment=\{environment\}/);
   assert.match(component, /data-whop-checkout-return-url=\{returnUrl\}/);
   assert.match(component, /if \(!hostedFallback\)/);
-  assert.match(component, /observeMeasurement\("CHECKOUT_CLICK"\)/);
+  assert.doesNotMatch(component, /observeMeasurement\("CHECKOUT_CLICK"\)/);
   assert.doesNotMatch(component, /track\(\s*["']purchase/i);
   assert.doesNotMatch(component, /data-whop-affiliate\s*=/);
   assert.doesNotMatch(page, /brand.?brain|checkout\/continue|receipt|ledger/i);
