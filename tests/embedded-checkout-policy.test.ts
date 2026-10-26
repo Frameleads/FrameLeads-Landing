@@ -214,8 +214,10 @@ test("checkout logo retains the approved charcoal badge with grey outline", () =
   const order = fs.readFileSync("src/components/CheckoutOrderSummary.tsx", "utf8");
   assert.match(order, /border-\[#888888\]/);
   assert.match(order, /bg-\[#242424\]/);
-  assert.match(order, /rounded-\[11px\]/);
+  assert.match(order, /rounded-\[9px\]/);
+  assert.match(order, /h-11 w-11/);
   assert.match(order, /src="\/logo\.png"/);
+  assert.match(order, /width=\{31\} height=\{31\}/);
 });
 
 test("checkout footer contains only FrameLeads policies and does not duplicate Whop legal text", () => {
