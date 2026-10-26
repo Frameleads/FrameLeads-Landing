@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import fs from "node:fs";
-import { checkoutTier, embeddedCheckoutPolicy, tierInformation, referralCheckoutDecision, hostedCheckoutWithAffiliate, WHOP_EMBED_LOADER, WHOP_CHECKOUT_RETURN_URL } from "../src/checkout-embed-policy.ts";
+import { checkoutTier, embeddedCheckoutPolicy, tierInformation, referralCheckoutDecision, WHOP_EMBED_LOADER, WHOP_CHECKOUT_RETURN_URL } from "../src/checkout-embed-policy.ts";
 
 test("supports all three FrameLeads tiers with existing offer and plan mappings", () => {
   assert.equal(checkoutTier("micro-pilot"), true);
@@ -128,14 +128,11 @@ test("Preview Sandbox requires its own company, all tier plans, safe hosted URLs
   assert.deepEqual(embeddedCheckoutPolicy("core", { ...sandbox, VERCEL_ENV: "production" }), { available: false, reason: "wrong_environment" });
 });
 
-test("affiliate referral is kept on Whop hosted checkout only with advertising consent", () => {
-  assert.equal(referralCheckoutDecision({ rawReferralPresent: true, advertisingConsent: null, storedReferralPresent: false }), "pending");
-  assert.equal(referralCheckoutDecision({ rawReferralPresent: true, advertisingConsent: false, storedReferralPresent: false }), "hosted");
-  assert.equal(referralCheckoutDecision({ rawReferralPresent: true, advertisingConsent: true, storedReferralPresent: false }), "hosted");
-  assert.equal(referralCheckoutDecision({ rawReferralPresent: false, advertisingConsent: true, storedReferralPresent: true }), "hosted");
-  assert.equal(hostedCheckoutWithAffiliate("https://whop.com/checkout/plan_example", "affiliate_12", true), "https://whop.com/checkout/plan_example?a=affiliate_12");
-  assert.equal(hostedCheckoutWithAffiliate("https://whop.com/checkout/plan_example", "affiliate_12", false), "https://whop.com/checkout/plan_example");
-  assert.equal(hostedCheckoutWithAffiliate("https://whop.com/checkout/plan_example", "bad code", true), "https://whop.com/checkout/plan_example");
+test("raw referrals wait for consent and use hosted checkout without forwarding URL data", () => {
+  assert.equal(referralCheckoutDecision({ rawReferralPresent: true, advertisingConsent: null }), "pending");
+  assert.equal(referralCheckoutDecision({ rawReferralPresent: true, advertisingConsent: false }), "hosted");
+  assert.equal(referralCheckoutDecision({ rawReferralPresent: true, advertisingConsent: true }), "hosted");
+  assert.equal(referralCheckoutDecision({ rawReferralPresent: false, advertisingConsent: true }), "allowed");
 });
 
 test("native form uses Whop fields and contains no custom payment or ledger route", () => {

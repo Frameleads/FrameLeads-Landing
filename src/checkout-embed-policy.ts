@@ -4,17 +4,14 @@ export const WHOP_EMBED_LOADER = "https://js.whop.com/static/checkout/loader.js"
 export const WHOP_CHECKOUT_RETURN_URL = "https://app.frameleads.io/login?source=whop-checkout";
 export const WHOP_SANDBOX_RETURN_URL_ENV = "FRAMELEADS_WHOP_SANDBOX_RETURN_URL";
 
-/** Keep a referral on the Whop-hosted checkout unless consented native
- * affiliate attribution has been explicitly approved and verified. */
+/** A referral parameter pauses checkout until consent; referrals stay hosted. */
 export type ReferralCheckoutDecision = "pending" | "hosted" | "allowed";
 export function referralCheckoutDecision(input: {
   rawReferralPresent: boolean;
   advertisingConsent: boolean | null;
-  storedReferralPresent: boolean;
 }): ReferralCheckoutDecision {
   if (input.rawReferralPresent && input.advertisingConsent === null) return "pending";
-  if (input.advertisingConsent === true && (input.rawReferralPresent || input.storedReferralPresent)) return "hosted";
-  if (input.rawReferralPresent && input.advertisingConsent === false) return "hosted";
+  if (input.rawReferralPresent) return "hosted";
   return "allowed";
 }
 
@@ -195,11 +192,4 @@ export function embeddedCheckoutPolicy(tier: CheckoutTier, values: Record<string
     hostedFallback: information.hostedCheckout,
     environment: "production",
   };
-}
-
-export function hostedCheckoutWithAffiliate(hostedCheckout: string, affiliateCode?: string, consented = false): string {
-  if (!consented || !affiliateCode || !/^[A-Za-z0-9_-]{1,64}$/.test(affiliateCode)) return hostedCheckout;
-  const url = new URL(hostedCheckout);
-  url.searchParams.set("a", affiliateCode);
-  return url.toString();
 }
