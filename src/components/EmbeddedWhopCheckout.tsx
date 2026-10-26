@@ -1,9 +1,9 @@
 "use client";
 
-import Script from "next/script";
-import { useState, useSyncExternalStore } from "react";
+import { WhopCheckoutEmbed } from "@whop/checkout/react";
+import { useSyncExternalStore } from "react";
 import { getPrivacyConsent, subscribePrivacyConsent } from "../privacy-consent";
-import { referralCheckoutDecision, WHOP_EMBED_LOADER } from "../checkout-embed-policy";
+import { referralCheckoutDecision } from "../checkout-embed-policy";
 
 /** Whop renders and processes payment fields; a return is never entitlement proof. */
 export default function EmbeddedWhopCheckout({
@@ -22,7 +22,6 @@ export default function EmbeddedWhopCheckout({
   embedEnabled: boolean;
 }) {
   const consent = useSyncExternalStore(subscribePrivacyConsent, getPrivacyConsent, () => null);
-  const [loaderFailed, setLoaderFailed] = useState(false);
 
   const decision = referralCheckoutDecision({
     rawReferralPresent: referralHintPresent,
@@ -33,55 +32,4 @@ export default function EmbeddedWhopCheckout({
     return <section role="status" className="rounded-xl border border-[#E4E4E4] bg-[#F7F7F7] p-6 text-sm leading-relaxed text-[#444444]">
       <h2 className="text-lg font-semibold text-[#1A1A1A]">Sandbox checkout is not configured</h2>
       <p className="mt-3">This preview has no verified Sandbox checkout link. Payment checkout is unavailable until its Sandbox plan and return settings are configured.</p>
-      {returnUrl && <p className="mt-3 text-xs text-[#666666]">Already purchased? <a className="underline underline-offset-4" href={returnUrl}>Sign in to FrameLeads Preview</a></p>}
-    </section>;
-  }
-
-  if (decision === "pending") {
-    return <div role="status" aria-live="polite" className="min-h-[26rem] rounded-xl border border-[#E3E3E3] bg-[#F7F7F7] p-6 text-sm text-[#5C5C5C]">
-      Preparing secure checkoutâ€¦
-    </div>;
-  }
-
-  if (decision === "hosted") {
-    return <section role="status" className="rounded-xl border border-[#FF5A1F]/40 bg-[#FF5A1F]/[0.06] p-6 text-sm leading-relaxed text-[#414141]">
-      <h2 className="text-lg font-semibold text-[#1A1A1A]">Continue with Whop hosted checkout</h2>
-      <p className="mt-3">Continue through Whop&apos;s hosted checkout. Existing consent choices are respected, and referral data from the page URL is not forwarded.</p>
-      <a className="mt-5 inline-flex rounded-lg bg-[#FF5A1F] px-5 py-3 font-semibold text-white" href={hostedFallback} rel="noreferrer">Continue securely with Whop</a>
-      {returnUrl && <p className="mt-4 text-xs">Already purchased? <a className="underline underline-offset-4" href={returnUrl}>Sign in to FrameLeads</a></p>}
-    </section>;
-  }
-
-  if (!embedEnabled) {
-    return <section role="status" className="rounded-xl border border-[#E4E4E4] bg-[#F7F7F7] p-6 text-sm leading-relaxed text-[#444444]">
-      <h2 className="text-lg font-semibold text-[#1A1A1A]">Continue securely with Whop</h2>
-      <p className="mt-3">Whop will show the current price, billing interval, and payment terms before you confirm.</p>
-      <a className="mt-5 inline-flex rounded-lg bg-[#FF5A1F] px-5 py-3 font-semibold text-white" href={hostedFallback} rel="noreferrer">Continue to Whop checkout</a>
-      {returnUrl && <p className="mt-3 text-xs text-[#666666]">After purchase, <a className="underline underline-offset-4" href={returnUrl}>sign in to FrameLeads with Whop</a> to verify your access.</p>}
-    </section>;
-  }
-
-  return <div className="min-w-0">
-    {loaderFailed ? <div role="alert" className="rounded-xl border border-[#DDDDDD] bg-[#F7F7F7] p-6 text-sm text-[#4C4C4C]">
-      <p>The secure payment form could not load.</p>
-      <a className="mt-4 inline-block font-semibold underline" href={hostedFallback} rel="noreferrer">Continue with Whop hosted checkout</a>
-      {returnUrl && <p className="mt-3 text-xs text-[#666666]">Already purchased? <a className="underline underline-offset-4" href={returnUrl}>Sign in to FrameLeads</a></p>}
-    </div> : <>
-      <Script src={WHOP_EMBED_LOADER} strategy="afterInteractive" onError={() => setLoaderFailed(true)} />
-      <div
-        className="whop-checkout-embed min-h-[34rem] w-full"
-        data-whop-checkout-plan-id={planId}
-        data-whop-checkout-environment={environment}
-        data-whop-checkout-theme="light"
-        data-whop-checkout-theme-accent-color="orange"
-        data-whop-checkout-return-url={returnUrl}
-      />
-      <p className="mt-4 text-center text-xs leading-5 text-[#666666]">
-        Payment panel not working?{" "}
-        <a className="font-semibold underline underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#FF5A1F]" href={hostedFallback} rel="noreferrer">
-          Continue securely on Whop
-        </a>
-      </p>
-    </>}
-  </div>;
-}
+      {returnUrl && <p className="mt-3 text-xs text-[#666666]">Already purchased? <a className="underline underline-offset-4" href={returnUrl}>S¶»§q«^
