@@ -24,8 +24,8 @@ export default function CheckoutOrderSummary({ tier, termsVerified }: Props) {
     >
       <div className="mx-auto w-full max-w-[460px]">
         <div className="flex items-center gap-3">
-          <span aria-hidden="true" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[11px] border border-[#888888] bg-[#242424]">
-            <Image src="/logo.png" alt="" width={28} height={28} className="h-7 w-7 object-contain" priority />
+          <span aria-hidden="true" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[9px] border border-[#888888] bg-[#242424]">
+            <Image src="/logo.png" alt="" width={31} height={31} className="h-[31px] w-[31px] object-contain" priority />
           </span>
           <div className="min-w-0">
             <p className="text-[15px] font-semibold leading-5 text-white">FrameLeads</p>
