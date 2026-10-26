@@ -1,0 +1,44 @@
+name: One-time V3 checkout SDK lockfile repair
+on:
+  push:
+    branches:
+      - codex/v3-checkout-only-20261026
+    paths:
+      - .github/workflows/checkout-lock-repair-20261026.yml
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.repository == 'Frameleads/FrameLeads-Landing' && github.ref == 'refs/heads/codex/v3-checkout-only-20261026'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact trusted branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: true
+          fetch-depth: 1
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+      - name: Regenerate complete lockfile and verify clean install
+        run: |
+          set -euo pipefail
+          rm -f package-lock.json
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx tsc --noEmit
+          npm test
+          npm run build
+      - name: Commit only the repaired package lockfile
+        run: |
+          set -euo pipefail
+          test "$(git diff --name-only | sort)" = "package-lock.json"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- package-lock.json
+          git commit -m 'fix(checkout): regenerate complete pinned Whop SDK npm lockfile'
+          git push origin HEAD:refs/heads/codex/v3-checkout-only-20261026
