@@ -38,10 +38,10 @@ test("does not suppress Audit email without Core hash or unrelated Core traffic"
   assert.equal(isAuditEmailCoreVisit("https://frameleads.io/#core"), false);
 });
 
-test("preserves the existing Micro-Pilot session key and Core checkout", () => {
+test("preserves the Micro-Pilot session key and routes its offer through V3", () => {
   assert.match(popupSource, /const SESSION_KEY = "microPilotShown";/);
-  assert.match(landingSource, /https:\/\/whop\.com\/checkout\/plan_sAEhr77rTrhX4/);
-  assert.match(popupSource, /https:\/\/whop\.com\/checkout\/plan_8qLWfJZHQUYZf/);
+  assert.match(landingSource, /href="\/checkout\/core"/);
+  assert.match(popupSource, /const MICRO_PILOT_URL = "\/checkout\/micro-pilot"/);
 });
 
 test("Micro-Pilot offer describes its finite verified limits and preserves raw-message access", () => {

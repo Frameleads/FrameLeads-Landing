@@ -425,8 +425,8 @@ function PricingCard({ tier }: { tier: "core" | "enterprise" }) {
   const enterprise = tier === "enterprise";
   const rows = pricingRows[tier];
   const extras = enterprise ? ["Everything in FrameLeads Core", "Custom Market Profiles", "Governance Overview", "Sales Constitution", "Governed Automation / Autopilot", "Revenue-at-Risk", "Response SLA", "Decision Sandbox", "Outcome Learning"] : ["Onboarding + campaign setup", "Lead ingestion", "Native Sandbox + AI generation", "Deploy / native outbound", "Built-in Market-Aware Messaging", "Scout", "ICP Profile + qualification", "Deep prospect research", "Prospect Memory", "FrameLeads Brain", "Revenue Playbook", "Inbox Triage", "Decision Engine / reply intelligence", "Decision Replay"];
-  const href = enterprise ? "https://whop.com/checkout/plan_jdy5Z44fMKMAz" : "https://whop.com/checkout/plan_sAEhr77rTrhX4";
-  return <article id={enterprise ? undefined : "core"} className={`relative overflow-hidden rounded-2xl border bg-[#1A1A1A] p-6 shadow-[0_24px_48px_-18px_rgba(0,0,0,0.8)] sm:p-8 ${enterprise ? "border-[#FF5A1F]/40" : "border-white/[0.1]"}`}><div className="relative z-10"><p className="font-mono text-[9px] uppercase tracking-[0.18em] text-[#FF5A1F]">{enterprise ? "Higher-volume architecture" : "Core operation"}</p><h3 className="mt-4 text-2xl font-bold text-white">FrameLeads {enterprise ? "Enterprise" : "Core"}</h3><p className="mt-2 text-sm leading-relaxed text-[#888888]">{enterprise ? "For higher-volume or more complex outbound operations." : "For founder-led and smaller outbound teams."}</p><p className={`mt-6 text-4xl font-bold ${enterprise ? "text-[#FF5A1F]" : "text-white"}`}>${enterprise ? "697" : "147"}<span className="ml-1 font-mono text-sm font-normal text-[#888888]">/ month</span></p><dl className="mt-7 border-t border-white/[0.07]">{rows.map(([label, value]) => <div key={label} className="grid gap-1 border-b border-white/[0.06] py-3 sm:grid-cols-[8rem_1fr]"><dt className="font-mono text-[8px] uppercase tracking-wider text-[#888888]">{label}</dt><dd className="text-sm text-white/85">{value}</dd></div>)}</dl><details className="group mt-5"><summary className="cursor-pointer font-mono text-[9px] uppercase tracking-[0.14em] text-[#FF5A1F] focus-visible:outline-none">See everything included</summary><ul className="mt-4 space-y-2 border-l border-white/[0.1] pl-4 text-sm text-white/65">{extras.map((extra) => <li key={extra}>{extra}</li>)}</ul></details><Link href={href} target="_blank" rel="noopener noreferrer" data-tripwire-guard="true" className={`mt-8 block w-full rounded-xl px-5 py-4 text-center text-sm font-bold transition-colors ${enterprise ? "bg-[#FF5A1F] text-white hover:bg-[#ff6b35]" : "border border-white/20 text-white hover:bg-white hover:text-black"}`}>Deploy FrameLeads {enterprise ? "Enterprise" : "Core"}</Link></div></article>;
+  const href = enterprise ? "/checkout/enterprise" : "/checkout/core";
+  return <article id={enterprise ? undefined : "core"} className={`relative overflow-hidden rounded-2xl border bg-[#1A1A1A] p-6 shadow-[0_24px_48px_-18px_rgba(0,0,0,0.8)] sm:p-8 ${enterprise ? "border-[#FF5A1F]/40" : "border-white/[0.1]"}`}><div className="relative z-10"><p className="font-mono text-[9px] uppercase tracking-[0.18em] text-[#FF5A1F]">{enterprise ? "Higher-volume architecture" : "Core operation"}</p><h3 className="mt-4 text-2xl font-bold text-white">FrameLeads {enterprise ? "Enterprise" : "Core"}</h3><p className="mt-2 text-sm leading-relaxed text-[#888888]">{enterprise ? "For higher-volume or more complex outbound operations." : "For founder-led and smaller outbound teams."}</p><p className={`mt-6 text-4xl font-bold ${enterprise ? "text-[#FF5A1F]" : "text-white"}`}>${enterprise ? "499" : "149"}<span className="ml-1 font-mono text-sm font-normal text-[#888888]">/ month</span></p><dl className="mt-7 border-t border-white/[0.07]">{rows.map(([label, value]) => <div key={label} className="grid gap-1 border-b border-white/[0.06] py-3 sm:grid-cols-[8rem_1fr]"><dt className="font-mono text-[8px] uppercase tracking-wider text-[#888888]">{label}</dt><dd className="text-sm text-white/85">{value}</dd></div>)}</dl><details className="group mt-5"><summary className="cursor-pointer font-mono text-[9px] uppercase tracking-[0.14em] text-[#FF5A1F] focus-visible:outline-none">See everything included</summary><ul className="mt-4 space-y-2 border-l border-white/[0.1] pl-4 text-sm text-white/65">{extras.map((extra) => <li key={extra}>{extra}</li>)}</ul></details><Link href={href} target="_blank" rel="noopener noreferrer" data-tripwire-guard="true" className={`mt-8 block w-full rounded-xl px-5 py-4 text-center text-sm font-bold transition-colors ${enterprise ? "bg-[#FF5A1F] text-white hover:bg-[#ff6b35]" : "border border-white/20 text-white hover:bg-white hover:text-black"}`}>Deploy FrameLeads {enterprise ? "Enterprise" : "Core"}</Link></div></article>;
 }
 
 export default function Home() {
@@ -477,7 +477,8 @@ export default function Home() {
   </div>;
 }
 
-export function LegacyHome() {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- retained inactive page component; App Router pages cannot export helpers.
+function LegacyHome() {
   const [isAuditExpanded, setIsAuditExpanded] = useState(false);
   const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
   const [activeStep, setActiveStep] = useState(0);
@@ -488,6 +489,7 @@ export function LegacyHome() {
     window.setTimeout(() => auditRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- retained with the inactive legacy page.
   const formatCurrency = (value: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
 
   return (
@@ -841,14 +843,12 @@ export function LegacyHome() {
                 For founder-led and smaller outbound operations that need execution and reply routing without building the workflow themselves.
               </p>
               <div className="relative z-10 mb-6 mt-6 flex items-baseline gap-1 border-b border-white/5 pb-6">
-                <span className="text-4xl font-bold text-white">$147</span>
+                <span className="text-4xl font-bold text-white">$149</span>
                 <span className="font-mono text-sm text-[#8A8A93]">/mo</span>
               </div>
               <PricingCapabilityList tier="core" />
               <Link
-                href="https://whop.com/checkout/plan_sAEhr77rTrhX4"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/checkout/core"
                 data-tripwire-guard="true"
                 className="relative z-10 mt-auto block w-full rounded-lg border border-white/15 px-4 py-4 text-center font-mono text-sm font-bold uppercase tracking-widest text-white transition-all hover:bg-white hover:text-black"
               >
@@ -874,14 +874,12 @@ export function LegacyHome() {
                 For higher-volume operations that need dedicated routing, deeper governance, and explicit human control over exceptions.
               </p>
               <div className="relative z-10 mb-6 mt-6 flex items-baseline gap-1 border-b border-white/5 pb-6">
-                <span className="text-4xl font-bold text-[#FF5A1F]">$697</span>
+                <span className="text-4xl font-bold text-[#FF5A1F]">$499</span>
                 <span className="font-mono text-sm text-[#8A8A93]">/mo</span>
               </div>
               <PricingCapabilityList tier="enterprise" />
               <Link
-                href="https://whop.com/checkout/plan_jdy5Z44fMKMAz"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/checkout/enterprise"
                 data-tripwire-guard="true"
                 className="relative z-10 mt-auto block w-full rounded-lg bg-[#FF5A1F] px-4 py-4 text-center font-mono text-sm font-bold uppercase tracking-widest text-white shadow-[0_0_28px_rgba(255,90,31,0.35)] transition-transform duration-200 hover:scale-[1.02] hover:bg-[#ff6b35] active:scale-[0.98]"
               >
@@ -951,7 +949,7 @@ export function LegacyHome() {
         <p className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-[#FF5A1F]">THE DIAGNOSIS IS CLEAR</p>
         <h2 className="mx-auto mt-5 max-w-4xl text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">Remove the manual decision layer from your outbound workflow.</h2>
         <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-[#888888] sm:text-lg">Put FrameLeads between the conversation and the next action.</p>
-        <Link href="https://whop.com/checkout/plan_jdy5Z44fMKMAz" target="_blank" rel="noopener noreferrer" data-tripwire-guard="true" className="mt-8 inline-flex min-h-12 items-center justify-center rounded-xl bg-[#FF5A1F] px-8 py-3.5 font-bold text-white transition-colors hover:bg-[#ff6b35] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F] focus-visible:ring-offset-2 focus-visible:ring-offset-[#111111]">Deploy FrameLeads</Link>
+        <Link href="/checkout/enterprise" data-tripwire-guard="true" className="mt-8 inline-flex min-h-12 items-center justify-center rounded-xl bg-[#FF5A1F] px-8 py-3.5 font-bold text-white transition-colors hover:bg-[#ff6b35] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F] focus-visible:ring-offset-2 focus-visible:ring-offset-[#111111]">Deploy FrameLeads</Link>
       </section>
 
       {/* FOOTER */}

@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { sectionEyebrowMotion, sectionHeadingMotion, sectionSubheadingMotion, sectionVisualMotion } from "./section-motion";
 
 const SESSION_KEY = "microPilotShown";
-const MICRO_PILOT_URL = "https://whop.com/checkout/plan_8qLWfJZHQUYZf";
+const MICRO_PILOT_URL = "/checkout/micro-pilot";
 
 const MicroPilotBurstIcon = () => (
   <svg viewBox="0 0 64 64" aria-hidden="true" className="h-14 w-14 text-white">
