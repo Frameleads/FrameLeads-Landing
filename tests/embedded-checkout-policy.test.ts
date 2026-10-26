@@ -198,3 +198,14 @@ test("Whop Elements only exposes hosted fallback on load failure", () => {
   assert.match(component, /onLoadError=\{\(\) => setElementsUnavailable\(true\)\}/);
   assert.doesNotMatch(component, /observeMeasurement\("Purchase"\)/);
 });
+
+test("Whop secure checkout uses supported summary typography classes without changing payment fields", () => {
+  const component = fs.readFileSync("src/components/EmbeddedWhopCheckout.tsx", "utf8");
+  for (const part of ["whop-CheckoutSeller", "whop-CheckoutItem", "whop-CheckoutPrice", "whop-CheckoutTotal", "whop-CheckoutPayButton"]) {
+    assert.ok(component.includes(part), "Missing styling for " + part);
+  }
+  assert.match(component, /fontFamily: "'Acid Grotesk', sans-serif"/);
+  assert.match(component, /<CheckoutElement/);
+  assert.doesNotMatch(component, /document\.querySelector|contentDocument|\.contentWindow/);
+  assert.doesNotMatch(component, /observeMeasurement\("Purchase"\)/);
+});
