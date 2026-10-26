@@ -76,6 +76,12 @@ export default function EmbeddedWhopCheckout({
         data-whop-checkout-theme-accent-color="orange"
         data-whop-checkout-return-url={returnUrl}
       />
+      <p className="mt-4 text-center text-xs leading-5 text-[#666666]">
+        Payment panel not working?{" "}
+        <a className="font-semibold underline underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#FF5A1F]" href={hostedFallback} rel="noreferrer">
+          Continue securely on Whop
+        </a>
+      </p>
     </>}
   </div>;
 }
