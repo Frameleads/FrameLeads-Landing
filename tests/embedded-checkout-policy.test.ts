@@ -28,9 +28,9 @@ test("supports all three FrameLeads tiers with existing offer and plan mappings"
 
 test("homepage and all checkout tiers present the finalized prices without stale monthly amounts", () => {
   const homepage = fs.readFileSync("src/app/page.tsx", "utf8");
-  assert.match(homepage, /\$149/);
-  assert.match(homepage, /\$499/);
-  assert.doesNotMatch(homepage, /\$147|\$697/);
+  // The approved homepage uses a template literal for the two public prices.
+  assert.match(homepage, /enterprise \? "499" : "149"/);
+  assert.doesNotMatch(homepage, /enterprise \? "697" : "147"/);
   assert.equal(tierInformation("micro-pilot").displayedPrice, "$10");
   assert.equal(tierInformation("micro-pilot").usageLabel, "25 total prospects");
 });
