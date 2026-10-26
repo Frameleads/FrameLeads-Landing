@@ -83,6 +83,8 @@ async function page(width = 1280, consent = false) {
   browser.on('Runtime.exceptionThrown', message => { if (message.sessionId === sessionId) errors.push(message.params.exceptionDetails.text); });
   await send('Runtime.enable'); await send('Page.enable');
   await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 700 });
+  // Emulate touch input as well as viewport size; real phones advertise coarse pointers.
+  if (width < 700) await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
   await send('Fetch.enable', { patterns: [{ urlPattern: base + '/api/*' }, { urlPattern: 'https://*' }] });
   const initialConsent = consent === null ? '' : `localStorage.setItem('frameleads:privacy-consent:v1', JSON.stringify({analytics:${consent},advertising:${consent},savedAt:new Date().toISOString()}));`;
   await send('Page.addScriptToEvaluateOnNewDocument', { source: `
@@ -295,5 +297,28 @@ test('failed capture, retry, consent denial, backdrop close and legacy links', a
     assert.equal(await p.evaluate(`window.__pixels.length`), 0);
     await p.evaluate(`${dialog}.parentElement.dispatchEvent(new MouseEvent('mousedown',{bubbles:true}))`); await p.wait(`!${dialog}`);
     assert.deepEqual(p.errors, []);
+  } finally { await p.close(); }
+});
+
+
+// This is a real mobile Chromium interaction against the current homepage:
+// pricing qualification and the final close section must activate the $10 offer.
+test('mobile Micro-Pilot popup appears after qualified pricing and final CTA views', async () => {
+  const p = await page(390, false);
+  const offer = "document.querySelector('[role=dialog][aria-labelledby=micro-pilot-title]')";
+  try {
+    await p.goto('/');
+    assert.equal(await p.evaluate(`!!${offer}`), false, 'do not interrupt the initial visit');
+    await p.evaluate("document.getElementById('pricing').scrollIntoView({block:'center',behavior:'instant'})");
+    await pause(400);
+    await p.evaluate("document.getElementById('commercial-close').scrollIntoView({block:'center',behavior:'instant'})");
+    await p.wait(`!!${offer}`, 'qualified mobile visitor receives the one-time offer');
+    assert.equal(await p.evaluate(`${offer}.textContent.includes('25 TOTAL PROSPECTS')`), true);
+    assert.equal(await p.evaluate(`${offer}.querySelector('a[href*="plan_8qLWfJZHQUYZf"]') !== null`), true);
+    await p.key('Escape');
+    await p.wait(`!${offer}`, 'escape closes the offer');
+    await p.evaluate("document.getElementById('commercial-close').scrollIntoView({block:'center',behavior:'instant'})");
+    await pause(300);
+    assert.equal(await p.evaluate(`!!${offer}`), false, 'one-time session offer must not reopen');
   } finally { await p.close(); }
 });

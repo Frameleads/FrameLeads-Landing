@@ -46,9 +46,27 @@ test("preserves the existing Micro-Pilot session key and Core checkout", () => {
 
 test("Micro-Pilot offer describes its finite verified limits and preserves raw-message access", () => {
   assert.match(popupSource, /25 TOTAL PROSPECTS/);
-  assert.match(popupSource, /Up to 3 AI reply decisions, one per prospect/);
+  assert.match(popupSource, /3 first-time prospect reply analyses with interest, Why Now evidence, and the recommended next action/);
+  assert.match(popupSource, /A suggested reply when the governance rules permit it/);
   assert.match(popupSource, /Research up to 3 qualified prospects once each/);
   assert.match(popupSource, /One company context, 2 sales rules, and 1 governance rule/);
-  assert.match(popupSource, /Raw inbound messages stay readable after analyses run out/);
+  assert.match(popupSource, /Original replies and completed Decision Replays remain readable afterward/);
   assert.doesNotMatch(popupSource, /25 PROSPECTS \/ MONTH/);
+});
+
+test("mobile exit offer is anchored to the current homepage final CTA", () => {
+  const currentHome = landingSource.split("export function LegacyHome()")[0];
+  assert.match(currentHome, /<section id="commercial-close"/);
+  assert.match(popupSource, /const finalCloseSection = document\.getElementById\("commercial-close"\)/);
+  assert.match(popupSource, /if \(!pricingViewed\) return;/);
+  assert.match(popupSource, /entry\.intersectionRatio >= 0\.5/);
+  assert.match(popupSource, /window\.matchMedia\("\(pointer: coarse\)"\)\.matches\) openOffer\(\)/);
+});
+
+test("public tier prices match final owner-approved amounts without rewriting checkout plan IDs", () => {
+  const currentHome = landingSource.split("export function LegacyHome()")[0];
+  assert.match(currentHome, /enterprise \? "499" : "149"/);
+  assert.doesNotMatch(currentHome, /enterprise \? "697" : "147"/);
+  assert.match(currentHome, /plan_sAEhr77rTrhX4/);
+  assert.match(currentHome, /plan_jdy5Z44fMKMAz/);
 });
