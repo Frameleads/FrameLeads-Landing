@@ -170,3 +170,16 @@ test("Micro-Pilot keeps its existing hosted checkout entry and offer unchanged",
   assert.equal(tierInformation("micro-pilot").hostedCheckout, "https://whop.com/checkout/plan_8qLWfJZHQUYZf");
   assert.equal(tierInformation("micro-pilot").recurring, false);
 });
+
+
+test("checkout-click analytics fire only for actual native or hosted checkout link clicks", () => {
+  const observer = fs.readFileSync("src/components/FirstPartyMeasurement.tsx", "utf8");
+  const checkout = fs.readFileSync("src/components/EmbeddedWhopCheckout.tsx", "utf8");
+  assert.match(observer, /const checkoutClick = \(event: MouseEvent\)/);
+  assert.match(observer, /target\.closest<HTMLAnchorElement>\("a\[href\]"\)/);
+  assert.match(observer, /nativeCheckout = url\.origin === window\.location\.origin/);
+  assert.match(observer, /micro-pilot\|core\|enterprise/);
+  assert.match(observer, /hostedWhopCheckout/);
+  assert.match(observer, /if \(nativeCheckout \|\| hostedWhopCheckout\) observeMeasurement\("CHECKOUT_CLICK"\)/);
+  assert.doesNotMatch(checkout, /observeMeasurement\(["']CHECKOUT_CLICK["']\)/);
+});
