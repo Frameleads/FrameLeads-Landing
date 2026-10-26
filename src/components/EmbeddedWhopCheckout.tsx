@@ -79,7 +79,19 @@ export default function EmbeddedWhopCheckout({
     <WhopElements
       elements={whopElements}
       environment={environment}
-      appearance={{ theme: { appearance: "light", accentColor: "orange" } }}
+      appearance={{
+        theme: { appearance: "light", accentColor: "orange" },
+        classes: {
+          // The Whop-owned frame cannot inherit next/font/local.
+          // Use a bundled Whop font for branded typography on summary
+          // and action elements, without touching protected payment fields.
+          "whop-CheckoutSeller": { fontFamily: "'Acid Grotesk', sans-serif", letterSpacing: "-0.01em" },
+          "whop-CheckoutItem": { fontFamily: "'Acid Grotesk', sans-serif", letterSpacing: "-0.015em" },
+          "whop-CheckoutPrice": { fontFamily: "'Acid Grotesk', sans-serif", letterSpacing: "-0.02em" },
+          "whop-CheckoutTotal": { fontFamily: "'Acid Grotesk', sans-serif", letterSpacing: "-0.02em" },
+          "whop-CheckoutPayButton": { fontFamily: "'Acid Grotesk', sans-serif", letterSpacing: "0.01em" },
+        },
+      }}
       onLoadError={() => setElementsUnavailable(true)}
     >
       <Checkout plan={planId} returnUrl={returnUrl}>
