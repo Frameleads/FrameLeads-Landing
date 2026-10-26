@@ -139,11 +139,10 @@ export function embeddedCheckoutPolicy(tier: CheckoutTier, values: Record<string
     const allSandboxPlansReady = sandboxTiers.every(item => Boolean(item.planId && item.hostedFallback)) &&
       sandboxPlanIds.every(id => Boolean(id && /^plan_[A-Za-z0-9]+$/.test(id) && !liveOrRetiredProductionPlanIds.has(id))) &&
       new Set(sandboxPlanIds).size === sandboxPlanIds.length;
-    const sandboxReady = values.FRAMELEADS_WHOP_SANDBOX_CHECKOUT_ENABLED === "true" &&
-      values.WHOP_ENVIRONMENT === "sandbox" &&
+    const sandboxConfigured = values.WHOP_ENVIRONMENT === "sandbox" &&
       Boolean(companyId && /^biz_[A-Za-z0-9]+$/.test(companyId)) &&
       allSandboxPlansReady && Boolean(returnUrl);
-    if (!sandboxReady) {
+    if (!sandboxConfigured) {
       return {
         available: false,
         reason: "sandbox_unconfigured",
@@ -154,12 +153,19 @@ export function embeddedCheckoutPolicy(tier: CheckoutTier, values: Record<string
     if (values.FRAMELEADS_WHOP_SANDBOX_PLAN_TERMS_VERIFIED !== "true") {
       return { available: false, reason: "sandbox_terms_unverified", environment: "sandbox", returnUrl };
     }
+    // The official Whop Sandbox embed can reject a valid hosted plan. Keep
+    // the verified, provider-owned hosted flow available when iframe testing
+    // is paused; never substitute production plans for Sandbox checkouts.
+    const hostedFallback = sandboxTiers.find(item => item.planId === planId)!.hostedFallback!;
+    if (values.FRAMELEADS_WHOP_SANDBOX_CHECKOUT_ENABLED !== "true") {
+      return { available: false, reason: "disabled", environment: "sandbox", returnUrl, hostedFallback };
+    }
     return {
       available: true,
       environment: "sandbox",
       planId: planId!,
       returnUrl,
-      hostedFallback: sandboxTiers.find(item => item.planId === planId)!.hostedFallback!,
+      hostedFallback,
     };
   }
 
