@@ -2,12 +2,6 @@
 
 @config "../../tailwind.config.ts";
 
-:root {
-  --font-space-grotesk: "Space Grotesk Variable";
-  --font-oxanium: "Oxanium Variable";
-  --font-jetbrains-mono: "JetBrains Mono Variable";
-}
-
 @layer base {
   html {
     scroll-behavior: smooth;
