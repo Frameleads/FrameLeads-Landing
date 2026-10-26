@@ -48,7 +48,7 @@ export default function ExitIntentPopup() {
       if (event.relatedTarget === null && event.clientY <= 8) openOffer();
     };
     const handleCheckoutClick = (event: MouseEvent) => {
-      if (!(event.target instanceof Element) || !event.target.closest('a[href*="whop.com"]')) return;
+      if (!(event.target instanceof Element) || !event.target.closest('a[href^="/checkout/"], a[href*="whop.com/checkout/plan_"]')) return;
       hasTriggered.current = true;
       try { sessionStorage.setItem(SESSION_KEY, "true"); } catch { /* Session storage is optional. */ }
     };
@@ -70,8 +70,11 @@ export default function ExitIntentPopup() {
     if (finalCloseSection && !hasTriggered.current) {
       finalCloseObserver = new IntersectionObserver(([entry]) => {
         if (!pricingViewed) return;
-        if (entry.isIntersecting) {
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
           finalCloseViewed = true;
+          // A touch user cannot express desktop exit intent. Show the offer
+          // after Pricing has been viewed and the final CTA is reached.
+          if (window.matchMedia("(pointer: coarse)").matches) openOffer();
           return;
         }
         if (finalCloseViewed && entry.boundingClientRect.top < 0 && window.matchMedia("(pointer: coarse)").matches) openOffer();
@@ -108,13 +111,13 @@ export default function ExitIntentPopup() {
                 <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .6, delay: .14, ease: [0.22, 1, 0.36, 1] }} className="mt-1 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-[#FF5A1F]">25 TOTAL PROSPECTS · $10 ONE-TIME</motion.p>
               </div></div>
               <motion.h2 variants={sectionHeadingMotion} initial="hidden" animate="visible" id="micro-pilot-title" className="mt-4 text-2xl font-bold leading-[1.12] tracking-tight text-white sm:text-3xl">Micro Pilot</motion.h2>
-              <motion.p variants={sectionSubheadingMotion} initial="hidden" animate="visible" className="mt-3 text-sm leading-relaxed text-[#888888] sm:text-base">Experience governed reply decisions with a small, one-time live sample before moving into a full deployment.</motion.p>
+              <motion.p variants={sectionSubheadingMotion} initial="hidden" animate="visible" className="mt-3 text-sm leading-relaxed text-[#888888] sm:text-base">See how FrameLeads interprets real prospect replies, explains the signals behind interest, and chooses the next safe action before you commit to a full plan.</motion.p>
             </div>
             <motion.div variants={sectionVisualMotion} initial="hidden" animate="visible" className="mt-5 grid gap-3 sm:grid-cols-2">
               <div className="rounded-xl border border-white/10 bg-[#1A1A1A] p-4">
                 <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-white">Included</p>
                 <ul className="mt-3 space-y-1.5 text-sm text-white/75">
-                  {["25 total outbound prospects", "Up to 3 AI reply decisions, one per prospect", "Research up to 3 qualified prospects once each", "One company context, 2 sales rules, and 1 governance rule", "Raw inbound messages stay readable after analyses run out"].map(item => <li key={item} className="flex gap-2.5"><span className="text-white" aria-hidden="true">✓</span><span>{item}</span></li>)}
+                  {["25 total outbound prospects", "3 first-time prospect reply analyses with interest, Why Now evidence, and the recommended next action", "A suggested reply when the governance rules permit it — otherwise a clear human-review hold", "Research up to 3 qualified prospects once each", "One company context, 2 sales rules, and 1 governance rule", "Original replies and completed Decision Replays remain readable afterward"].map(item => <li key={item} className="flex gap-2.5"><span className="text-white" aria-hidden="true">✓</span><span>{item}</span></li>)}
                 </ul>
               </div>
               <div className="rounded-xl border border-white/10 bg-[#1A1A1A] p-4">
