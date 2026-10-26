@@ -209,3 +209,21 @@ test("Whop secure checkout uses supported summary typography classes without cha
   assert.doesNotMatch(component, /document\.querySelector|contentDocument|\.contentWindow/);
   assert.doesNotMatch(component, /observeMeasurement\("Purchase"\)/);
 });
+
+test("checkout logo retains the approved charcoal badge with grey outline", () => {
+  const order = fs.readFileSync("src/components/CheckoutOrderSummary.tsx", "utf8");
+  assert.match(order, /border-\[#888888\]/);
+  assert.match(order, /bg-\[#242424\]/);
+  assert.match(order, /rounded-\[11px\]/);
+  assert.match(order, /src="\/logo\.png"/);
+});
+
+test("checkout footer contains only FrameLeads policies and does not duplicate Whop legal text", () => {
+  const page = fs.readFileSync("src/app/checkout/[plan]/page.tsx", "utf8");
+  const checkoutFooter = page.slice(page.indexOf("<footer"), page.indexOf("</footer>") + "</footer>".length);
+  assert.ok(checkoutFooter.includes('href="/terms"'));
+  assert.ok(checkoutFooter.includes('href="/privacy"'));
+  assert.ok(checkoutFooter.includes("FrameLeads Terms"));
+  assert.doesNotMatch(checkoutFooter, /whop\.com|Powered by|Whop&apos;s|Buyer Terms/);
+  assert.match(checkoutFooter, /aria-label="FrameLeads policies"/);
+});
