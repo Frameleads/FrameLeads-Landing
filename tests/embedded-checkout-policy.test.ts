@@ -183,3 +183,14 @@ test("checkout-click analytics fire only for actual native or hosted checkout li
   assert.match(observer, /if \(nativeCheckout \|\| hostedWhopCheckout\) observeMeasurement\("CHECKOUT_CLICK"\)/);
   assert.doesNotMatch(checkout, /observeMeasurement\(["']CHECKOUT_CLICK["']\)/);
 });
+
+
+test("failed embedded checkout always has a visible provider-hosted fallback without treating the browser return as payment proof", () => {
+  const component = fs.readFileSync("src/components/EmbeddedWhopCheckout.tsx", "utf8");
+  const activeEmbedStart = component.indexOf('className="whop-checkout-embed min-h-[34rem] w-full"');
+  assert.ok(activeEmbedStart > 0);
+  const afterEmbed = component.slice(activeEmbedStart);
+  assert.match(afterEmbed, /href=\{hostedFallback\} rel="noreferrer"/);
+  assert.match(afterEmbed, /Continue securely on Whop/);
+  assert.doesNotMatch(afterEmbed, /observeMeasurement\("Purchase"\)/);
+});
