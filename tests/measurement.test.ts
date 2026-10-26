@@ -47,7 +47,10 @@ test('consent-gated identifiers, 30-minute session rotation, cookies, pixel fail
   location.pathname='/';observeMeasurement('PAGE_VIEW');observeMeasurement('PAGE_VIEW');await wait();
   assert.equal(requests.length,3,'a real navigation creates one view per route and same-path rerenders are deduplicated');
   observeMeasurement('PRICING_VIEW');observeMeasurement('PRICING_VIEW');observeMeasurement('CHECKOUT_CLICK');observeMeasurement('CHECKOUT_CLICK');await wait();
-  assert.deepEqual((requests.slice(3) as {eventName:string}[]).map(event=>event.eventName),['PRICING_VIEW','CHECKOUT_CLICK'],'pricing exposure and outbound checkout clicks are distinct and deduplicated');
+  // Browser observations hash asynchronously before sending. Network arrival order
+  // is not guaranteed; both distinct logical events must be recorded once each.
+  assert.deepEqual((requests.slice(3) as {eventName:string}[]).map(event=>event.eventName).sort(),
+    ['CHECKOUT_CLICK','PRICING_VIEW'],'pricing exposure and checkout clicks remain distinct and deduplicated');
   const id=await providerEventId('META','a'.repeat(64));sendPixelCopy('META','Lead',id);sendPixelCopy('META','Lead',id);assert.equal((pixelCalls.at(-1)?.[3] as {eventID:string}).eventID,id);
   process.env.NEXT_PUBLIC_META_TRACKING_ENABLED='false';const before=pixelCalls.length;sendPixelCopy('META','Lead',id);assert.equal(pixelCalls.length,before);
   const browserObservationCount=requests.length;observeMeasurement('PURCHASE' as never);await wait();assert.equal(requests.length,browserObservationCount);
