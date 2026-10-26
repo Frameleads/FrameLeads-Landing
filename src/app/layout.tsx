@@ -1,10 +1,32 @@
 import type { Metadata } from "next";
 import FirstPartyMeasurement from '../components/FirstPartyMeasurement';
 import PrivacyChoices from '../components/PrivacyChoices';
-import "@fontsource-variable/space-grotesk";
-import "@fontsource-variable/oxanium";
-import "@fontsource-variable/jetbrains-mono";
+import localFont from "next/font/local";
 import "./globals.css";
+
+const spaceGrotesk = localFont({
+  src: "../../node_modules/@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2",
+  weight: "300 700",
+  style: "normal",
+  display: "swap",
+  variable: "--font-space-grotesk",
+});
+
+const oxanium = localFont({
+  src: "../../node_modules/@fontsource-variable/oxanium/files/oxanium-latin-wght-normal.woff2",
+  weight: "200 800",
+  style: "normal",
+  display: "swap",
+  variable: "--font-oxanium",
+});
+
+const jetbrainsMono = localFont({
+  src: "../../node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2",
+  weight: "100 800",
+  style: "normal",
+  display: "swap",
+  variable: "--font-jetbrains-mono",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://frameleads.io"),
@@ -52,7 +74,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="en" className={`scroll-smooth ${spaceGrotesk.variable} ${oxanium.variable} ${jetbrainsMono.variable}`}>
       <body className="min-h-screen max-w-[100vw] overflow-x-hidden bg-[#1A1A1A] bg-grid-overlay font-sans text-white antialiased" suppressHydrationWarning>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify([
           {
