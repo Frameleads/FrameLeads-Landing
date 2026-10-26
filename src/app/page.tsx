@@ -471,14 +471,13 @@ export default function Home() {
 
       <section id="faq" className="mx-auto max-w-6xl scroll-mt-32 border-t border-white/[0.06] py-16 md:py-24"><SectionIntro eyebrow="Buying questions" heading="Clear before you deploy." className="max-w-3xl" /><div className="mt-10 space-y-3">{compactFaqs.map(([question, answer]) => <details key={question} className="group overflow-hidden rounded-xl border border-white/[0.1] bg-[#1A1A1A] [&_summary::-webkit-details-marker]:hidden"><summary className="flex cursor-pointer items-center justify-between gap-5 p-5 font-semibold text-white sm:p-6"><span>{question}</span><span className="shrink-0 text-[#FF5A1F] transition-transform group-open:rotate-180">↓</span></summary><p className="px-5 pb-5 text-sm leading-relaxed text-[#888888] sm:px-6 sm:pb-6">{answer}</p></details>)}</div></section>
 
-      <section className="mx-auto max-w-4xl border-t border-white/[0.06] py-16 text-center md:py-24"><SectionIntro eyebrow="Next step" heading="See where your reply workflow becomes manual." description="Run the 5-question Reply Workflow Audit and identify where FrameLeads would sit in your operation." /><motion.button initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: .3 }} transition={{ duration: .5, delay: .34, ease: "easeOut" }} type="button" data-tripwire-guard="true" onClick={launchAudit} className="mt-8 rounded-xl bg-[#FF5A1F] px-7 py-4 text-base font-bold text-white transition-colors hover:bg-[#ff6b35]">Diagnose My Reply Workflow</motion.button></section>
+      <section id="commercial-close" className="mx-auto max-w-4xl border-t border-white/[0.06] py-16 text-center md:py-24"><SectionIntro eyebrow="Next step" heading="See where your reply workflow becomes manual." description="Run the 5-question Reply Workflow Audit and identify where FrameLeads would sit in your operation." /><motion.button initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: .3 }} transition={{ duration: .5, delay: .34, ease: "easeOut" }} type="button" data-tripwire-guard="true" onClick={launchAudit} className="mt-8 rounded-xl bg-[#FF5A1F] px-7 py-4 text-base font-bold text-white transition-colors hover:bg-[#ff6b35]">Diagnose My Reply Workflow</motion.button></section>
     </main>
     <footer className="relative z-10 border-t border-white/[0.06] bg-[#0D0D0D] px-4 py-10 sm:px-6"><div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-5 md:flex-row"><p className="font-mono text-[10px] uppercase tracking-widest text-[#888888]">© 2026 FrameLeads. A BrandFlow Studio Company.</p><a href="mailto:akram@frameleads.io" aria-label="Email FrameLeads support at akram@frameleads.io" className="font-mono text-[10px] uppercase tracking-widest text-[#888888] transition-colors hover:text-white">Support &amp; inquiries · akram@frameleads.io</a><div className="flex gap-6 font-mono text-[10px] uppercase tracking-widest text-[#888888]"><Link href="/terms" className="hover:text-white">Terms</Link><Link href="/privacy" className="hover:text-white">Privacy</Link></div></div></footer><AuditModal returnFocusRef={auditTrigger} open={isAuditModalOpen} onClose={closeAudit} onComplete={setAuditResult} />{!isAuditModalOpen && <ExitIntentPopup />}
   </div>;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- retained inactive page component; App Router pages cannot export helpers.
-function LegacyHome() {
+export function LegacyHome() {
   const [isAuditExpanded, setIsAuditExpanded] = useState(false);
   const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
   const [activeStep, setActiveStep] = useState(0);
@@ -489,7 +488,6 @@ function LegacyHome() {
     window.setTimeout(() => auditRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- retained with the inactive legacy page.
   const formatCurrency = (value: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
 
   return (
@@ -843,12 +841,14 @@ function LegacyHome() {
                 For founder-led and smaller outbound operations that need execution and reply routing without building the workflow themselves.
               </p>
               <div className="relative z-10 mb-6 mt-6 flex items-baseline gap-1 border-b border-white/5 pb-6">
-                <span className="text-4xl font-bold text-white">$149</span>
+                <span className="text-4xl font-bold text-white">$147</span>
                 <span className="font-mono text-sm text-[#8A8A93]">/mo</span>
               </div>
               <PricingCapabilityList tier="core" />
               <Link
                 href="/checkout/core"
+                target="_blank"
+                rel="noopener noreferrer"
                 data-tripwire-guard="true"
                 className="relative z-10 mt-auto block w-full rounded-lg border border-white/15 px-4 py-4 text-center font-mono text-sm font-bold uppercase tracking-widest text-white transition-all hover:bg-white hover:text-black"
               >
@@ -874,12 +874,14 @@ function LegacyHome() {
                 For higher-volume operations that need dedicated routing, deeper governance, and explicit human control over exceptions.
               </p>
               <div className="relative z-10 mb-6 mt-6 flex items-baseline gap-1 border-b border-white/5 pb-6">
-                <span className="text-4xl font-bold text-[#FF5A1F]">$499</span>
+                <span className="text-4xl font-bold text-[#FF5A1F]">$697</span>
                 <span className="font-mono text-sm text-[#8A8A93]">/mo</span>
               </div>
               <PricingCapabilityList tier="enterprise" />
               <Link
                 href="/checkout/enterprise"
+                target="_blank"
+                rel="noopener noreferrer"
                 data-tripwire-guard="true"
                 className="relative z-10 mt-auto block w-full rounded-lg bg-[#FF5A1F] px-4 py-4 text-center font-mono text-sm font-bold uppercase tracking-widest text-white shadow-[0_0_28px_rgba(255,90,31,0.35)] transition-transform duration-200 hover:scale-[1.02] hover:bg-[#ff6b35] active:scale-[0.98]"
               >
@@ -949,7 +951,7 @@ function LegacyHome() {
         <p className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-[#FF5A1F]">THE DIAGNOSIS IS CLEAR</p>
         <h2 className="mx-auto mt-5 max-w-4xl text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">Remove the manual decision layer from your outbound workflow.</h2>
         <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-[#888888] sm:text-lg">Put FrameLeads between the conversation and the next action.</p>
-        <Link href="/checkout/enterprise" data-tripwire-guard="true" className="mt-8 inline-flex min-h-12 items-center justify-center rounded-xl bg-[#FF5A1F] px-8 py-3.5 font-bold text-white transition-colors hover:bg-[#ff6b35] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F] focus-visible:ring-offset-2 focus-visible:ring-offset-[#111111]">Deploy FrameLeads</Link>
+        <Link href="/checkout/enterprise" target="_blank" rel="noopener noreferrer" data-tripwire-guard="true" className="mt-8 inline-flex min-h-12 items-center justify-center rounded-xl bg-[#FF5A1F] px-8 py-3.5 font-bold text-white transition-colors hover:bg-[#ff6b35] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F] focus-visible:ring-offset-2 focus-visible:ring-offset-[#111111]">Deploy FrameLeads</Link>
       </section>
 
       {/* FOOTER */}
