@@ -83,6 +83,8 @@ async function page(width = 1280, consent = false) {
   browser.on('Runtime.exceptionThrown', message => { if (message.sessionId === sessionId) errors.push(message.params.exceptionDetails.text); });
   await send('Runtime.enable'); await send('Page.enable');
   await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 700 });
+  // Emulate touch input as well as viewport size; real phones advertise coarse pointers.
+  if (width < 700) await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
   await send('Fetch.enable', { patterns: [{ urlPattern: base + '/api/*' }, { urlPattern: 'https://*' }] });
   const initialConsent = consent === null ? '' : `localStorage.setItem('frameleads:privacy-consent:v1', JSON.stringify({analytics:${consent},advertising:${consent},savedAt:new Date().toISOString()}));`;
   await send('Page.addScriptToEvaluateOnNewDocument', { source: `
