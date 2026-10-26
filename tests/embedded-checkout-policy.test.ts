@@ -138,10 +138,12 @@ test("raw referrals wait for consent and use hosted checkout without forwarding 
 test("native form uses Whop fields and contains no custom payment or ledger route", () => {
   const component = fs.readFileSync(new URL("../src/components/EmbeddedWhopCheckout.tsx", import.meta.url), "utf8");
   const page = fs.readFileSync(new URL("../src/app/checkout/[plan]/page.tsx", import.meta.url), "utf8");
-  assert.match(component, /import .*WhopCheckoutEmbed.*@whop\/checkout\/react/);
-  assert.match(component, /<WhopCheckoutEmbed/);
-  assert.match(component, /planId=\{planId\}/);
+  assert.match(component, /import .*CheckoutElement.*@whop\/elements-react/);
+  assert.match(component, /<CheckoutElement/);
+  assert.match(component, /plan=\{planId\}/);
   assert.match(component, /environment=\{environment\}/);
+  assert.match(component, /elements=\{whopElements\}/);
+  assert.doesNotMatch(component, /WhopCheckoutEmbed/);
   assert.match(component, /returnUrl=\{returnUrl\}/);
   assert.match(component, /if \(!hostedFallback\)/);
   assert.doesNotMatch(component, /observeMeasurement\("CHECKOUT_CLICK"\)/);
@@ -187,12 +189,12 @@ test("checkout-click analytics fire only for actual native or hosted checkout li
 });
 
 
-test("failed embedded checkout always has a visible provider-hosted fallback without treating the browser return as payment proof", () => {
+test("Whop Elements only exposes hosted fallback on load failure", () => {
   const component = fs.readFileSync("src/components/EmbeddedWhopCheckout.tsx", "utf8");
-  const activeEmbedStart = component.indexOf("<WhopCheckoutEmbed");
-  assert.ok(activeEmbedStart > 0);
-  const afterEmbed = component.slice(activeEmbedStart);
-  assert.match(afterEmbed, /href=\{hostedFallback\} rel="noreferrer"/);
-  assert.match(afterEmbed, /Continue securely on Whop/);
-  assert.doesNotMatch(afterEmbed, /observeMeasurement\("Purchase"\)/);
+  assert.match(component, /<WhopElements/);
+  assert.match(component, /<Checkout plan=\{planId\} returnUrl=\{returnUrl\}>/);
+  assert.match(component, /<CheckoutElement/);
+  assert.match(component, /if \(elementsUnavailable\)/);
+  assert.match(component, /onLoadError=\{\(\) => setElementsUnavailable\(true\)\}/);
+  assert.doesNotMatch(component, /observeMeasurement\("Purchase"\)/);
 });

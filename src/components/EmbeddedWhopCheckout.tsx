@@ -1,9 +1,13 @@
 "use client";
 
-import { WhopCheckoutEmbed } from "@whop/checkout/react";
-import { useSyncExternalStore } from "react";
+import { WhopElements, Checkout, CheckoutElement } from "@whop/elements-react";
+import { loadWhop } from "@whop/elements";
+import { useState, useSyncExternalStore } from "react";
 import { getPrivacyConsent, subscribePrivacyConsent } from "../privacy-consent";
 import { referralCheckoutDecision } from "../checkout-embed-policy";
+
+// Whop hosts every payment field. Raw card data must never reach FrameLeads.
+const whopElements = loadWhop();
 
 /** Whop renders and processes payment fields; a return is never entitlement proof. */
 export default function EmbeddedWhopCheckout({
@@ -21,6 +25,7 @@ export default function EmbeddedWhopCheckout({
   referralHintPresent: boolean;
   embedEnabled: boolean;
 }) {
+  const [elementsUnavailable, setElementsUnavailable] = useState(false);
   const consent = useSyncExternalStore(subscribePrivacyConsent, getPrivacyConsent, () => null);
 
   const decision = referralCheckoutDecision({
@@ -60,22 +65,29 @@ export default function EmbeddedWhopCheckout({
     </section>;
   }
 
-  return <div className="min-w-0">
-    <div className="min-h-[34rem]">
-      <WhopCheckoutEmbed
-        planId={planId}
-        environment={environment}
-        returnUrl={returnUrl}
-        theme="light"
-        themeOptions={{ accentColor: "orange" }}
-        fallback={<div role="status" className="p-8 text-sm text-[#666666]">Loading secure Whop checkout…</div>}
-      />
-    </div>
-    <p className="mt-4 text-center text-xs leading-5 text-[#666666]">
-      Payment panel not working?{" "}
-      <a className="font-semibold underline underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#FF5A1F]" href={hostedFallback} rel="noreferrer">
-        Continue securely on Whop
+  if (elementsUnavailable) {
+    return <section role="alert" className="rounded-xl border border-[#E4E4E4] bg-[#F7F7F7] p-6 text-sm text-[#444444]">
+      <h2 className="text-lg font-semibold text-[#1A1A1A]">Secure payment is temporarily unavailable</h2>
+      <p className="mt-3">The protected payment form could not load. No payment has been submitted.</p>
+      <a className="mt-5 inline-flex rounded-lg bg-[#FF5A1F] px-5 py-3 font-semibold text-white" href={hostedFallback} rel="noreferrer">
+        Continue securely with Whop
       </a>
-    </p>
+    </section>;
+  }
+
+  return <div className="min-w-0">
+    <WhopElements
+      elements={whopElements}
+      environment={environment}
+      appearance={{ theme: { appearance: "light", accentColor: "orange" } }}
+      onLoadError={() => setElementsUnavailable(true)}
+    >
+      <Checkout plan={planId} returnUrl={returnUrl}>
+        <CheckoutElement
+          onError={() => setElementsUnavailable(true)}
+          fallback={<div role="status" className="p-8 text-sm text-[#666666]">Loading secure Whop payment options…</div>}
+        />
+      </Checkout>
+    </WhopElements>
   </div>;
 }
