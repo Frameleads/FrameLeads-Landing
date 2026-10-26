@@ -46,10 +46,8 @@ export default async function FrameLeadsCheckout({ params, searchParams }: Props
             embedEnabled={config.available}
           />
 
-          <footer className="mt-8 border-t border-[#E8E8E8] pt-5 text-center text-xs leading-5 text-[#666666]">
-            <p>By continuing, you agree to Whop&apos;s <a href="https://whop.com/buyer-terms/" rel="noopener noreferrer" target="_blank" className="underline underline-offset-2">Buyer Terms</a> and <a href="https://whop.com/privacy/" rel="noopener noreferrer" target="_blank" className="underline underline-offset-2">Privacy Policy</a>.</p>
-            <p className="mt-2">Powered by <a href="https://whop.com/" rel="noopener noreferrer" target="_blank" className="font-medium underline underline-offset-2">Whop</a></p>
-            <p className="mt-2"><Link href="/terms" className="underline underline-offset-2">FrameLeads Terms</Link>{" · "}<Link href="/privacy" className="underline underline-offset-2">Privacy</Link></p>
+          <footer aria-label="FrameLeads policies" className="mt-8 border-t border-[#E8E8E8] pt-5 text-center text-xs leading-5 text-[#666666]">
+            <p><Link href="/terms" className="underline underline-offset-2">FrameLeads Terms</Link>{" · "}<Link href="/privacy" className="underline underline-offset-2">Privacy</Link></p>
           </footer>
         </div>
       </section>
