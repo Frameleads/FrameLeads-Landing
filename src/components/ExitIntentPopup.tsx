@@ -9,7 +9,7 @@ const SESSION_KEY = "microPilotShown";
 const MICRO_PILOT_URL = "/checkout/micro-pilot";
 
 const MicroPilotBurstIcon = () => (
-  <svg viewBox="0 0 64 64" aria-hidden="true" className="h-14 w-14 text-white">
+  <svg viewBox="0 0 64 64" aria-hidden="true" className="h-10 w-10 shrink-0 text-white sm:h-14 sm:w-14">
     {[-45, 15, 75, 135, 195, 255].map((angle) => <rect key={angle} x="29" y="5" width="6" height="14" rx="3" fill="currentColor" transform={`rotate(${angle} 32 32)`} />)}
   </svg>
 );
@@ -102,25 +102,25 @@ export default function ExitIntentPopup() {
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-4 backdrop-blur-lg sm:p-6" onMouseDown={(event) => { if (event.target === event.currentTarget) setIsOpen(false); }}>
-          <motion.div initial={{ opacity: 0, y: 18, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.98 }} transition={{ duration: 0.25, ease: "easeOut" }} role="dialog" aria-modal="true" aria-labelledby="micro-pilot-title" className="relative max-h-[94vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-white/10 bg-[#0a0a0a] p-5 shadow-2xl sm:max-h-none sm:overflow-hidden sm:p-7">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center overflow-x-hidden bg-black/75 px-3 py-4 backdrop-blur-lg sm:px-6 sm:py-6" onMouseDown={(event) => { if (event.target === event.currentTarget) setIsOpen(false); }}>
+          <motion.div initial={{ opacity: 0, y: 18, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.98 }} transition={{ duration: 0.25, ease: "easeOut" }} role="dialog" aria-modal="true" aria-labelledby="micro-pilot-title" className="relative box-border max-h-[calc(100dvh-2rem)] w-full min-w-0 max-w-6xl overflow-x-hidden overflow-y-auto overscroll-contain rounded-2xl border border-white/10 bg-[#1A1A1A] p-4 shadow-2xl sm:max-h-[calc(100dvh-3rem)] sm:p-6 lg:p-7">
             <button type="button" onClick={() => setIsOpen(false)} aria-label="Close Micro-Pilot offer" className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-xl text-[#888888] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F]"><span aria-hidden="true">&times;</span></button>
-            <div className="pr-10">
-              <div className="flex items-center gap-3"><MicroPilotBurstIcon /><div>
+            <div className="min-w-0 pr-10">
+              <div className="flex min-w-0 items-start gap-2.5 sm:items-center sm:gap-3"><MicroPilotBurstIcon /><div className="min-w-0">
                 <motion.p variants={sectionEyebrowMotion} initial="hidden" animate="visible" className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#888888]">PRIVATE MICRO-PILOT</motion.p>
-                <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .6, delay: .14, ease: [0.22, 1, 0.36, 1] }} className="mt-1 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-[#FF5A1F]">25 TOTAL PROSPECTS · $10 ONE-TIME</motion.p>
+                <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .6, delay: .14, ease: [0.22, 1, 0.36, 1] }} className="mt-1 break-words font-mono text-[10px] font-bold uppercase leading-relaxed tracking-[0.08em] text-[#FF5A1F] sm:text-[11px] sm:tracking-[0.18em]">25 TOTAL PROSPECTS · $10 ONE-TIME</motion.p>
               </div></div>
               <motion.h2 variants={sectionHeadingMotion} initial="hidden" animate="visible" id="micro-pilot-title" className="mt-4 text-2xl font-bold leading-[1.12] tracking-tight text-white sm:text-3xl">Micro Pilot</motion.h2>
               <motion.p variants={sectionSubheadingMotion} initial="hidden" animate="visible" className="mt-3 text-sm leading-relaxed text-[#888888] sm:text-base">See how FrameLeads interprets real prospect replies, explains the signals behind interest, and chooses the next safe action before you commit to a full plan.</motion.p>
             </div>
-            <motion.div variants={sectionVisualMotion} initial="hidden" animate="visible" className="mt-5 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-xl border border-white/10 bg-[#1A1A1A] p-4">
+            <motion.div variants={sectionVisualMotion} initial="hidden" animate="visible" className="mt-5 grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2">
+              <div className="min-w-0 rounded-xl border border-white/10 bg-[#242424] p-4">
                 <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-white">Included</p>
                 <ul className="mt-3 space-y-1.5 text-sm text-white/75">
-                  {["25 total outbound prospects", "3 first-time prospect reply analyses with interest, Why Now evidence, and the recommended next action", "A suggested reply when the governance rules permit it — otherwise a clear human-review hold", "Research up to 3 qualified prospects once each", "One company context, 2 sales rules, and 1 governance rule", "Original replies and completed Decision Replays remain readable afterward"].map(item => <li key={item} className="flex gap-2.5"><span className="text-white" aria-hidden="true">✓</span><span>{item}</span></li>)}
+                  {["25 total outbound prospects", "3 first-time prospect reply analyses with interest, Why Now evidence, and the recommended next action", "A suggested reply when the governance rules permit it — otherwise a clear human-review hold", "Research up to 3 qualified prospects once each", "One company context, 2 sales rules, and 1 governance rule", "Original replies and completed Decision Replays remain readable afterward"].map(item => <li key={item} className="flex min-w-0 gap-2.5"><span className="shrink-0 text-white" aria-hidden="true">✓</span><span className="min-w-0 break-words">{item}</span></li>)}
                 </ul>
               </div>
-              <div className="rounded-xl border border-white/10 bg-[#1A1A1A] p-4">
+              <div className="min-w-0 rounded-xl border border-white/10 bg-[#242424] p-4">
                 <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-[#888888]">Full deployment adds</p>
                 <p className="mt-3 text-sm leading-relaxed text-[#888888]">Core expands prospect research, decision intelligence, company context, and sales playbook configuration. Enterprise adds expanded governance controls and automation.</p>
               </div>

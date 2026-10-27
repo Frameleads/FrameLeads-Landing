@@ -72,3 +72,15 @@ test("public pricing and purchase CTAs use the final branded V3 routes", () => {
   assert.match(landingSource, /href="\/checkout\/enterprise"/);
   assert.doesNotMatch(currentHome, /https:\/\/whop\.com\/checkout\/plan_(?:sAEhr77rTrhX4|jdy5Z44fMKMAz)/);
 });
+
+test("Micro-Pilot layout is viewport bounded and uses approved surfaces on mobile and desktop", () => {
+  assert.ok(popupSource.includes("max-h-[calc(100dvh-2rem)]"));
+  assert.ok(popupSource.includes("sm:max-h-[calc(100dvh-3rem)]"));
+  assert.ok(popupSource.includes("max-w-6xl"));
+  assert.ok(popupSource.includes("overflow-x-hidden overflow-y-auto overscroll-contain"));
+  assert.ok(popupSource.includes("min-w-0 pr-10"));
+  assert.ok(popupSource.includes("grid-cols-1 gap-3 md:grid-cols-2"));
+  assert.ok(popupSource.includes("bg-[#1A1A1A]"));
+  assert.equal(popupSource.split("bg-[#242424]").length - 1, 2);
+  assert.doesNotMatch(popupSource, /sm:max-h-none|sm:overflow-hidden|max-w-2xl|bg-\[#0a0a0a\]/);
+});
