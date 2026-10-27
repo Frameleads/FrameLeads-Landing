@@ -230,11 +230,11 @@ test("checkout logo retains the approved charcoal badge with grey outline", () =
   assert.match(order, /rounded-\[9px\]/);
   assert.match(order, /h-11 w-11/);
   assert.match(order, /src="\/logo\.png"/);
-  // The source PNG contains large internal margins. Enlarging the image crops
+  // The source PNG contains large internal margins. Sizing the image crops
   // only those margins; the approved outer checkout badge remains 44px.
   assert.match(order, /overflow-hidden/);
-  assert.match(order, /width=\{72\} height=\{72\}/);
-  assert.match(order, /h-\[72px\] w-\[72px\] max-w-none shrink-0/);
+  assert.match(order, /width=\{47\} height=\{47\}/);
+  assert.match(order, /h-\[47px\] w-\[47px\] max-w-none shrink-0/);
 });
 
 test("checkout footer contains only FrameLeads policies and does not duplicate Whop legal text", () => {
