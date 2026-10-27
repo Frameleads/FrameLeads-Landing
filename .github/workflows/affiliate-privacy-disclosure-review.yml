@@ -5,6 +5,12 @@ on:
     paths:
       - "src/components/PrivacyChoices.tsx"
       - "src/app/privacy/page.tsx"
+      - "src/affiliate-checkout-return.ts"
+      - "src/app/api/checkout/**"
+      - "src/app/api/audit-lead/continue/route.ts"
+      - "src/app/checkout/continue/**"
+      - "src/app/checkout/verify/**"
+      - "tests/affiliate-checkout-return.test.ts"
       - "tests/affiliate-disclosure-gate.test.mjs"
       - ".github/workflows/affiliate-privacy-disclosure-review.yml"
   workflow_dispatch:
@@ -28,6 +34,8 @@ jobs:
         run: npm ci --ignore-scripts
       - name: Verify gated notice and unchanged hosted fallback
         run: node --test tests/affiliate-disclosure-gate.test.mjs
+      - name: Verify checkout return host/plan and fail-closed flags
+        run: npx tsx --test tests/affiliate-checkout-return.test.ts
       - name: TypeScript check
         run: npx tsc --noEmit
       - name: Production build (review only, no deployment)
