@@ -18,8 +18,16 @@ export default function FirstPartyMeasurement() {
     };
     const checkoutClick = (event: MouseEvent) => {
       const target = event.target;
-      if (!(target instanceof Element) || !target.closest('a[href*="whop.com/checkout/plan_"]')) return;
-      observeMeasurement("CHECKOUT_CLICK");
+      if (!(target instanceof Element)) return;
+      const link = target.closest<HTMLAnchorElement>("a[href]");
+      if (!link) return;
+      let url: URL;
+      try { url = new URL(link.href); } catch { return; }
+      const nativeCheckout = url.origin === window.location.origin &&
+        /^\/checkout\/(?:micro-pilot|core|enterprise)\/?$/.test(url.pathname);
+      const hostedWhopCheckout = ["whop.com", "www.whop.com", "sandbox.whop.com"].includes(url.hostname) &&
+        /^\/checkout\/plan_[A-Za-z0-9]+$/.test(url.pathname);
+      if (nativeCheckout || hostedWhopCheckout) observeMeasurement("CHECKOUT_CLICK");
     };
     pageView();
     window.addEventListener(privacyConsentEventName(), consentChanged);

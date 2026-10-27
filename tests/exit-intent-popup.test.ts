@@ -38,10 +38,11 @@ test("does not suppress Audit email without Core hash or unrelated Core traffic"
   assert.equal(isAuditEmailCoreVisit("https://frameleads.io/#core"), false);
 });
 
-test("preserves the existing Micro-Pilot session key and Core checkout", () => {
+test("preserves Micro-Pilot suppression and routes the purchase through V3", () => {
   assert.match(popupSource, /const SESSION_KEY = "microPilotShown";/);
-  assert.match(landingSource, /https:\/\/whop\.com\/checkout\/plan_sAEhr77rTrhX4/);
-  assert.match(popupSource, /https:\/\/whop\.com\/checkout\/plan_8qLWfJZHQUYZf/);
+  assert.match(landingSource, /href="\/checkout\/core"/);
+  assert.match(popupSource, /const MICRO_PILOT_URL = "\/checkout\/micro-pilot";/);
+  assert.match(popupSource, /a\[href\^="\/checkout\/"\]/);
 });
 
 test("Micro-Pilot offer describes its finite verified limits and preserves raw-message access", () => {
@@ -63,10 +64,11 @@ test("mobile exit offer is anchored to the current homepage final CTA", () => {
   assert.match(popupSource, /window\.matchMedia\("\(pointer: coarse\)"\)\.matches\) openOffer\(\)/);
 });
 
-test("public tier prices match final owner-approved amounts without rewriting checkout plan IDs", () => {
+test("public pricing and purchase CTAs use the final branded V3 routes", () => {
   const currentHome = landingSource.split("export function LegacyHome()")[0];
   assert.match(currentHome, /enterprise \? "499" : "149"/);
   assert.doesNotMatch(currentHome, /enterprise \? "697" : "147"/);
-  assert.match(currentHome, /plan_sAEhr77rTrhX4/);
-  assert.match(currentHome, /plan_jdy5Z44fMKMAz/);
+  assert.match(landingSource, /href="\/checkout\/core"/);
+  assert.match(landingSource, /href="\/checkout\/enterprise"/);
+  assert.doesNotMatch(currentHome, /https:\/\/whop\.com\/checkout\/plan_(?:sAEhr77rTrhX4|jdy5Z44fMKMAz)/);
 });

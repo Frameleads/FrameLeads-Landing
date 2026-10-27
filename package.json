@@ -18,7 +18,9 @@
     "framer-motion": "^13.1.0",
     "next": "16.2.10",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "@whop/elements": "1.9.0",
+    "@whop/elements-react": "1.9.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
