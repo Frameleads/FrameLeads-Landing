@@ -26,6 +26,7 @@ export default function EmbeddedWhopCheckout({
   embedEnabled: boolean;
 }) {
   const [elementsUnavailable, setElementsUnavailable] = useState(false);
+  const [checkoutFinished, setCheckoutFinished] = useState(false);
   const consent = useSyncExternalStore(subscribePrivacyConsent, getPrivacyConsent, () => null);
 
   const decision = referralCheckoutDecision({
@@ -65,6 +66,18 @@ export default function EmbeddedWhopCheckout({
     </section>;
   }
 
+  // The SDK completion event is not the authority for payment or entitlement.
+  // Keep the post-checkout handoff within the correct Whop environment. A new
+  // buyer may still need to verify their Whop account before OAuth succeeds.
+  if (checkoutFinished) {
+    return <section role="status" aria-live="polite" className="rounded-xl border border-[#E4E4E4] bg-[#F7F7F7] p-6 text-sm leading-relaxed text-[#444444]">
+      <h2 className="text-lg font-semibold text-[#1A1A1A]">Continue to FrameLeads</h2>
+      <p className="mt-3">Whop has completed the checkout step. Sign in with the same Whop account to verify your membership and open your workspace.</p>
+      <p className="mt-2 text-xs text-[#666666]">If Whop asks you to verify your email or finish setting up your account, complete that step before signing in.</p>
+      <a className="mt-5 inline-flex rounded-lg bg-[#FF5A1F] px-5 py-3 font-semibold text-white" href={returnUrl}>Continue to FrameLeads</a>
+    </section>;
+  }
+
   if (elementsUnavailable) {
     return <section role="alert" className="rounded-xl border border-[#E4E4E4] bg-[#F7F7F7] p-6 text-sm text-[#444444]">
       <h2 className="text-lg font-semibold text-[#1A1A1A]">Secure payment is temporarily unavailable</h2>
@@ -94,7 +107,16 @@ export default function EmbeddedWhopCheckout({
       }}
       onLoadError={() => setElementsUnavailable(true)}
     >
-      <Checkout plan={planId} returnUrl={returnUrl}>
+      <Checkout
+        plan={planId}
+        returnUrl={returnUrl}
+        onComplete={(completion) => {
+          if (completion.result === "payment" && returnUrl) {
+            // Do not grant access or create Purchase events from this callback.
+            setCheckoutFinished(true);
+          }
+        }}
+      >
         <CheckoutElement
           onError={() => setElementsUnavailable(true)}
           fallback={<div role="status" className="p-8 text-sm text-[#666666]">Loading secure Whop payment options…</div>}
