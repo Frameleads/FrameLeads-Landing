@@ -27,6 +27,9 @@ export default function PrivacyChoices() {
   const [analytics, setAnalytics] = useState(false);
   const [advertising, setAdvertising] = useState(false);
   const visible = consent === null || isOpen;
+  // Disclosure copy remains staged until the independent affiliate privacy gate is approved.
+  // This does not grant affiliate tracking permission or enable any referral integration.
+  const affiliateNoticeApproved = process.env.NEXT_PUBLIC_AFFILIATE_REFERRAL_PRIVACY_APPROVED === "true";
 
   useEffect(() => {
     const onOpen = () => {
@@ -64,7 +67,7 @@ export default function PrivacyChoices() {
         </label>
         <label className="flex cursor-pointer items-start gap-3 text-sm text-white/85">
           <input type="checkbox" checked={advertising} onChange={(event) => setAdvertising(event.target.checked)} className="mt-1 h-4 w-4 accent-[#FF5A1F]" />
-          <span><span className="block font-semibold text-white">Advertising and conversion measurement</span><span className="mt-1 block text-xs leading-relaxed text-white/55">Configured Meta/TikTok browser tags, eligible server-side conversion matching, and the Whop analytics tag.</span></span>
+          <span><span className="block font-semibold text-white">{affiliateNoticeApproved ? "Advertising, conversion measurement and partner referrals (optional)" : "Advertising and conversion measurement"}</span><span className="mt-1 block text-xs leading-relaxed text-white/55">{affiliateNoticeApproved ? "Allow optional advertising measurement through Meta, TikTok, and Whop. If you arrived via a partner link, FrameLeads may also link a permitted referral to this Audit and a later purchase to determine whether a partner earns a commission. The Audit and normal checkout work if you decline; you can change your choice later." : "Configured Meta/TikTok browser tags, eligible server-side conversion matching, and the Whop analytics tag."}</span></span>
         </label>
         <p className="text-xs leading-relaxed text-white/45">You can change these choices later with the Privacy settings control. Necessary site storage is limited to remembering your choice.</p>
       </div>}
