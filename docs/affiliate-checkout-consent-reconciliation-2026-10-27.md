@@ -41,3 +41,6 @@ Whop is charge/subscription authority, and the SaaS membership check governs pla
 
 ## Current work product
 This draft PR stages only consent notice copy behind an OFF-by-default gate plus source-level guards. **No affiliate code is forwarded to Whop, no subscription entitlement is changed, no new checkout route is activated.**
+
+## Cross-repo redirect incompatibility — discovered during verification
+Landing's older **unmerged affiliate PR #5** still contains `src/app/api/checkout/route.ts`, which accepts only Whop-hosted checkout redirect hosts and the **retired** Core/Enterprise plan IDs. It will reject the current native `https://frameleads.io/checkout/core` / `/checkout/enterprise` URLs and the corrected production plan IDs supplied by Brand Brain draft PR #28. Its `src/app/checkout/continue/page.tsx` still displays obsolete **$147/$697** price copy. **Do not merge or publish PR #5 unchanged.** Migrate only its verified-cookie / email-continuation pieces into the current Landing main-based branch, updating plan IDs, host allowlists, and displayed price after review. For affiliate-aware checkout, preserve the server-owned Whop checkout configuration/session and attribution rather than converting it to an untracked normal checkout link. This cross-repo contract has **not** yet passed live E2E testing.
