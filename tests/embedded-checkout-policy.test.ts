@@ -22,6 +22,14 @@ test("supports all three FrameLeads tiers with existing offer and plan mappings"
   assert.equal(tierInformation("enterprise").hostedCheckout, "https://whop.com/checkout/plan_uGDGf5WKW7hlE");
   assert.equal(tierInformation("core").displayedPrice, "$149");
   assert.equal(tierInformation("enterprise").displayedPrice, "$499");
+  // This is the new-buyer published reference offer. Existing SaaS customer
+  // entitlements are intentionally not modified by Landing checkout copy.
+  assert.equal(tierInformation("enterprise").monthlyQuota, 10_000);
+  assert.equal(tierInformation("enterprise").usageLabel, "10,000 prospects per month");
+  const homepage = fs.readFileSync("src/app/page.tsx", "utf8");
+  assert.ok(homepage.includes("enterpriseDetail: \"10,000 / month\""));
+  assert.ok(homepage.includes('["Prospect volume", "10,000 / month"]'));
+  assert.doesNotMatch(homepage, /20,000 \/ month/);
   assert.equal(tierInformation("core").billingInterval, "month");
   assert.equal(tierInformation("enterprise").billingInterval, "month");
 });
