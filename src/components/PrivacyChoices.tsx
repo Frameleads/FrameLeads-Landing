@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { getPrivacyConsent, savePrivacyConsent, subscribePrivacyConsent } from "../privacy-consent";
+import { getPrivacyConsent, requiresAffiliateNoticeChoice, savePrivacyConsent, subscribePrivacyConsent } from "../privacy-consent";
 
 declare global {
   interface Window {
@@ -26,7 +26,8 @@ export default function PrivacyChoices() {
   const [managing, setManaging] = useState(false);
   const [analytics, setAnalytics] = useState(false);
   const [advertising, setAdvertising] = useState(false);
-  const visible = consent === null || isOpen;
+  const renewalNeeded = requiresAffiliateNoticeChoice(consent);
+  const visible = consent === null || isOpen || renewalNeeded;
   // Disclosure copy remains staged until the independent affiliate privacy gate is approved.
   // This does not grant affiliate tracking permission or enable any referral integration.
   const affiliateNoticeApproved = process.env.NEXT_PUBLIC_AFFILIATE_REFERRAL_PRIVACY_APPROVED === "true";
@@ -43,8 +44,8 @@ export default function PrivacyChoices() {
     return () => window.removeEventListener("frameleads:open-privacy-choices", onOpen);
   }, []);
 
-  const save = (next: { analytics: boolean; advertising: boolean }) => {
-    savePrivacyConsent(next);
+  const save = (next: { analytics: boolean; advertising: boolean }, affiliateChoice: "accept" | "decline" = "accept") => {
+    savePrivacyConsent(next, affiliateChoice);
     setIsOpen(false);
     setManaging(false);
   };
@@ -57,9 +58,9 @@ export default function PrivacyChoices() {
           <p className="font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-[#FF5A1F]">Privacy choices</p>
           <h2 id="privacy-choices-title" className="mt-2 text-lg font-semibold text-white">Choose optional measurement</h2>
         </div>
-        {consent && <button type="button" onClick={() => setIsOpen(false)} aria-label="Close privacy choices" className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-white/10 text-lg text-white/65 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F]">×</button>}
+        {consent && <button type="button" onClick={() => renewalNeeded ? save({ analytics: consent.analytics, advertising: consent.advertising }, "decline") : setIsOpen(false)} aria-label="Close privacy choices" className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-white/10 text-lg text-white/65 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F]">×</button>}
       </div>
-      <p id="privacy-choices-description" className="mt-2 text-sm leading-relaxed text-white/65">The Reply Workflow Audit works either way. Optional analytics and advertising tags stay off until you choose.</p>
+      <p id="privacy-choices-description" className="mt-2 text-sm leading-relaxed text-white/65">{renewalNeeded ? "Your earlier advertising preference stays as it was. We have added a separate compensated-partner purpose; only a fresh affirmative choice permits referral attribution." : "The Reply Workflow Audit works either way. Optional analytics and advertising tags stay off until you choose."}</p>
       {managing && <div className="mt-4 space-y-3 border-y border-white/10 py-4">
         <label className="flex cursor-pointer items-start gap-3 text-sm text-white/85">
           <input type="checkbox" checked={analytics} onChange={(event) => setAnalytics(event.target.checked)} className="mt-1 h-4 w-4 accent-[#FF5A1F]" />
@@ -73,6 +74,7 @@ export default function PrivacyChoices() {
       </div>}
       <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
         {!managing ? <>
+          {renewalNeeded && consent && <button type="button" onClick={() => save({ analytics: consent.analytics, advertising: consent.advertising }, "decline")} className="rounded-lg border border-white/15 px-4 py-2.5 text-sm font-medium text-white/80 hover:text-white">Keep existing preferences without partner referrals</button>}
           <button type="button" onClick={() => save({ analytics: false, advertising: false })} className="rounded-lg border border-white/15 px-4 py-2.5 text-sm font-medium text-white/80 transition-colors hover:border-white/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F]">Reject optional</button>
           <button type="button" onClick={() => save({ analytics: true, advertising: true })} className="rounded-lg bg-[#FF5A1F] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#ff6b35] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Accept optional</button>
           <button type="button" onClick={() => setManaging(true)} className="rounded-lg px-3 py-2.5 text-sm text-white/65 underline decoration-white/20 underline-offset-4 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F]">Manage choices</button>
