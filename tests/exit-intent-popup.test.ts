@@ -73,15 +73,14 @@ test("public pricing and purchase CTAs use the final branded V3 routes", () => {
   assert.doesNotMatch(currentHome, /https:\/\/whop\.com\/checkout\/plan_(?:sAEhr77rTrhX4|jdy5Z44fMKMAz)/);
 });
 
-
 test("Micro-Pilot layout is viewport bounded and uses approved surfaces on mobile and desktop", () => {
-  assert.match(popupSource, /max-h-\\[calc\\(100dvh-2rem\\)\\]/);
-  assert.match(popupSource, /sm:max-h-\\[calc\\(100dvh-3rem\\)\\]/);
-  assert.match(popupSource, /max-w-6xl/);
-  assert.match(popupSource, /overflow-x-hidden overflow-y-auto overscroll-contain/);
-  assert.match(popupSource, /min-w-0.*pr-10/);
-  assert.match(popupSource, /grid-cols-1 gap-3 md:grid-cols-2/);
-  assert.match(popupSource, /bg-\\[#1A1A1A\\]/);
-  assert.equal((popupSource.match(/bg-\\[#242424\\]/g) ?? []).length, 2);
-  assert.doesNotMatch(popupSource, /sm:max-h-none|sm:overflow-hidden|max-w-2xl|bg-\\[#0a0a0a\\]/);
+  assert.ok(popupSource.includes("max-h-[calc(100dvh-2rem)]"));
+  assert.ok(popupSource.includes("sm:max-h-[calc(100dvh-3rem)]"));
+  assert.ok(popupSource.includes("max-w-6xl"));
+  assert.ok(popupSource.includes("overflow-x-hidden overflow-y-auto overscroll-contain"));
+  assert.ok(popupSource.includes("min-w-0 pr-10"));
+  assert.ok(popupSource.includes("grid-cols-1 gap-3 md:grid-cols-2"));
+  assert.ok(popupSource.includes("bg-[#1A1A1A]"));
+  assert.equal(popupSource.split("bg-[#242424]").length - 1, 2);
+  assert.doesNotMatch(popupSource, /sm:max-h-none|sm:overflow-hidden|max-w-2xl|bg-\[#0a0a0a\]/);
 });
