@@ -8,6 +8,8 @@ on:
       - "src/affiliate-checkout-return.ts"
       - "src/app/api/checkout/**"
       - "src/app/api/audit-lead/continue/route.ts"
+      - "src/app/api/audit-lead/route.ts"
+      - "src/components/PipelineAudit.tsx"
       - "src/app/checkout/continue/**"
       - "src/app/checkout/verify/**"
       - "tests/affiliate-checkout-return.test.ts"
