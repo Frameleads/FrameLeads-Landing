@@ -59,3 +59,13 @@ Propose a transparent partner agreement specifying the eligible partner, first-v
 - [ ] Final partner terms, enrollment and commission scope/window approved, then explicit production release authorization
 
 **Current state:** Landing [PR #19](https://github.com/Frameleads/FrameLeads-Landing/pull/19) and Brand Brain [PR #28](https://github.com/Frameleads/Brand-Brain/pull/28) are staged and default-disabled. None of the unchecked tasks may be marked complete merely because static TypeScript or mocked provider tests pass.
+
+## Additional protection staged — versioned affiliate notice (28 October 2026)
+
+The current draft Landing branch now **requires a fresh explicit choice for the exact new compensated-referral notice**. The legacy `frameleads:privacy-consent:v1` preference continues to govern existing advertising/analytics, but cannot authorize affiliate attribution on its own.
+
+- Public release needs **both** `NEXT_PUBLIC_AFFILIATE_REFERRAL_PRIVACY_APPROVED=true` **and** a valid explicitly approved `NEXT_PUBLIC_AFFILIATE_CONSENT_NOTICE_VERSION` (identifier, not a secret). A missing/invalid version fails closed for affiliate capture.
+- The browser saves `affiliateNoticeAcceptedVersion` only after a user explicitly saves/accepts the disclosed new optional purpose. An older acceptance, a different version, or a declined notice never qualifies a partner code. The UI presents a new choice for old *affirmative advertising* preferences; users may **retain their previous advertising choice while declining the partner referral purpose**.
+- Version rotation invalidates stored affiliate attribution without revoking the user's existing unrelated analytics/advertising choices. The URL referral is not silently sent while the user decides. Explicit withdrawal still clears the stored code and scrubs its URL.
+- Browser localStorage is not authenticated. Version markers are UX/collection controls **only** and are **not** a durable, server-issued consent receipt. The Audit server still strips affiliate codes, and the payable checkout RPC stays absent until independent policy/database authorization.
+- Regression tests cover historical advertising acceptance, fresh acceptance, declining referral while retaining advertising, notice-version rotation, URL code leakage and withdrawal, plus existing checkout tests. These pass in GitHub Actions.
