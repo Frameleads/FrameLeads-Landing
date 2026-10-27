@@ -10,6 +10,12 @@ on:
       - "src/app/api/audit-lead/continue/route.ts"
       - "src/app/api/audit-lead/route.ts"
       - "src/components/PipelineAudit.tsx"
+      - "src/privacy-consent.ts"
+      - "src/marketing-events.ts"
+      - "src/audit-capture.ts"
+      - "src/audit.ts"
+      - "tests/marketing-attribution.test.ts"
+      - "tests/marketing-events.test.ts"
       - "src/app/checkout/continue/**"
       - "src/app/checkout/verify/**"
       - "tests/affiliate-checkout-return.test.ts"
@@ -38,6 +44,8 @@ jobs:
         run: node --test tests/affiliate-disclosure-gate.test.mjs
       - name: Verify checkout return host/plan and fail-closed flags
         run: npx tsx --test tests/affiliate-checkout-return.test.ts
+      - name: test reviewed referral capture and withdrawal
+        run: npx tsx --test tests/marketing-attribution.test.ts tests/marketing-events.test.ts
       - name: TypeScript check
         run: npx tsc --noEmit
       - name: Production build (review only, no deployment)
