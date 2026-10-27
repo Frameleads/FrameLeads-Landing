@@ -25,6 +25,11 @@ test("Tampered, wrong-key, expired, unsupported, or provider-open-redirect cooki
   assert.equal(sealAffiliateNativeSession({ ...data, hostedFallback: "https://whop.com/checkout/ch_validSession" }, key, timestamp), null);
   assert.equal(sealAffiliateNativeSession({ ...data, hostedFallback: "https://sandbox.whop.com/checkout/ch_validSession/?a=x" }, key, timestamp), null);
   assert.equal(sealAffiliateNativeSession({ ...data, checkoutConfigurationId: "plan_untrusted" }, key, timestamp), null);
+  assert.equal(sealAffiliateNativeSession({ ...data, checkoutConfigurationId: "ch_differentAffiliate" }, key, timestamp), null,
+    "native configuration and hosted fallback must identify the same Whop checkout");
+  assert.equal(sealAffiliateNativeSession({ ...data, hostedFallback: "https://sandbox.whop.com/checkout/ch_differentAffiliate/" }, key, timestamp), null,
+    "an unrelated fallback may not silently credit a different affiliate");
+  assert.equal(sealAffiliateNativeSession({ ...data, hostedFallback: "https://sandbox.whop.com/checkout/ch_validSession/other" }, key, timestamp), null);
   assert.equal(sealAffiliateNativeSession(data, "weak", timestamp), null);
   assert.equal(readAffiliateNativeSession("invalid", key, timestamp), null);
 });
