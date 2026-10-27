@@ -2,12 +2,13 @@
 
 import { WhopElements, Checkout, CheckoutElement } from "@whop/elements-react";
 import { loadWhop } from "@whop/elements";
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { getPrivacyConsent, subscribePrivacyConsent } from "../privacy-consent";
 import { referralCheckoutDecision } from "../checkout-embed-policy";
 
 // Whop hosts every payment field. Raw card data must never reach FrameLeads.
-const whopElements = loadWhop();
+// Never initialize Whop payment Elements while Next.js renders on the server.
+// Its browser-only loader must start after hydration in an explicitly enabled checkout.
 
 /** Whop renders and processes payment fields; a return is never entitlement proof. */
 export default function EmbeddedWhopCheckout({
@@ -26,6 +27,18 @@ export default function EmbeddedWhopCheckout({
   embedEnabled: boolean;
 }) {
   const [elementsUnavailable, setElementsUnavailable] = useState(false);
+  const [whopElements, setWhopElements] = useState<ReturnType<typeof loadWhop> | null>(null);
+
+  useEffect(() => {
+    // Disabled checkouts, referrals routed to hosted checkout and server-side
+    // renders must never initialize third-party payment elements.
+    if (!embedEnabled || !hostedFallback || referralHintPresent) return;
+    try {
+      setWhopElements(loadWhop());
+    } catch {
+      setElementsUnavailable(true);
+    }
+  }, [embedEnabled, hostedFallback, referralHintPresent]);
   const [checkoutFinished, setCheckoutFinished] = useState(false);
   const consent = useSyncExternalStore(subscribePrivacyConsent, getPrivacyConsent, () => null);
 
@@ -86,6 +99,10 @@ export default function EmbeddedWhopCheckout({
         Continue securely with Whop
       </a>
     </section>;
+  }
+
+  if (!whopElements) {
+    return <div role="status" className="p-8 text-sm text-[#666666]">Loading secure Whop payment options…</div>;
   }
 
   return <div className="min-w-0">
