@@ -39,6 +39,7 @@ export default async function FrameLeadsCheckout({ params, searchParams }: Props
           <h2 className="mb-7 text-xl font-semibold leading-tight text-[#1A1A1A]">Complete your purchase</h2>
           <EmbeddedWhopCheckout
             planId={config.planId ?? ""}
+            checkoutConfigurationId={config.checkoutConfigurationId ?? ""}
             returnUrl={config.returnUrl ?? ""}
             hostedFallback={config.hostedFallback ?? ""}
             environment={config.environment ?? "sandbox"}
