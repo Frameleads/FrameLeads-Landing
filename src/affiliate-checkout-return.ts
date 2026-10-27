@@ -44,7 +44,7 @@ export function validateCheckoutReturn(
     : target.hostname === "sandbox.whop.com";
   if (!allowedHost || !/^\/checkout\/ch_[A-Za-z0-9]+\/?$/.test(target.pathname)) return null;
   if (data.affiliateLinked && (typeof data.attemptId !== "string" ||
-      !/^[0-9a-f]{8}-[0-9a-f-]{27,}$/.test(data.attemptId))) return null;
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(data.attemptId))) return null;
   return { url: target.toString(), affiliateLinked: data.affiliateLinked };
 }
 
