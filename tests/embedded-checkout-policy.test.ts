@@ -244,3 +244,14 @@ test("checkout completion never crosses Sandbox into the live SaaS or grants acc
   assert.match(content, /membership before granting access/);
   assert.doesNotMatch(content, /status === "success"|payment_id|grantEntitlement|track\(["']Purchase/);
 });
+
+test("Whop Elements initialization happens only in the browser after hydration", () => {
+  const component = fs.readFileSync("src/components/EmbeddedWhopCheckout.tsx", "utf8");
+  assert.doesNotMatch(component, /const whopElements = loadWhop\(\)/);
+  assert.match(component, /useEffect\(\(\) => \{/);
+  assert.match(component, /if \(!embedEnabled \|\| !hostedFallback \|\| referralHintPresent\) return/);
+  assert.match(component, /setWhopElements\(loadWhop\(\)\)/);
+  assert.match(component, /if \(!whopElements\)/);
+  assert.match(component, /setElementsUnavailable\(true\)/);
+  assert.doesNotMatch(component, /onComplete[\s\S]*?grantEntitlement/);
+});
