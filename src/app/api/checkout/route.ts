@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { AFFILIATE_NATIVE_COOKIE, nativeAffiliateEmbedEnabled, sealAffiliateNativeSession } from "../../../affiliate-native-session";
 import { getVercelOidcToken } from "@vercel/oidc";
 import {
   auditContinuationBridgeEnabled, brandBrainIngestUrl, CHECKOUT_SESSION_COOKIE_NAME,
@@ -39,6 +40,30 @@ export async function POST(request: Request) {
     const payload: unknown = await response.json();
     const verified = validateCheckoutReturn(payload, plan, environment, process.env.WHOP_CORE_SANDBOX_PLAN_ID);
     if (!verified) return fail("unavailable");
+    // A server-validated Whop configuration can use the native Elements checkout
+    // only through an encrypted host-only capability; never via ?a= or a URL ID.
+    if (verified.affiliateLinked && nativeAffiliateEmbedEnabled(process.env) && payload
+      && typeof payload === "object" && !Array.isArray(payload)) {
+      const response = payload as Record<string, unknown>;
+      const configId = response.embeddedSessionId;
+      const planId = response.planId;
+      if (typeof configId === "string" && /^ch_[A-Za-z0-9]+$/.test(configId)
+        && typeof planId === "string") {
+        const token = sealAffiliateNativeSession({
+          offer: plan, environment, planId,
+          checkoutConfigurationId: configId, hostedFallback: verified.url,
+        }, process.env.FRAMELEADS_AFFILIATE_NATIVE_COOKIE_KEY);
+        if (token) {
+          const native = NextResponse.redirect(new URL(`/checkout/affiliate/${plan.toLowerCase()}`, request.url), 303);
+          native.headers.set("Set-Cookie", `${AFFILIATE_NATIVE_COOKIE}=${token}; Path=/; Max-Age=600; HttpOnly; Secure; SameSite=Lax`);
+          native.headers.set("Cache-Control", "no-store");
+          native.headers.set("Referrer-Policy", "no-referrer");
+          return native;
+        }
+      }
+    }
+    // Missing/disabled native session keeps the provider-created *attributed*
+    // checkout URL; never substitute the generic uncredited plan checkout.
     const output = NextResponse.redirect(verified.url, 303);
     output.headers.set("Cache-Control", "no-store");
     output.headers.set("Referrer-Policy", "no-referrer");
