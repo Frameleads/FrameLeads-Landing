@@ -192,12 +192,12 @@ test("checkout-click analytics fire only for actual native or hosted checkout li
 test("Whop Elements only exposes hosted fallback on load failure", () => {
   const component = fs.readFileSync("src/components/EmbeddedWhopCheckout.tsx", "utf8");
   assert.match(component, /<WhopElements/);
-  assert.match(component, /<Checkout[\\s\\S]*?plan=\\{planId\\}[\\s\\S]*?returnUrl=\\{returnUrl\\}/);
-  assert.match(component, /onComplete=\\{\\(completion\\) =>/);
-  assert.match(component, /completion\\.result === "payment"/);
-  assert.match(component, /setCheckoutFinished\\(true\\)/);
-  assert.doesNotMatch(component, /window\\.location\\.(?:assign|replace)/);
-  assert.doesNotMatch(component, /observeMeasurement\\(["'](?:Purchase|PURCHASE)["']/);
+  assert.match(component, /<Checkout[\s\S]*?plan=\{planId\}[\s\S]*?returnUrl=\{returnUrl\}/);
+  assert.match(component, /onComplete=\{\(completion\) =>/);
+  assert.match(component, /completion\.result === "payment"/);
+  assert.match(component, /setCheckoutFinished\(true\)/);
+  assert.doesNotMatch(component, /window\.location\.(?:assign|replace)/);
+  assert.doesNotMatch(component, /observeMeasurement\(["'](?:Purchase|PURCHASE)["']/);
   assert.match(component, /<CheckoutElement/);
   assert.match(component, /if \(elementsUnavailable\)/);
   assert.match(component, /onLoadError=\{\(\) => setElementsUnavailable\(true\)\}/);
@@ -238,9 +238,9 @@ test("checkout footer contains only FrameLeads policies and does not duplicate W
 
 test("checkout completion never crosses Sandbox into the live SaaS or grants access from URL status", () => {
   const content = fs.readFileSync("src/app/checkout/complete/page.tsx", "utf8");
-  assert.match(content, /embeddedCheckoutPolicy\\("micro-pilot", process\\.env\\)/);
+  assert.match(content, /embeddedCheckoutPolicy\("micro-pilot", process\.env\)/);
   assert.match(content, /environment === "preview"/);
-  assert.match(content, /checkout\\.environment === "sandbox"/);
+  assert.match(content, /checkout\.environment === "sandbox"/);
   assert.match(content, /membership before granting access/);
-  assert.doesNotMatch(content, /status === "success"|payment_id|grantEntitlement|track\\(["']Purchase/);
+  assert.doesNotMatch(content, /status === "success"|payment_id|grantEntitlement|track\(["']Purchase/);
 });
