@@ -1,0 +1,43 @@
+# FrameLeads — embedded checkout + affiliate/consent/entitlement reconciliation
+**Review date:** 27 October 2026  
+**Status:** implementation handoff on a separate, unmerged branch. No publication, payment change, live affiliate activation, hosted database migration, or policy/legal signoff.
+
+## Source-of-truth boundaries
+- Landing `main` includes merged native Whop Elements checkout `src/app/checkout/[plan]/page.tsx` and `src/components/EmbeddedWhopCheckout.tsx`. Active offers: Micro-Pilot **$10 one-time**, plan `plan_8qLWfJZHQUYZf`; Core **$149/month**, plan `plan_GQTDPXnvijugf`; Enterprise **$499/month**, plan `plan_uGDGf5WKW7hlE`. Checkout source says **25 total / 500 monthly / 10,000 monthly prospects** for new customers. Preserve grandfathered Enterprise allowances in SaaS.
+- Checkout uses Whop-hosted card fields; an Elements completion callback only instructs the customer to sign into `app.frameleads.io`. A browser success page must NEVER grant entitlement or emit a duplicate Whop purchase.
+- Landing affiliate [PR #5](https://github.com/Frameleads/FrameLeads-Landing/pull/5) is still OPEN, unmerged and conflicts with newer checkout `main`. Cherry-pick **specific reviewed consent/referral behavior** into new work, not the old PR wholesale.
+- Brand Brain affiliate [PR #12](https://github.com/Frameleads/Brand-Brain/pull/12) is still OPEN. Its `audit-checkout-policy.ts` / `audit-checkout.ts` refer to **retired** Core/Enterprise plan IDs `plan_sAEhr77rTrhX4` and `plan_jdy5Z44fMKMAz`. Do not merge until mapped against verified newer Whop plans and existing subscribers. Affiliate `affiliate-consent-proof.ts` is an **unwired, disabled-by-default verifier**; it is not an issuer, durable store or RLS/withdrawal implementation.
+- Brand Brain [PR #10](https://github.com/Frameleads/Brand-Brain/pull/10) for Affiliate HQ remains OPEN. Verify Upstash distributed rate limit on isolated previews before launch.
+
+## Immediate checkout critical gap
+In merged Landing `main`, `src/checkout-embed-policy.ts` handles `?a=` as `pending` for undecided consent and `hosted` for accepted or rejected consent. `src/components/EmbeddedWhopCheckout.tsx` then links to the **generic hosted fallback WITHOUT the affiliate code**. This is a privacy-safe default, NOT verified affiliate attribution. It can lose payable partner credit for a buyer who comes directly from a partner video.
+- Whop's documentation for a plain HTML embed uses `data-whop-affiliate` from `?a=`, but **that recipe is not verified for the exact `@whop/elements-react@1.9.0` Checkout API**. Do not assume raw `?a=` is sufficient evidence, inject it into Whop unchecked, or replace approved Elements with a hand-coded payment flow.
+- Backend PR #12 can create a Whop `checkoutConfigurations.create({affiliate_code, ...})` with idempotency and event metadata after server/provider validation; its sandbox-only `embeddedSessionId` proposal still needs API compatibility and real Sandbox testing. Do not assume a plan-only Checkout and checkout-configuration session are interchangeable.
+- Preserve **direct (nonaffiliate) checkout** for rejected/no consent users. A referral opt-out must never block purchase or force an unnecessary Audit.
+- Distinguish (a) consented and server-verified immediate referral, (b) consented Audit observation + authorized delayed checkout, (c) no consent/direct, (d) conflicted/withdrawn/expired, (e) provider-side affiliate dispute. Never infer attribution from email matching, cookies after opt-out, or Whop checkout success callback.
+
+## Privacy gate (this branch)
+The only functional change in this branch is **disclosure-copy staging** in `PrivacyChoices.tsx`, behind existing `NEXT_PUBLIC_AFFILIATE_REFERRAL_PRIVACY_APPROVED === 'true'`. With flag OFF, existing consumer-facing privacy text and all tracking behavior remain unchanged. With flag ON, the UI discloses that partner links may earn commissions and may link a permitted referral through Audit to a later purchase. **This is NOT an independent consent receipt, legal clearance, or permission to flip the flag.**
+- Owner business approvals: public individual operator name for BrandFlow Studio and the draft advertising/referral disclosure, both subject to responsible policy/legal review.
+- Responsible policy/legal review must decide granular affiliate-vs-advertising consent, exact notice content/version/purpose/digest, applicable legal bases and jurisdictions, Whop affiliate-visible buyer data, and a defensible data retention/deletion schedule. Attribution window (30 days proposed) and final partner agreement **not approved**.
+- Brand Brain must issue/store server-timestamped notice-bound affirmative consent receipt, append withdrawal, generate observation-scoped signed challenge, atomically consume it and insert immutable observation **in the same transaction**, fail closed on expired/replayed/withdrawn/conflict, and support deletion/export/suppression policy. Never treat a browser boolean as durable proof. Keep `AFFILIATE_CONSENT_EVIDENCE_ENABLED`, `AFFILIATE_REFERRAL_PRIVACY_APPROVED`, `NEXT_PUBLIC_AFFILIATE_REFERRAL_PRIVACY_APPROVED`, `WHOP_AFFILIATE_CHECKOUT_ENABLED` and `AUDIT_CHECKOUT_CONTINUATION_ENABLED` OFF without all requisite approvals.
+- Initial hosted Audit ingestion migration 16 was explicitly blocked by connected-tool safety checks; 15 migrations were verified in the dedicated Sandbox on 27 Oct 2026. Do NOT retry via another SQL route or deploy blocked changes.
+
+## Subscription access verification — do not rewrite working access
+Whop is charge/subscription authority, and the SaaS membership check governs plan access. Preserve historical subscriptions and grandfathered quotas. The already-reported Micro-Pilot Sandbox checkout -> login -> 25 total access proof is useful **but not** blanket proof that all tiers and signed webhooks are correct.
+- Verify genuine signed Whop webhook processing (idempotent across retries), plan identity, purchase/reconciliation record, sandbox vs live isolation, customer account/membership mapping, subscription active/cancelled/refunded, access/grace/revocation, and returning login.
+- Exercise Micro-Pilot, Core and Enterprise if distinct Sandbox plans are approved; report unavailable plans **BLOCKED**, not passed. Avoid live charges/changes without separate owner authorization.
+- Whop Pixel on Landing already exists and is advertising-consent-gated. Don't install a duplicate script or fire Purchase from checkout UI. Track click/start separately from Whop provider-confirmed purchase and SaaS membership access.
+
+## Release gates and acceptance matrix
+1. Verify exact Whop React Elements API or server-created checkout-configuration session method, then build safe **server-only** checkout initialization for immediate/referral after approved consent proof.
+2. Verify affiliate eligibility for the exact account/plan; preserve raw code only until explicitly accepted and server-proven; no code leak in logs/UTMs.
+3. Nonconsenting and anonymous visitors retain fully usable normal embedded checkout. Nonaffiliate Audit customers should also receive non-attributed continuation, independent of affiliate evidence (older Brand Brain path currently excludes them).
+4. Ensure a validated affiliate code reaches **both** embedded and hosted-fallback paths, or explicitly flag that path ineligible before making a partner promise; never silently credit the wrong person.
+5. Verify signed purchase events and **Whop dashboard commission** for immediate and delayed attribution. Cancellation/refund/dispute logic must follow provider and partner agreement. Final commission duration is undecided.
+6. Verify true sandbox isolation for preview pair, CORS/CSRF/session/cookie boundaries, rate-limit, RLS/grants and concurrent withdrawal/consumption contracts; no production credentials in previews.
+7. Resolve the hosted migration refusal via the authorized review process and obtain legal/policy and explicit named release authorizations.
+8. Keep each changed PR isolated and unmerged until browser/mobile E2E and provider-side receipts validate actual behavior.
+
+## Current work product
+This draft PR stages only consent notice copy behind an OFF-by-default gate plus source-level guards. **No affiliate code is forwarded to Whop, no subscription entitlement is changed, no new checkout route is activated.**
