@@ -47,7 +47,7 @@ const EnterpriseIcon = () => (
 );
 
 const pricingCapabilities = [
-  { capability: "Prospect capacity", coreDetail: "500 / month", enterpriseDetail: "20,000 / month", coreIncluded: true },
+  { capability: "Prospect capacity", coreDetail: "500 / month", enterpriseDetail: "10,000 / month", coreIncluded: true },
   { capability: "Omnichannel Sandbox", coreIncluded: true },
   { capability: "Outbound deployment", coreIncluded: true },
   { capability: "Inbox Triage", coreIncluded: true },
@@ -418,7 +418,7 @@ const compactFaqs = [
 
 const pricingRows = {
   core: [["Prospect volume", "500 / month"], ["Reply intelligence", "Decision Engine + Inbox Triage"], ["Outbound execution", "Native Sandbox + Deploy"], ["Intelligence", "Scout + Memory + Brain + Playbook"], ["Control", "Human-reviewed workflow"]],
-  enterprise: [["Prospect volume", "20,000 / month"], ["Reply intelligence", "Full Decision Intelligence"], ["Outbound execution", "Native + governed automation"], ["Governance", "Constitution + governance controls"], ["Operations", "Risk + SLA + outcome learning"]],
+  enterprise: [["Prospect volume", "10,000 / month"], ["Reply intelligence", "Full Decision Intelligence"], ["Outbound execution", "Native + governed automation"], ["Governance", "Constitution + governance controls"], ["Operations", "Risk + SLA + outcome learning"]],
 } as const;
 
 function PricingCard({ tier }: { tier: "core" | "enterprise" }) {
