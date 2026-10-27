@@ -31,7 +31,8 @@ function validSession(value: NativeAffiliateSession, now: number): boolean {
       ? url.hostname === "whop.com" || url.hostname === "www.whop.com"
       : url.hostname === "sandbox.whop.com";
     return providerHost && url.protocol === "https:" && !url.username && !url.password && !url.port
-      && !url.hash && !url.search && /^\/checkout\/ch_[A-Za-z0-9]+\/?$/.test(url.pathname);
+      && !url.hash && !url.search
+      && url.pathname.replace(/\/$/, "") === `/checkout/${value.checkoutConfigurationId}`;
   } catch { return false; }
 }
 export function sealAffiliateNativeSession(
