@@ -73,10 +73,11 @@ test("production native form keeps its exact plan gate and existing hosted fallb
       : tier === "core" ? "WHOP_CORE_CHECKOUT_CONFIGURATION_ID"
       : "WHOP_ENTERPRISE_CHECKOUT_CONFIGURATION_ID";
     for (const invalid of [undefined, "ch_bad?plan=other", "plan_invalid", "ch_"]) {
-      const disabled = embeddedCheckoutPolicy(tier, { ...enabled, [key]: invalid });
-      assert.equal(disabled.available, false, "Native payment must fail closed without reviewed checkout configuration");
-      assert.equal(disabled.reason, "redirect_unverified");
-      assert.equal(disabled.hostedFallback, tierInformation(tier).hostedCheckout);
+      const planBased = embeddedCheckoutPolicy(tier, { ...enabled, [key]: invalid });
+      assert.equal(planBased.available, true, "Verified production plans can use native Elements without optional checkout configuration");
+      assert.equal(planBased.checkoutConfigurationId, undefined, "Malformed checkout configuration must not be used");
+      assert.equal(planBased.hostedFallback, tierInformation(tier).hostedCheckout);
+      assert.equal(planBased.planId, tierInformation(tier).productionPlanId);
     }
   }
   assert.deepEqual(embeddedCheckoutPolicy("core", { ...enabled, WHOP_ENVIRONMENT: "sandbox" }), { available: false, reason: "wrong_environment" });
