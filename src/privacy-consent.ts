@@ -107,6 +107,10 @@ export function savePrivacyConsent(
   }
   if (!next.advertising) {
     clearAdvertisingAttribution();
+  } else if (affiliateChoice === "decline" && version) {
+    // Declining the new partner purpose must scrub the referral even when
+    // existing, unrelated advertising permission is retained.
+    discardAffiliateReferral();
   }
   window.dispatchEvent(new CustomEvent(eventName, { detail: next }));
   return next;
@@ -122,16 +126,21 @@ export function subscribePrivacyConsent(onChange: () => void): () => void {
     if (event.key === storageKey) {
       let advertising = false;
       let currentAffiliateNotice = false;
+      let declinedAffiliateNotice = false;
       try {
         const value: unknown = event.newValue ? JSON.parse(event.newValue) : null;
         advertising = Boolean(value && typeof value === "object" && (value as Record<string, unknown>).advertising === true);
         currentAffiliateNotice = Boolean(advertising && currentAffiliateNoticeVersion()
           && value && typeof value === "object"
           && (value as Record<string, unknown>).affiliateNoticeAcceptedVersion === currentAffiliateNoticeVersion());
+        declinedAffiliateNotice = Boolean(advertising && currentAffiliateNoticeVersion()
+          && value && typeof value === "object"
+          && (value as Record<string, unknown>).affiliateNoticeDeclinedVersion === currentAffiliateNoticeVersion());
       } catch {
         // An unreadable changed preference fails closed for referral capture.
       }
       if (!advertising) clearAdvertisingAttribution();
+      else if (declinedAffiliateNotice) discardAffiliateReferral();
       else if (!currentAffiliateNotice) clearAffiliateReferralForOutdatedNotice();
     }
     onChange();
