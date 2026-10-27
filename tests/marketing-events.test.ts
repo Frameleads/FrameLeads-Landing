@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { savePrivacyConsent, subscribePrivacyConsent } from "../src/privacy-consent.ts";
+import { getPrivacyConsent, hasCurrentAffiliateNoticeConsent, requiresAffiliateNoticeChoice, savePrivacyConsent, subscribePrivacyConsent } from "../src/privacy-consent.ts";
 import {
   captureMarketingAttribution,
   initializeMarketingPixels,
@@ -53,6 +53,45 @@ function withBrowser<T>(run: (events: MarketingEvent[], storage: Map<string, str
     else Reflect.deleteProperty(globalThis, "window");
   }
 }
+
+// One reviewed test notice only. Production requires independently approved public notice text.
+process.env.NEXT_PUBLIC_AFFILIATE_REFERRAL_PRIVACY_APPROVED = "true";
+process.env.NEXT_PUBLIC_AFFILIATE_CONSENT_NOTICE_VERSION = "affiliate-test-v1";
+
+test("a historical advertising opt-in cannot be silently upgraded to affiliate permission", () => {
+  withBrowser((_events, _storage, location) => {
+    location.search = "?a=partner_old&utm_source=affiliate";
+    assert.equal(hasCurrentAffiliateNoticeConsent(getPrivacyConsent()), false);
+    assert.equal(requiresAffiliateNoticeChoice(getPrivacyConsent()), true);
+    assert.equal(captureMarketingAttribution(true).affiliateCode, undefined);
+    assert.equal(new URL(location.href).searchParams.get("a"), "partner_old",
+      "undecided new purpose must not erase a potential referral before choice");
+    savePrivacyConsent({ analytics: true, advertising: true }, "decline");
+    assert.equal(requiresAffiliateNoticeChoice(getPrivacyConsent()), false);
+    assert.equal(hasCurrentAffiliateNoticeConsent(getPrivacyConsent()), false);
+    assert.equal(captureMarketingAttribution(true).affiliateCode, undefined);
+    savePrivacyConsent({ analytics: true, advertising: true });
+    assert.equal(hasCurrentAffiliateNoticeConsent(getPrivacyConsent()), true);
+    assert.equal(captureMarketingAttribution(true).affiliateCode, "partner_old");
+  });
+});
+
+test("notice version rotation requires new affirmative consent before another referral", () => {
+  withBrowser((_events, _storage, location) => {
+    location.search = "?a=partner_rotate";
+    savePrivacyConsent({ analytics: true, advertising: true });
+    assert.equal(captureMarketingAttribution(true).affiliateCode, "partner_rotate");
+    process.env.NEXT_PUBLIC_AFFILIATE_CONSENT_NOTICE_VERSION = "affiliate-test-v2";
+    try {
+      assert.equal(captureMarketingAttribution(true).affiliateCode, undefined);
+      assert.equal(requiresAffiliateNoticeChoice(getPrivacyConsent()), true);
+      savePrivacyConsent({ analytics: true, advertising: true });
+      assert.equal(captureMarketingAttribution(true).affiliateCode, "partner_rotate");
+    } finally {
+      process.env.NEXT_PUBLIC_AFFILIATE_CONSENT_NOTICE_VERSION = "affiliate-test-v1";
+    }
+  });
+});
 
 test("canonical marketing event names are stable and do not include client-side purchase confirmation", () => {
   assert.deepEqual(marketingEventNames, [
@@ -133,6 +172,7 @@ test("attribution merging never replaces known campaign values with empty values
 
 test("advertising withdrawal removes session affiliate data and URL referral while preserving analytics attribution", () => {
   withBrowser((_events, storage, location) => {
+    savePrivacyConsent({ analytics: true, advertising: true });
     location.search = "?a=partner_alpha&utm_source=partner&utm_campaign=spring";
     const captured = captureMarketingAttribution(true);
     assert.equal(captured.affiliateCode, "partner_alpha");
@@ -164,6 +204,7 @@ test("analytics-only consent retains allowed UTM attribution but never captures 
 
 test("a consent withdrawal in another tab clears this tab's referral and leaves its UTM attribution", () => {
   withBrowser((_events, storage, location, local, fireStorageChange) => {
+    savePrivacyConsent({ analytics: true, advertising: true });
     location.search = "?a=partner_alpha&utm_source=partner";
     captureMarketingAttribution(true);
     const unsubscribe = subscribePrivacyConsent(() => {});
