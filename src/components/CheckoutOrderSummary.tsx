@@ -25,8 +25,8 @@ export default function CheckoutOrderSummary({ tier, termsVerified }: Props) {
       <div className="mx-auto w-full max-w-[460px]">
         <div className="flex items-center gap-3">
           <span aria-hidden="true" className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[9px] border border-[#888888] bg-[#242424]">
-            {/* The 2000px logo PNG has internal padding; zoom the art inside the unchanged 44px badge. */}
-            <Image src="/logo.png" alt="" width={72} height={72} className="h-[72px] w-[72px] max-w-none shrink-0 object-contain" priority />
+            {/* Match the SaaS-header bolt proportions; preserve the 44px checkout badge. */}
+            <Image src="/logo.png" alt="" width={47} height={47} className="h-[47px] w-[47px] max-w-none shrink-0 object-contain" priority />
           </span>
           <div className="min-w-0">
             <p className="text-[15px] font-semibold leading-5 text-white">FrameLeads</p>
