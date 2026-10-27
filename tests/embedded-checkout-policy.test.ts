@@ -159,8 +159,8 @@ test("native form uses Whop fields and contains no custom payment or ledger rout
   const page = fs.readFileSync(new URL("../src/app/checkout/[plan]/page.tsx", import.meta.url), "utf8");
   assert.match(component, /import .*CheckoutElement.*@whop\/elements-react/);
   assert.match(component, /<CheckoutElement/);
-  assert.match(component, /checkoutConfiguration=\\{checkoutConfigurationId\\}/);
-  assert.match(page, /checkoutConfigurationId=\\{config\\.checkoutConfigurationId \\?\\? ""\\}/);
+  assert.match(component, /checkoutConfiguration=\{checkoutConfigurationId\}/);
+  assert.match(page, /checkoutConfigurationId=\{config\.checkoutConfigurationId \?\? ""\}/);
   assert.match(component, /plan=\{planId\}/);
   assert.match(component, /environment=\{environment\}/);
   assert.match(component, /elements=\{whopElements\}/);
