@@ -24,6 +24,9 @@ test("trusted provider-created affiliate checkout configuration is the only paya
     "https://whop.com/checkout/ch_verifiedConfiguration#ref", "https://frameleads.io/checkout/core",
   ]) assert.equal(validateCheckoutReturn({ ...verified, purchaseUrl: url }, "CORE", "production"), null, url);
   assert.equal(validateCheckoutReturn({ ...verified, attemptId: undefined }, "CORE", "production"), null);
+  assert.equal(validateCheckoutReturn({ ...verified, attemptId: "11111111-1111-1111-1111-111111111111" }, "CORE", "production"), null,
+    "attempt IDs require a conforming, variant-marked UUID");
+  assert.equal(validateCheckoutReturn({ ...verified, attemptId: "11111111-1111-4111-8111-11111111111z" }, "CORE", "production"), null);
   assert.equal(validateCheckoutReturn({ ...verified, affiliateLinked: "true" }, "CORE", "production"), null);
 });
 test("invalid environments, wrong plans, stale plan IDs and query-based grants fail closed", () => {
