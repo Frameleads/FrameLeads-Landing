@@ -69,10 +69,35 @@ test("a historical advertising opt-in cannot be silently upgraded to affiliate p
     savePrivacyConsent({ analytics: true, advertising: true }, "decline");
     assert.equal(requiresAffiliateNoticeChoice(getPrivacyConsent()), false);
     assert.equal(hasCurrentAffiliateNoticeConsent(getPrivacyConsent()), false);
+    assert.equal(getPrivacyConsent()?.advertising, true, "unrelated advertising choice remains accepted");
+    assert.equal(new URL(location.href).searchParams.has("a"), false, "declined referral is scrubbed");
     assert.equal(captureMarketingAttribution(true).affiliateCode, undefined);
     savePrivacyConsent({ analytics: true, advertising: true });
     assert.equal(hasCurrentAffiliateNoticeConsent(getPrivacyConsent()), true);
-    assert.equal(captureMarketingAttribution(true).affiliateCode, "partner_old");
+    assert.equal(captureMarketingAttribution(true).affiliateCode, undefined,
+      "prior refused referral cannot be restored by new consent alone");
+    location.search = "?a=partner_fresh";
+    assert.equal(captureMarketingAttribution(true).affiliateCode, "partner_fresh");
+  });
+});
+
+test("cross-tab partner-only decline removes the stored code without rejecting advertising", () => {
+  withBrowser((_events, storage, location, local, fireStorageChange) => {
+    savePrivacyConsent({ analytics: true, advertising: true });
+    location.search = "?a=partner_tab_decline&utm_source=video";
+    assert.equal(captureMarketingAttribution(true).affiliateCode, "partner_tab_decline");
+    const unsubscribe = subscribePrivacyConsent(() => {});
+    const newer = JSON.stringify({
+      analytics: true, advertising: true, affiliateNoticeDeclinedVersion: "affiliate-test-v1",
+      savedAt: "2026-10-28T00:00:00.000Z",
+    });
+    local.set("frameleads:privacy-consent:v1", newer);
+    fireStorageChange(newer);
+    assert.equal(new URL(location.href).searchParams.has("a"), false);
+    assert.equal(JSON.parse(storage.get("frameleads:marketing-attribution:v1")!).affiliateCode, undefined);
+    assert.equal(JSON.parse(storage.get("frameleads:marketing-attribution:v1")!).utmSource, "video");
+    assert.equal(hasCurrentAffiliateNoticeConsent(getPrivacyConsent()), false);
+    unsubscribe();
   });
 });
 
