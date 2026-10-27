@@ -43,7 +43,16 @@ export async function POST(request: Request) {
       console.error(JSON.stringify({ event: "audit_bridge_invalid_upstream_response", requestId, upstreamStatus: upstream.status, upstreamRequestId: upstream.headers.get("x-request-id") }));
       return bridgeFailure(requestId, "AUDIT_BRIDGE_UPSTREAM_INVALID", 502);
     }
-    return Response.json({ success: true }, { status: 201, headers: { "X-Request-Id": requestId } });
+    // A usable continuation is offered only when the public UI feature flag
+    // is explicitly enabled and Brand Brain attests its eligibility. This
+    // exposes no affiliate code or consent proof to the browser.
+    const continuationAvailable =
+      process.env.NEXT_PUBLIC_FRAMELEADS_AUDIT_CHECKOUT_CONTINUATION_ENABLED === "true" &&
+      "checkoutContinuationAvailable" in result && result.checkoutContinuationAvailable === true;
+    return Response.json({
+      success: true,
+      ...(continuationAvailable ? { prospectId: result.prospectId, checkoutContinuationAvailable: true } : {}),
+    }, { status: 201, headers: { "X-Request-Id": requestId, "Cache-Control": "no-store" } });
   } catch (error) {
     console.error(JSON.stringify({ event: "audit_bridge_fetch_failed", requestId, errorClass: error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError") ? "timeout" : "network_or_response" }));
     const timeout = error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
