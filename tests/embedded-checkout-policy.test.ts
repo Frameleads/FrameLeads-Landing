@@ -50,7 +50,7 @@ test("Whop native loader and existing SaaS login return target are fixed", () =>
 
 test("production native form keeps its exact plan gate and existing hosted fallback", () => {
   assert.deepEqual(embeddedCheckoutPolicy("core", {}), { available: false, reason: "preview_only" });
-  const enabled = { FRAMELEADS_WHOP_NATIVE_CHECKOUT_ENABLED: "true", WHOP_ENVIRONMENT: "production", VERCEL_ENV: "production", FRAMELEADS_WHOP_PLAN_TERMS_VERIFIED: "true", WHOP_MICRO_PLAN_ID: "plan_8qLWfJZHQUYZf", WHOP_CORE_PLAN_ID: "plan_GQTDPXnvijugf", WHOP_ENTERPRISE_PLAN_ID: "plan_uGDGf5WKW7hlE" };
+  const enabled = { FRAMELEADS_WHOP_NATIVE_CHECKOUT_ENABLED: "true", WHOP_ENVIRONMENT: "production", VERCEL_ENV: "production", FRAMELEADS_WHOP_PLAN_TERMS_VERIFIED: "true", WHOP_MICRO_PLAN_ID: "plan_8qLWfJZHQUYZf", WHOP_CORE_PLAN_ID: "plan_GQTDPXnvijugf", WHOP_ENTERPRISE_PLAN_ID: "plan_uGDGf5WKW7hlE", WHOP_MICRO_CHECKOUT_CONFIGURATION_ID: "ch_microVerified", WHOP_CORE_CHECKOUT_CONFIGURATION_ID: "ch_coreVerified", WHOP_ENTERPRISE_CHECKOUT_CONFIGURATION_ID: "ch_enterpriseVerified" };
   assert.deepEqual(embeddedCheckoutPolicy("core", { ...enabled, FRAMELEADS_WHOP_NATIVE_CHECKOUT_ENABLED: undefined }), {
     available: false, reason: "disabled", environment: "production", hostedFallback: "https://whop.com/checkout/plan_GQTDPXnvijugf", returnUrl: WHOP_CHECKOUT_RETURN_URL,
   });
@@ -60,14 +60,25 @@ test("production native form keeps its exact plan gate and existing hosted fallb
   assert.deepEqual(embeddedCheckoutPolicy("core", { ...enabled, WHOP_CORE_PLAN_ID: "plan_wrong" }), {
     available: false, reason: "plan_unverified", environment: "production", hostedFallback: "https://whop.com/checkout/plan_GQTDPXnvijugf", returnUrl: WHOP_CHECKOUT_RETURN_URL,
   });
-  assert.deepEqual(embeddedCheckoutPolicy("core", enabled), { available: true, environment: "production", planId: "plan_GQTDPXnvijugf", returnUrl: WHOP_CHECKOUT_RETURN_URL, hostedFallback: "https://whop.com/checkout/plan_GQTDPXnvijugf" });
+  assert.deepEqual(embeddedCheckoutPolicy("core", enabled), { available: true, environment: "production", planId: "plan_GQTDPXnvijugf", checkoutConfigurationId: "ch_coreVerified", returnUrl: WHOP_CHECKOUT_RETURN_URL, hostedFallback: "https://whop.com/checkout/plan_GQTDPXnvijugf" });
   assert.equal(embeddedCheckoutPolicy("enterprise", enabled).available, true);
   assert.equal(embeddedCheckoutPolicy("enterprise", enabled).planId, "plan_uGDGf5WKW7hlE");
   assert.equal(embeddedCheckoutPolicy("enterprise", enabled).hostedFallback, "https://whop.com/checkout/plan_uGDGf5WKW7hlE");
-  assert.deepEqual(embeddedCheckoutPolicy("micro-pilot", enabled), { available: true, environment: "production", planId: "plan_8qLWfJZHQUYZf", returnUrl: WHOP_CHECKOUT_RETURN_URL, hostedFallback: "https://whop.com/checkout/plan_8qLWfJZHQUYZf" });
+  assert.deepEqual(embeddedCheckoutPolicy("micro-pilot", enabled), { available: true, environment: "production", planId: "plan_8qLWfJZHQUYZf", checkoutConfigurationId: "ch_microVerified", returnUrl: WHOP_CHECKOUT_RETURN_URL, hostedFallback: "https://whop.com/checkout/plan_8qLWfJZHQUYZf" });
   assert.deepEqual(embeddedCheckoutPolicy("micro-pilot", { ...enabled, WHOP_MICRO_PLAN_ID: "plan_other" }), {
     available: false, reason: "plan_unverified", environment: "production", hostedFallback: "https://whop.com/checkout/plan_8qLWfJZHQUYZf", returnUrl: WHOP_CHECKOUT_RETURN_URL,
   });
+  for (const tier of ["micro-pilot", "core", "enterprise"] as const) {
+    const key = tier === "micro-pilot" ? "WHOP_MICRO_CHECKOUT_CONFIGURATION_ID"
+      : tier === "core" ? "WHOP_CORE_CHECKOUT_CONFIGURATION_ID"
+      : "WHOP_ENTERPRISE_CHECKOUT_CONFIGURATION_ID";
+    for (const invalid of [undefined, "ch_bad?plan=other", "plan_invalid", "ch_"]) {
+      const disabled = embeddedCheckoutPolicy(tier, { ...enabled, [key]: invalid });
+      assert.equal(disabled.available, false, "Native payment must fail closed without reviewed checkout configuration");
+      assert.equal(disabled.reason, "redirect_unverified");
+      assert.equal(disabled.hostedFallback, tierInformation(tier).hostedCheckout);
+    }
+  }
   assert.deepEqual(embeddedCheckoutPolicy("core", { ...enabled, WHOP_ENVIRONMENT: "sandbox" }), { available: false, reason: "wrong_environment" });
 });
 
@@ -148,6 +159,8 @@ test("native form uses Whop fields and contains no custom payment or ledger rout
   const page = fs.readFileSync(new URL("../src/app/checkout/[plan]/page.tsx", import.meta.url), "utf8");
   assert.match(component, /import .*CheckoutElement.*@whop\/elements-react/);
   assert.match(component, /<CheckoutElement/);
+  assert.match(component, /checkoutConfiguration=\\{checkoutConfigurationId\\}/);
+  assert.match(page, /checkoutConfigurationId=\\{config\\.checkoutConfigurationId \\?\\? ""\\}/);
   assert.match(component, /plan=\{planId\}/);
   assert.match(component, /environment=\{environment\}/);
   assert.match(component, /elements=\{whopElements\}/);
