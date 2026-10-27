@@ -205,7 +205,7 @@ test("analytics-only consent retains allowed UTM attribution but never captures 
 test("a consent withdrawal in another tab clears this tab's referral and leaves its UTM attribution", () => {
   withBrowser((_events, storage, location, local, fireStorageChange) => {
     savePrivacyConsent({ analytics: true, advertising: true });
-    location.search = "?a=partner_alpha&utm_source=partner";
+    location.search = "?a=partner_other_tab&utm_source=partner";
     captureMarketingAttribution(true);
     const unsubscribe = subscribePrivacyConsent(() => {});
     const changedChoice = JSON.stringify({ analytics: true, advertising: false, savedAt: "2026-10-22T12:00:00.000Z" });
