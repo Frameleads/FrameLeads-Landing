@@ -1,6 +1,6 @@
 import type { AuditLeadPayload, DiagnosisType } from "./audit";
 import {initializeMeasurementPixels} from './measurement.ts';
-import {clearStoredAffiliateReferral, discardAffiliateReferral, getPrivacyConsent, isAffiliateCaptureBlockedForCurrentPage} from './privacy-consent.ts';
+import {clearStoredAffiliateReferral, discardAffiliateReferral, getPrivacyConsent, hasCurrentAffiliateNoticeConsent, isAffiliateCaptureBlockedForCurrentPage} from './privacy-consent.ts';
 
 export const marketingEventNames = [
   "LANDING_VIEW",
@@ -109,7 +109,9 @@ export function captureMarketingAttribution(
   // A withdrawal invalidates the previously stored referral for this page even
   // if sessionStorage removal was unavailable. A different fresh referral URL
   // can still qualify after consent is restored.
-  if (isAffiliateCaptureBlockedForCurrentPage()) delete existing.affiliateCode;
+  // A previous advertising opt-in never becomes permission for a newly added
+  // compensated referral purpose. Outdated referral data is not reusable.
+  if (isAffiliateCaptureBlockedForCurrentPage() || !hasCurrentAffiliateNoticeConsent(consent)) delete existing.affiliateCode;
 
   const params = new URLSearchParams(currentWindow.location.search);
   const incoming: MarketingAttribution = { landingPath: currentWindow.location.pathname };
@@ -125,7 +127,7 @@ export function captureMarketingAttribution(
   const queryAffiliateCode = params.get("a");
   const affiliateCode = isAffiliateCaptureBlockedForCurrentPage(queryAffiliateCode ?? undefined)
     ? undefined
-    : captureAffiliateCode(queryAffiliateCode, consent.advertising, affiliateReferralApproved);
+    : captureAffiliateCode(queryAffiliateCode, hasCurrentAffiliateNoticeConsent(consent), affiliateReferralApproved);
   if (affiliateCode) incoming.affiliateCode = affiliateCode;
   incoming.referrer = safeReferrer(currentWindow.document.referrer);
 
