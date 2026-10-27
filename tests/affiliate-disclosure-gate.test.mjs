@@ -33,3 +33,9 @@ test('checkout completion must not grant membership access or manufacture Purcha
   assert.doesNotMatch(checkout, /track\(\s*["']Purchase["']/);
   assert.match(checkout, /onComplete=/);
 });
+
+test('operator identification uses approved individual rather than unsupported registered-company claim', () => {
+  const privacy = fs.readFileSync(new URL('../src/app/privacy/page.tsx', import.meta.url), 'utf8');
+  assert.match(privacy, /operated by Akram Walid, based in the United Arab Emirates/);
+  assert.doesNotMatch(privacy, /BrandFlow Studio is a registered company/i);
+});
