@@ -29,6 +29,8 @@ const tiers = {
     hostedCheckout: "https://whop.com/checkout/plan_8qLWfJZHQUYZf",
     productionPlanId: "plan_8qLWfJZHQUYZf",
     planEnvironmentVariable: "WHOP_MICRO_PLAN_ID",
+    checkoutConfigurationEnvironmentVariable: "WHOP_MICRO_CHECKOUT_CONFIGURATION_ID",
+    sandboxCheckoutConfigurationEnvironmentVariable: "WHOP_MICRO_SANDBOX_CHECKOUT_CONFIGURATION_ID",
     sandboxPlanEnvironmentVariable: "WHOP_MICRO_SANDBOX_PLAN_ID",
     sandboxCheckoutEnvironmentVariable: "WHOP_MICRO_SANDBOX_CHECKOUT_URL",
     benefits: ["25 total prospects", "One-time purchase", "Existing Micro-Pilot access and usage limits"],
@@ -44,6 +46,8 @@ const tiers = {
     hostedCheckout: "https://whop.com/checkout/plan_GQTDPXnvijugf",
     productionPlanId: "plan_GQTDPXnvijugf",
     planEnvironmentVariable: "WHOP_CORE_PLAN_ID",
+    checkoutConfigurationEnvironmentVariable: "WHOP_CORE_CHECKOUT_CONFIGURATION_ID",
+    sandboxCheckoutConfigurationEnvironmentVariable: "WHOP_CORE_SANDBOX_CHECKOUT_CONFIGURATION_ID",
     sandboxPlanEnvironmentVariable: "WHOP_CORE_SANDBOX_PLAN_ID",
     sandboxCheckoutEnvironmentVariable: "WHOP_CORE_SANDBOX_CHECKOUT_URL",
     benefits: ["Reply intelligence and routing", "Governed execution", "Escalation for consequential decisions"],
@@ -59,6 +63,8 @@ const tiers = {
     hostedCheckout: "https://whop.com/checkout/plan_uGDGf5WKW7hlE",
     productionPlanId: "plan_uGDGf5WKW7hlE",
     planEnvironmentVariable: "WHOP_ENTERPRISE_PLAN_ID",
+    checkoutConfigurationEnvironmentVariable: "WHOP_ENTERPRISE_CHECKOUT_CONFIGURATION_ID",
+    sandboxCheckoutConfigurationEnvironmentVariable: "WHOP_ENTERPRISE_SANDBOX_CHECKOUT_CONFIGURATION_ID",
     sandboxPlanEnvironmentVariable: "WHOP_ENTERPRISE_SANDBOX_PLAN_ID",
     sandboxCheckoutEnvironmentVariable: "WHOP_ENTERPRISE_SANDBOX_CHECKOUT_URL",
     benefits: ["Higher-volume decision orchestration", "Advanced governance and routing", "Human approvals for important exceptions"],
@@ -85,12 +91,17 @@ export function tierInformation(tier: CheckoutTier) {
 
 export type EmbedPolicy = {
   available: boolean;
-  reason?: "disabled" | "preview_only" | "wrong_environment" | "plan_unverified" | "terms_unverified" | "sandbox_unconfigured" | "sandbox_terms_unverified";
+  reason?: "disabled" | "preview_only" | "wrong_environment" | "plan_unverified" | "terms_unverified" | "redirect_unverified" | "sandbox_unconfigured" | "sandbox_terms_unverified";
   environment?: "production" | "sandbox";
   planId?: string;
+  checkoutConfigurationId?: string;
   returnUrl?: string;
   hostedFallback?: string;
 };
+
+function validCheckoutConfigurationId(value: string | undefined): value is string {
+  return typeof value === "string" && /^ch_[A-Za-z0-9]+$/.test(value);
+}
 
 function safeSandboxReturnUrl(value: string | undefined): string | undefined {
   if (!value) return undefined;
@@ -164,6 +175,9 @@ export function embeddedCheckoutPolicy(tier: CheckoutTier, values: Record<string
       available: true,
       environment: "sandbox",
       planId: planId!,
+      ...(validCheckoutConfigurationId(values[information.sandboxCheckoutConfigurationEnvironmentVariable])
+        ? { checkoutConfigurationId: values[information.sandboxCheckoutConfigurationEnvironmentVariable] }
+        : {}),
       returnUrl,
       hostedFallback,
     };
@@ -191,9 +205,17 @@ export function embeddedCheckoutPolicy(tier: CheckoutTier, values: Record<string
   if (values[information.planEnvironmentVariable] !== information.productionPlanId) {
     return { available: false, reason: "plan_unverified", ...productionFallback };
   }
+  // A Whop checkout configuration must be merchant-reviewed for the exact
+  // plan, payment mode and success redirect before setting this variable.
+  // A missing ID fails closed to the established hosted checkout route.
+  const checkoutConfigurationId = values[information.checkoutConfigurationEnvironmentVariable];
+  if (!validCheckoutConfigurationId(checkoutConfigurationId)) {
+    return { available: false, reason: "redirect_unverified", ...productionFallback };
+  }
   return {
     available: true,
     planId: information.productionPlanId,
+    checkoutConfigurationId,
     returnUrl: WHOP_CHECKOUT_RETURN_URL,
     hostedFallback: information.hostedCheckout,
     environment: "production",
