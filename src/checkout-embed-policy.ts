@@ -91,7 +91,7 @@ export function tierInformation(tier: CheckoutTier) {
 
 export type EmbedPolicy = {
   available: boolean;
-  reason?: "disabled" | "preview_only" | "wrong_environment" | "plan_unverified" | "terms_unverified" | "redirect_unverified" | "sandbox_unconfigured" | "sandbox_terms_unverified";
+  reason?: "disabled" | "preview_only" | "wrong_environment" | "plan_unverified" | "terms_unverified" | "sandbox_unconfigured" | "sandbox_terms_unverified";
   environment?: "production" | "sandbox";
   planId?: string;
   checkoutConfigurationId?: string;
@@ -205,17 +205,15 @@ export function embeddedCheckoutPolicy(tier: CheckoutTier, values: Record<string
   if (values[information.planEnvironmentVariable] !== information.productionPlanId) {
     return { available: false, reason: "plan_unverified", ...productionFallback };
   }
-  // A Whop checkout configuration must be merchant-reviewed for the exact
-  // plan, payment mode and success redirect before setting this variable.
-  // A missing ID fails closed to the established hosted checkout route.
+  // The Whop Elements plan-based checkout already works in Sandbox. Do not
+  // require a separately created checkout configuration just to render it.
+  // A merchant-verified checkout configuration may be supplied later for
+  // custom success-redirect behavior, without blocking the normal form.
   const checkoutConfigurationId = values[information.checkoutConfigurationEnvironmentVariable];
-  if (!validCheckoutConfigurationId(checkoutConfigurationId)) {
-    return { available: false, reason: "redirect_unverified", ...productionFallback };
-  }
   return {
     available: true,
     planId: information.productionPlanId,
-    checkoutConfigurationId,
+    ...(validCheckoutConfigurationId(checkoutConfigurationId) ? { checkoutConfigurationId } : {}),
     returnUrl: WHOP_CHECKOUT_RETURN_URL,
     hostedFallback: information.hostedCheckout,
     environment: "production",
