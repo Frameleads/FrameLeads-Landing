@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
+import { DIRECT_AFFILIATE_ACTOR_COOKIE } from "../../../direct-affiliate-actor";
 import CheckoutOrderSummary from "../../../components/CheckoutOrderSummary";
 import EmbeddedWhopCheckout from "../../../components/EmbeddedWhopCheckout";
 import { checkoutTier, embeddedCheckoutPolicy, tierInformation } from "../../../checkout-embed-policy";
@@ -25,7 +27,12 @@ export default async function FrameLeadsCheckout({ params, searchParams }: Props
   if (!checkoutTier(plan)) notFound();
 
   const query = await searchParams;
-  const referralHintPresent = Object.prototype.hasOwnProperty.call(query, "a");
+  const jar = await cookies();
+  // A signed direct-referral actor may persist across navigation after ?a=
+  // disappears. Hold the generic checkout until the verified path completes;
+  // this boolean alone never proves consent or creates a commission.
+  const referralHintPresent = Object.prototype.hasOwnProperty.call(query, "a")
+    || Boolean(jar.get(DIRECT_AFFILIATE_ACTOR_COOKIE)?.value);
   const config = embeddedCheckoutPolicy(plan, process.env);
   const termsVerified = process.env.VERCEL_ENV === "preview"
     ? config.available
