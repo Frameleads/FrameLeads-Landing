@@ -26,7 +26,9 @@ test('staged privacy copy does not itself send affiliate code or emit Whop purch
 });
 
 test('current native checkout keeps raw affiliate parameter out of payment elements', () => {
-  assert.match(policy, /if \(input\.rawReferralPresent\) return "hosted"/);
+  assert.match(policy, /if \(input\.affiliateConsent === true\) return "await_verified"/);
+  assert.match(checkout, /decision === "await_verified"/);
+  assert.match(checkout, /Partner-linked checkout needs verification/);
   assert.match(checkout, /referralHintPresent/);
   assert.match(checkout, /Continue with Whop hosted checkout/);
   assert.doesNotMatch(checkout, /data-whop-affiliate/);
