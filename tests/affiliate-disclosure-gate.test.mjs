@@ -25,6 +25,16 @@ test('staged privacy copy does not itself send affiliate code or emit Whop purch
   assert.match(consent, /<WhopAnalytics enabled=\{consent\?\.advertising === true\}/);
 });
 
+test('server acknowledgement is required before browser stores partner acceptance', () => {
+  assert.match(consent, /if \(!await request\(\{ action: "accept", affiliateCode: code \}\)\)/);
+  assert.match(consent, /setPartnerConsentError\("Partner attribution could not be confirmed/);
+  assert.match(consent, /savePrivacyConsent\(next, wantsPartner \? "accept" : "decline"\)/);
+  assert.match(consent, /pendingServerWithdrawal/);
+  assert.match(consent, /action: "withdraw"/);
+  assert.match(checkout, /body: JSON\.stringify\(\{ plan: "CORE" \}\)/);
+  assert.doesNotMatch(checkout, /body: JSON\.stringify\(\{[^}]*affiliateCode/);
+});
+
 test('current native checkout keeps raw affiliate parameter out of payment elements', () => {
   assert.match(policy, /if \(input\.affiliateConsent === true\) return "await_verified"/);
   assert.match(checkout, /decision === "await_verified"/);
