@@ -83,8 +83,7 @@ async function page(width = 1280, consent = false) {
   browser.on('Runtime.exceptionThrown', message => { if (message.sessionId === sessionId) errors.push(message.params.exceptionDetails.text); });
   await send('Runtime.enable'); await send('Page.enable');
   await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 700 });
-  // Emulate touch input as well as viewport size; real phones advertise coarse pointers.
-  if (width < 700) await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
+  if (width < 1024) await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
   await send('Fetch.enable', { patterns: [{ urlPattern: base + '/api/*' }, { urlPattern: 'https://*' }] });
   const initialConsent = consent === null ? '' : `localStorage.setItem('frameleads:privacy-consent:v1', JSON.stringify({analytics:${consent},advertising:${consent},savedAt:new Date().toISOString()}));`;
   await send('Page.addScriptToEvaluateOnNewDocument', { source: `
@@ -112,7 +111,20 @@ async function page(width = 1280, consent = false) {
     setOutcome: (value, code = 201) => { outcome = value; status = code; },
     goto: async route => { await send('Page.navigate', { url: base + route }); await wait(`document.querySelector('#top') && document.readyState === 'complete'`); await pause(400); },
     key: async (key, shift = false) => { const params = {key, code: key === ' ' ? 'Space' : key, windowsVirtualKeyCode: key === 'Tab' ? 9 : key === 'Escape' ? 27 : 32, modifiers: shift ? 8 : 0}; await send('Input.dispatchKeyEvent', {type:'keyDown',...params}); await send('Input.dispatchKeyEvent', {type:'keyUp',...params}); },
+    tap: async selector => {
+      await evaluate(`document.querySelector(${JSON.stringify(selector)}).scrollIntoView({block:'center',behavior:'instant'})`);
+      const point = await evaluate(`(() => { const r=document.querySelector(${JSON.stringify(selector)}).getBoundingClientRect(); return {x:r.x+r.width/2,y:r.y+r.height/2}; })()`);
+      await send('Input.dispatchMouseEvent', { type: 'mousePressed', ...point, button: 'left', clickCount: 1, pointerType: 'touch' });
+      await send('Input.dispatchMouseEvent', { type: 'mouseReleased', ...point, button: 'left', clickCount: 1, pointerType: 'touch' });
+    },
+    setReducedMotion: async () => send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] }),
     screenshot: async name => { mkdirSync('.next/audit-qa', { recursive: true }); const { data } = await send('Page.captureScreenshot', { format: 'png' }); writeFileSync('.next/audit-qa/' + name + '.png', Buffer.from(data, 'base64')); },
+    screenshotElement: async (selector, name) => {
+      const rect = await evaluate(`(() => { const r=document.querySelector(${JSON.stringify(selector)}).getBoundingClientRect(); return {x:r.x+scrollX,y:r.y+scrollY,width:r.width,height:r.height}; })()`);
+      mkdirSync('.next/audit-qa', { recursive: true });
+      const { data } = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true, clip: { ...rect, scale: 1 } });
+      writeFileSync('.next/audit-qa/' + name + '.png', Buffer.from(data, 'base64'));
+    },
     close: () => browser.send('Target.closeTarget', { targetId }),
   };
 }
@@ -232,7 +244,7 @@ for (const width of [1280, 390]) test(`pricing exposure uses a visible heading, 
     await p.evaluate(`window.scrollTo({top:0,behavior:'instant'}); document.querySelector('#pricing h2').scrollIntoView({block:'center',behavior:'instant'})`);
     await pause(700);
     assert.equal(p.observations.filter(event => event.eventName === 'PRICING_VIEW').length, 1, 'scrolling and rerendering do not repeat the exposure');
-    const checkout = `document.querySelector('a[href*="whop.com/checkout/plan_"]')`;
+    const checkout = `document.querySelector('a[href^="/checkout/"]')`;
     await p.evaluate(`${checkout}.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true})); ${checkout}.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true}))`);
     await waitForObservation('CHECKOUT_CLICK');
     assert.equal(p.observations.filter(event => event.eventName === 'CHECKOUT_CLICK').length, 1, 'outbound clicks are recorded once and remain distinct from checkout confirmation');
@@ -301,6 +313,7 @@ test('failed capture, retry, consent denial, backdrop close and legacy links', a
 });
 
 
+
 // This is a real mobile Chromium interaction against the current homepage:
 // pricing qualification and the final close section must activate the $10 offer.
 test('mobile Micro-Pilot popup appears after qualified pricing and final CTA views', async () => {
@@ -314,11 +327,71 @@ test('mobile Micro-Pilot popup appears after qualified pricing and final CTA vie
     await p.evaluate("document.getElementById('commercial-close').scrollIntoView({block:'center',behavior:'instant'})");
     await p.wait(`!!${offer}`, 'qualified mobile visitor receives the one-time offer');
     assert.equal(await p.evaluate(`${offer}.textContent.includes('25 TOTAL PROSPECTS')`), true);
-    assert.equal(await p.evaluate(`${offer}.querySelector('a[href*="plan_8qLWfJZHQUYZf"]') !== null`), true);
+    assert.equal(await p.evaluate(`${offer}.querySelector('a[href="/checkout/micro-pilot"]') !== null`), true);
     await p.key('Escape');
     await p.wait(`!${offer}`, 'escape closes the offer');
     await p.evaluate("document.getElementById('commercial-close').scrollIntoView({block:'center',behavior:'instant'})");
     await pause(300);
     assert.equal(await p.evaluate(`!!${offer}`), false, 'one-time session offer must not reopen');
+    assert.deepEqual(p.errors, []);
+  } finally { await p.close(); }
+});
+
+for (const width of [1440, 1280, 768, 375]) test(`real product proof interaction, screenshot readability and responsive layout at ${width}px`, async () => {
+  const p = await page(width, false);
+  try {
+    await p.goto('/');
+    await p.evaluate(`document.querySelector('#how-it-works').scrollIntoView({block:'start',behavior:'instant'})`);
+    await p.wait(`document.querySelector('#proof-panel img')?.complete && document.querySelector('#proof-panel img')?.naturalWidth > 0`);
+    assert.equal(await p.evaluate(`document.querySelectorAll('#how-it-works').length`), 1);
+    assert.equal(await p.evaluate(`document.querySelectorAll('#how-it-works [role=tab]').length`), 4);
+    assert.equal(await p.evaluate(`document.querySelector('#how-it-works [role=tab][aria-selected=true]').textContent.includes('04')`), true);
+    assert.match(await p.evaluate(`document.querySelector('#proof-panel img').getAttribute('src')`), /04-decision-packet\.png/);
+    assert.ok(await p.evaluate(`document.querySelector('#proof-panel img').naturalWidth >= 350`));
+    if (width === 375) {
+      await p.setReducedMotion();
+      assert.equal(await p.evaluate(`matchMedia('(prefers-reduced-motion: reduce)').matches`), true);
+      assert.equal(await p.evaluate(`getComputedStyle(document.querySelector('#proof-mobile-panel img').parentElement).transitionProperty`), 'none');
+    }
+    if (width < 1024) {
+      assert.equal(await p.evaluate(`document.querySelector('#proof-mobile-step-3').getAttribute('aria-pressed')`), 'true');
+      const mobileStepBottom = await p.evaluate(`document.querySelector('#proof-mobile-step-3').getBoundingClientRect().bottom`);
+      const mobileImageTop = await p.evaluate(`document.querySelector('#proof-mobile-panel').getBoundingClientRect().top`);
+      assert.ok(mobileImageTop >= mobileStepBottom, 'active step is immediately followed by its screenshot');
+    }
+    assert.equal(await p.evaluate(`document.documentElement.scrollWidth <= innerWidth`), true, 'no horizontal overflow');
+    if (width >= 1200) await p.screenshotElement('#how-it-works', width === 1440 ? 'product-proof-desktop' : 'product-proof-desktop-1280');
+    if (width === 375) await p.screenshotElement('#how-it-works', 'product-proof-mobile');
+
+    if (width >= 1024) {
+      await p.evaluate(`document.querySelector('#proof-tab-0').click()`);
+      await p.wait(`document.querySelector('#proof-tab-0').getAttribute('aria-selected') === 'true'`);
+      assert.match(await p.evaluate(`document.querySelector('#proof-panel img').getAttribute('src')`), /01-outbound-sandbox\.png/);
+      assert.ok(await p.evaluate(`document.querySelector('#proof-panel img').naturalWidth >= 300`));
+      await p.evaluate(`document.querySelector('#proof-tab-0').focus()`);
+      await p.key('ArrowRight');
+      await p.wait(`document.querySelector('#proof-tab-1').getAttribute('aria-selected') === 'true'`);
+      assert.equal(await p.evaluate(`document.activeElement.id`), 'proof-tab-1');
+      await p.evaluate(`document.querySelector('#proof-panel button').click()`);
+    } else {
+      await p.tap('#proof-mobile-step-0');
+      await p.wait(`document.querySelector('#proof-mobile-step-0').getAttribute('aria-pressed') === 'true'`);
+      assert.match(await p.evaluate(`document.querySelector('#proof-mobile-panel img').getAttribute('src')`), /01-outbound-sandbox\.png/);
+      assert.equal(await p.evaluate(`document.querySelector('#proof-mobile-step-0').nextElementSibling.id`), 'proof-mobile-panel');
+      await p.evaluate(`document.querySelector('#proof-mobile-panel button').click()`);
+    }
+    await p.wait(`!!document.querySelector('[role=dialog][aria-modal=true]')`);
+    assert.match(await p.evaluate(`document.querySelector('[role=dialog][aria-modal=true]').getAttribute('aria-label')`), width >= 1024 ? /See replies/ : /Prepare outreach/);
+    await p.wait(`document.querySelector('[role=dialog][aria-modal=true] img')?.complete && document.querySelector('[role=dialog][aria-modal=true] img')?.naturalWidth > 0`);
+    assert.equal(await p.evaluate(`document.querySelector('[role=dialog][aria-modal=true] img').naturalWidth`), 1497);
+    if (width < 1497) assert.equal(await p.evaluate(`document.querySelector('[role=dialog][aria-modal=true] img').parentElement.scrollWidth > document.querySelector('[role=dialog][aria-modal=true] img').parentElement.clientWidth`), true, 'full-resolution screenshot remains natively scrollable on small screens');
+    await p.key('Tab');
+    assert.equal(await p.evaluate(`document.querySelector('[role=dialog][aria-modal=true]').contains(document.activeElement)`), true);
+    await p.key('Escape');
+    await p.wait(`!document.querySelector('[role=dialog][aria-modal=true]')`);
+    if (width >= 1024) assert.equal(await p.evaluate(`document.activeElement.id`), 'proof-tab-1');
+    else assert.equal(await p.evaluate(`document.activeElement.textContent.includes('View full screenshot')`), true);
+    assert.deepEqual(p.errors, []);
+
   } finally { await p.close(); }
 });

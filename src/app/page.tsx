@@ -14,7 +14,7 @@ import { auditLocation, auditRequested } from "../audit-entry";
 import CleanBottleneckVisual from "../components/CleanBottleneckVisual";
 import SectionIntro from "../components/SectionIntro";
 import HeroIntro from "../components/HeroIntro";
-import OperatingPath from "../components/OperatingPath";
+import ProductProofHowItWorks from "../components/ProductProofHowItWorks";
 import Navbar from "../components/Navbar";
 import PipelineAudit, { type AuditResult } from "../components/PipelineAudit";
 import VideoSection from "../components/VideoSection";
@@ -463,7 +463,7 @@ export default function Home() {
 
       <EmbeddedSandbox />
 
-      <section id="how-it-works" className="mx-auto max-w-6xl scroll-mt-32 border-t border-white/[0.06] py-16 text-center md:py-24"><SectionIntro eyebrow="One operating path" heading="From lead to next action without the handoff gap." description="FrameLeads keeps campaign execution, reply intelligence, routing, and governance connected." /><OperatingPath /></section>
+      <ProductProofHowItWorks onAudit={launchAudit} />
 
       <section id="pricing" className="mx-auto max-w-6xl scroll-mt-32 border-t border-white/[0.06] py-16 md:py-24"><SectionIntro eyebrow="Pricing" heading="Choose the level of control your operation needs." className="max-w-3xl" /><div className="mt-10 grid gap-6 lg:grid-cols-2"><PricingCard tier="core" /><PricingCard tier="enterprise" /></div></section>
 
