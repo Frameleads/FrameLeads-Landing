@@ -136,11 +136,14 @@ test("Preview Sandbox requires its own company, all tier plans, safe hosted URLs
   assert.deepEqual(embeddedCheckoutPolicy("core", { ...sandbox, VERCEL_ENV: "production" }), { available: false, reason: "wrong_environment" });
 });
 
-test("raw referrals wait for consent and use hosted checkout without forwarding URL data", () => {
+test("partner-consented referrals cannot silently lose attribution on generic checkout", () => {
   assert.equal(referralCheckoutDecision({ rawReferralPresent: true, advertisingConsent: null }), "pending");
   assert.equal(referralCheckoutDecision({ rawReferralPresent: true, advertisingConsent: false }), "hosted");
   assert.equal(referralCheckoutDecision({ rawReferralPresent: true, advertisingConsent: true }), "hosted");
-  assert.equal(referralCheckoutDecision({ rawReferralPresent: false, advertisingConsent: true }), "allowed");
+  assert.equal(referralCheckoutDecision({ rawReferralPresent: true, advertisingConsent: true, affiliateConsent: true }), "await_verified");
+  assert.equal(referralCheckoutDecision({ rawReferralPresent: true, advertisingConsent: false, affiliateConsent: true }), "await_verified");
+  assert.equal(referralCheckoutDecision({ rawReferralPresent: false, advertisingConsent: true, affiliateConsent: true }), "allowed");
+  assert.equal(referralCheckoutDecision({ rawReferralPresent: false, advertisingConsent: false }), "allowed");
 });
 
 test("native form uses Whop fields and contains no custom payment or ledger route", () => {
