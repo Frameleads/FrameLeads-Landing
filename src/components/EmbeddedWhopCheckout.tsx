@@ -30,6 +30,29 @@ export default function EmbeddedWhopCheckout({
   const [whopElements, setWhopElements] = useState<ReturnType<typeof loadWhop> | null>(null);
 
   const [checkoutFinished, setCheckoutFinished] = useState(false);
+  const [directStatus, setDirectStatus] = useState<"idle" | "sending" | "unavailable">("idle");
+  const directPartnerPreviewEnabled = environment === "sandbox"
+    && planId === "plan_kgrX8LpuAH2Ba"
+    && process.env.NEXT_PUBLIC_FRAMELEADS_DIRECT_AFFILIATE_CHECKOUT_ENABLED === "true";
+
+  async function beginVerifiedDirectCheckout() {
+    if (!directPartnerPreviewEnabled || directStatus === "sending") return;
+    setDirectStatus("sending");
+    try {
+      const response = await fetch("/api/affiliate/direct/initialize", {
+        method: "POST", credentials: "same-origin", cache: "no-store",
+        headers: { "Content-Type": "application/json", "x-frameleads-intent": "affiliate-direct-v1" },
+        body: JSON.stringify({ plan: "CORE" }),
+      });
+      const result: unknown = await response.json();
+      const next = result && typeof result === "object" && "next" in result ? result.next : null;
+      if (response.ok && next === "/checkout/affiliate/core") {
+        window.location.assign(next);
+        return;
+      }
+    } catch { /* No fallback to an unattributed purchase. */ }
+    setDirectStatus("unavailable");
+  }
   const consent = useSyncExternalStore(subscribePrivacyConsent, getPrivacyConsent, () => null);
   // The server saw ?a= before the client selected a privacy preference.
   // An explicit decline scrubs the URL; do not keep the stale server prop as
@@ -71,6 +94,15 @@ export default function EmbeddedWhopCheckout({
       <h2 className="text-lg font-semibold text-[#1A1A1A]">Partner-linked checkout needs verification</h2>
       <p className="mt-3">You selected optional partner attribution. This link has not been connected to a verified Whop affiliate checkout session, so we will not silently redirect you to a purchase that could exclude the partner&apos;s commission.</p>
       <p className="mt-3">You can change your optional tracking choice and use the normal checkout without partner attribution. Otherwise, a verified partner checkout will be required.</p>
+      {directPartnerPreviewEnabled && <button type="button"
+        disabled={directStatus === "sending"}
+        onClick={beginVerifiedDirectCheckout}
+        className="mt-5 rounded-lg bg-[#FF5A1F] px-4 py-3 font-semibold text-white disabled:opacity-50">
+        {directStatus === "sending" ? "Verifying partner checkout…" : "Continue with verified partner checkout"}
+      </button>}
+      {directStatus === "unavailable" && <p role="status" className="mt-3 text-xs text-[#8C431B]">
+        Partner checkout is not ready. No payment was taken or attribution reassigned.
+      </p>}
       <button type="button" className="mt-5 rounded-lg border border-[#D5D5D5] px-4 py-3 font-semibold text-[#1A1A1A]"
         onClick={() => window.dispatchEvent(new Event("frameleads:open-privacy-choices"))}>
         Review privacy choices
