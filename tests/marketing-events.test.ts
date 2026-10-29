@@ -73,6 +73,10 @@ test("a historical advertising opt-in cannot be silently upgraded to affiliate p
     assert.equal(new URL(location.href).searchParams.has("a"), false, "declined referral is scrubbed");
     assert.equal(captureMarketingAttribution(true).affiliateCode, undefined);
     savePrivacyConsent({ analytics: true, advertising: true });
+    assert.equal(hasCurrentAffiliateNoticeConsent(getPrivacyConsent()), false,
+      "general advertising save is not an explicit affiliate opt-in");
+    assert.equal(captureMarketingAttribution(true).affiliateCode, undefined);
+    savePrivacyConsent({ analytics: true, advertising: true }, "accept");
     assert.equal(hasCurrentAffiliateNoticeConsent(getPrivacyConsent()), true);
     assert.equal(captureMarketingAttribution(true).affiliateCode, undefined,
       "prior refused referral cannot be restored by new consent alone");
@@ -81,9 +85,25 @@ test("a historical advertising opt-in cannot be silently upgraded to affiliate p
   });
 });
 
+test("general marketing acceptance never grants compensated affiliate consent", () => {
+  withBrowser((_events, _storage, location) => {
+    location.search = "?a=partner_generic_accept";
+    savePrivacyConsent({ analytics: true, advertising: true });
+    assert.equal(getPrivacyConsent()?.advertising, true);
+    assert.equal(hasCurrentAffiliateNoticeConsent(getPrivacyConsent()), false);
+    assert.equal(new URL(location.href).searchParams.has("a"), false);
+    assert.equal(captureMarketingAttribution(true).affiliateCode, undefined);
+    // Separate, affirmative partner choice is required even if ads were accepted.
+    savePrivacyConsent({ analytics: true, advertising: true }, "accept");
+    assert.equal(hasCurrentAffiliateNoticeConsent(getPrivacyConsent()), true);
+    location.search = "?a=partner_fresh_optin";
+    assert.equal(captureMarketingAttribution(true).affiliateCode, "partner_fresh_optin");
+  });
+});
+
 test("cross-tab partner-only decline removes the stored code without rejecting advertising", () => {
   withBrowser((_events, storage, location, local, fireStorageChange) => {
-    savePrivacyConsent({ analytics: true, advertising: true });
+    savePrivacyConsent({ analytics: true, advertising: true }, "accept");
     location.search = "?a=partner_tab_decline&utm_source=video";
     assert.equal(captureMarketingAttribution(true).affiliateCode, "partner_tab_decline");
     const unsubscribe = subscribePrivacyConsent(() => {});
@@ -104,13 +124,13 @@ test("cross-tab partner-only decline removes the stored code without rejecting a
 test("notice version rotation requires new affirmative consent before another referral", () => {
   withBrowser((_events, _storage, location) => {
     location.search = "?a=partner_rotate";
-    savePrivacyConsent({ analytics: true, advertising: true });
+    savePrivacyConsent({ analytics: true, advertising: true }, "accept");
     assert.equal(captureMarketingAttribution(true).affiliateCode, "partner_rotate");
     process.env.NEXT_PUBLIC_AFFILIATE_CONSENT_NOTICE_VERSION = "affiliate-test-v2";
     try {
       assert.equal(captureMarketingAttribution(true).affiliateCode, undefined);
       assert.equal(requiresAffiliateNoticeChoice(getPrivacyConsent()), true);
-      savePrivacyConsent({ analytics: true, advertising: true });
+      savePrivacyConsent({ analytics: true, advertising: true }, "accept");
       assert.equal(captureMarketingAttribution(true).affiliateCode, "partner_rotate");
     } finally {
       process.env.NEXT_PUBLIC_AFFILIATE_CONSENT_NOTICE_VERSION = "affiliate-test-v1";
@@ -197,7 +217,7 @@ test("attribution merging never replaces known campaign values with empty values
 
 test("advertising withdrawal removes session affiliate data and URL referral while preserving analytics attribution", () => {
   withBrowser((_events, storage, location) => {
-    savePrivacyConsent({ analytics: true, advertising: true });
+    savePrivacyConsent({ analytics: true, advertising: true }, "accept");
     location.search = "?a=partner_alpha&utm_source=partner&utm_campaign=spring";
     const captured = captureMarketingAttribution(true);
     assert.equal(captured.affiliateCode, "partner_alpha");
@@ -210,7 +230,7 @@ test("advertising withdrawal removes session affiliate data and URL referral whi
     assert.equal(saved.utmCampaign, "spring");
     assert.equal(new URL(location.href).searchParams.has("a"), false);
 
-    savePrivacyConsent({ analytics: true, advertising: true });
+    savePrivacyConsent({ analytics: true, advertising: true }, "accept");
     assert.equal(captureMarketingAttribution().affiliateCode, undefined);
     location.search = "?a=partner_beta&utm_source=partner";
     assert.equal(captureMarketingAttribution(true).affiliateCode, "partner_beta");
@@ -229,7 +249,7 @@ test("analytics-only consent retains allowed UTM attribution but never captures 
 
 test("a consent withdrawal in another tab clears this tab's referral and leaves its UTM attribution", () => {
   withBrowser((_events, storage, location, local, fireStorageChange) => {
-    savePrivacyConsent({ analytics: true, advertising: true });
+    savePrivacyConsent({ analytics: true, advertising: true }, "accept");
     location.search = "?a=partner_other_tab&utm_source=partner";
     captureMarketingAttribution(true);
     const unsubscribe = subscribePrivacyConsent(() => {});
@@ -253,7 +273,7 @@ test("undecided first visit keeps the referral URL but neither stores nor return
     assert.equal(storage.has("frameleads:marketing-attribution:v1"), false);
     assert.equal(new URL(location.href).searchParams.get("a"), "partner_first");
 
-    savePrivacyConsent({ analytics: true, advertising: true });
+    savePrivacyConsent({ analytics: true, advertising: true }, "accept");
     assert.equal(captureMarketingAttribution(true).affiliateCode, "partner_first");
   });
 });
