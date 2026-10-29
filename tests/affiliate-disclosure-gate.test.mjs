@@ -8,7 +8,11 @@ const policy = fs.readFileSync(new URL('../src/checkout-embed-policy.ts', import
 
 test('affiliate compensation disclosure is gated behind independent public privacy approval', () => {
   assert.match(consent, /NEXT_PUBLIC_AFFILIATE_REFERRAL_PRIVACY_APPROVED === "true"/);
-  assert.match(consent, /affiliateNoticeApproved \?/);
+  assert.match(consent, /partnerPurposeAvailable && <label/);
+  assert.match(consent, /checked=\{partnerReferral && advertising\}/);
+  assert.match(consent, /partnerPurposeAvailable && advertising && partnerReferral \? "accept" : "decline"/);
+  assert.doesNotMatch(consent, />Accept optional<\/button>/);
+  assert.match(consent, />Accept analytics &amp; advertising<\/button>/);
   assert.match(consent, /partner earns a commission/);
   assert.match(consent, /Audit and normal checkout work if you decline/);
   assert.match(consent, /Advertising and conversion measurement/);
