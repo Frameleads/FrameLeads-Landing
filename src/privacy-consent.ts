@@ -78,7 +78,9 @@ export function hasAdvertisingConsent(): boolean {
 
 export function savePrivacyConsent(
   preferences: Pick<PrivacyConsent, "analytics" | "advertising">,
-  affiliateChoice: "accept" | "decline" = "accept",
+  // General analytics/advertising consent is never an affiliate opt-in.
+  // Only a fresh, explicit partner checkbox may call this with "accept".
+  affiliateChoice: "accept" | "decline" = "decline",
 ): PrivacyConsent {
   const previous = getPrivacyConsent();
   const version = currentAffiliateNoticeVersion();
