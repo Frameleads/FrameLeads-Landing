@@ -3,7 +3,7 @@
 import { WhopElements, Checkout, CheckoutElement } from "@whop/elements-react";
 import { loadWhop } from "@whop/elements";
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { getPrivacyConsent, subscribePrivacyConsent } from "../privacy-consent";
+import { getPrivacyConsent, hasCurrentAffiliateNoticeConsent, isAffiliateCaptureBlockedForCurrentPage, subscribePrivacyConsent } from "../privacy-consent";
 import { referralCheckoutDecision } from "../checkout-embed-policy";
 
 // Whop hosts every payment field. Raw card data must never reach FrameLeads.
@@ -29,23 +29,28 @@ export default function EmbeddedWhopCheckout({
   const [elementsUnavailable, setElementsUnavailable] = useState(false);
   const [whopElements, setWhopElements] = useState<ReturnType<typeof loadWhop> | null>(null);
 
+  const [checkoutFinished, setCheckoutFinished] = useState(false);
+  const consent = useSyncExternalStore(subscribePrivacyConsent, getPrivacyConsent, () => null);
+  // The server saw ?a= before the client selected a privacy preference.
+  // An explicit decline scrubs the URL; do not keep the stale server prop as
+  // evidence that this buyer still has an active partner referral.
+  const activeReferralHint = referralHintPresent && !isAffiliateCaptureBlockedForCurrentPage();
+  const decision = referralCheckoutDecision({
+    rawReferralPresent: activeReferralHint,
+    advertisingConsent: consent?.advertising ?? null,
+    affiliateConsent: hasCurrentAffiliateNoticeConsent(consent),
+  });
+
   useEffect(() => {
-    // Disabled checkouts, referrals routed to hosted checkout and server-side
-    // renders must never initialize third-party payment elements.
-    if (!embedEnabled || !hostedFallback || referralHintPresent) return;
+    // Ineligible raw referrals must never initialize a generic plan payment
+    // that could silently deny commission to the intended partner.
+    if (!embedEnabled || !hostedFallback || decision !== "allowed") return;
     try {
       setWhopElements(loadWhop());
     } catch {
       setElementsUnavailable(true);
     }
-  }, [embedEnabled, hostedFallback, referralHintPresent]);
-  const [checkoutFinished, setCheckoutFinished] = useState(false);
-  const consent = useSyncExternalStore(subscribePrivacyConsent, getPrivacyConsent, () => null);
-
-  const decision = referralCheckoutDecision({
-    rawReferralPresent: referralHintPresent,
-    advertisingConsent: consent?.advertising ?? null,
-  });
+  }, [embedEnabled, hostedFallback, decision]);
 
   if (!hostedFallback) {
     return <section role="status" className="rounded-xl border border-[#E4E4E4] bg-[#F7F7F7] p-6 text-sm leading-relaxed text-[#444444]">
@@ -59,6 +64,18 @@ export default function EmbeddedWhopCheckout({
     return <div role="status" aria-live="polite" className="min-h-[26rem] rounded-xl border border-[#E3E3E3] bg-[#F7F7F7] p-6 text-sm text-[#5C5C5C]">
       Preparing secure checkout…
     </div>;
+  }
+
+  if (decision === "await_verified") {
+    return <section role="alert" className="rounded-xl border border-[#FF5A1F]/40 bg-[#FF5A1F]/[0.06] p-6 text-sm leading-relaxed text-[#414141]">
+      <h2 className="text-lg font-semibold text-[#1A1A1A]">Partner-linked checkout needs verification</h2>
+      <p className="mt-3">You selected optional partner attribution. This link has not been connected to a verified Whop affiliate checkout session, so we will not silently redirect you to a purchase that could exclude the partner&apos;s commission.</p>
+      <p className="mt-3">You can change your optional tracking choice and use the normal checkout without partner attribution. Otherwise, a verified partner checkout will be required.</p>
+      <button type="button" className="mt-5 rounded-lg border border-[#D5D5D5] px-4 py-3 font-semibold text-[#1A1A1A]"
+        onClick={() => window.dispatchEvent(new Event("frameleads:open-privacy-choices"))}>
+        Review privacy choices
+      </button>
+    </section>;
   }
 
   if (decision === "hosted") {
