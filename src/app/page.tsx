@@ -432,6 +432,7 @@ function PricingCard({ tier }: { tier: "core" | "enterprise" }) {
 export default function Home() {
   const [isAuditExpanded, setIsAuditExpanded] = useState(false);
   const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
+  const [isMicroPilotRequested, setIsMicroPilotRequested] = useState(false);
   const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
   const auditRef = useRef<HTMLElement>(null);
   const auditTrigger = useRef<HTMLElement | null>(null);
@@ -440,16 +441,18 @@ export default function Home() {
     setIsAuditModalOpen(open);
   }, []);
   const launchAudit = useCallback(() => {
+    setIsMicroPilotRequested(false);
     auditTrigger.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     if (!auditRequested(window.location.search)) window.history.pushState(null, "", auditLocation(window.location.href, true));
     synchronizeAudit(true);
   }, [synchronizeAudit]);
+  const openMicroPilot = useCallback(() => setIsMicroPilotRequested(true), []);
   const closeAudit = useCallback(() => {
     if (auditRequested(window.location.search)) window.history.replaceState(null, "", auditLocation(window.location.href, false));
     synchronizeAudit(false);
   }, [synchronizeAudit]);
 
-  return <div id="top" className="relative min-h-screen max-w-[100vw] overflow-x-hidden bg-[#111111] bg-grid-overlay font-sans text-white selection:bg-[#FF5A1F] selection:text-white"><Suspense fallback={null}><AuditDeepLink onChange={synchronizeAudit} /></Suspense><Navbar onAuditClick={launchAudit} />
+  return <div id="top" className="relative min-h-screen max-w-[100vw] overflow-x-hidden bg-[#111111] bg-grid-overlay font-sans text-white selection:bg-[#FF5A1F] selection:text-white"><Suspense fallback={null}><AuditDeepLink onChange={synchronizeAudit} /></Suspense><Navbar onAuditClick={launchAudit} onMicroPilotClick={openMicroPilot} />
     <main className="relative z-10 mx-auto max-w-7xl px-4 pb-16 pt-16 sm:px-6 sm:pt-20 lg:pt-32">
       <section className="mx-auto max-w-5xl text-center"><HeroIntro onAudit={launchAudit} /><motion.div initial={{ opacity: 0, y: 20, scale: .985 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: .72, ease: "easeOut", delay: .46 }} className="mt-10"><VideoSection /></motion.div></section>
 
@@ -463,7 +466,7 @@ export default function Home() {
 
       <EmbeddedSandbox />
 
-      <ProductProofHowItWorks onAudit={launchAudit} />
+      <ProductProofHowItWorks onMicroPilot={openMicroPilot} />
 
       <section id="pricing" className="mx-auto max-w-6xl scroll-mt-32 border-t border-white/[0.06] py-16 md:py-24"><SectionIntro eyebrow="Pricing" heading="Choose the level of control your operation needs." className="max-w-3xl" /><div className="mt-10 grid gap-6 lg:grid-cols-2"><PricingCard tier="core" /><PricingCard tier="enterprise" /></div></section>
 
@@ -473,7 +476,7 @@ export default function Home() {
 
       <section id="commercial-close" className="mx-auto max-w-4xl border-t border-white/[0.06] py-16 text-center md:py-24"><SectionIntro eyebrow="Next step" heading="See where your reply workflow becomes manual." description="Run the 5-question Reply Workflow Audit and identify where FrameLeads would sit in your operation." /><motion.button initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: .3 }} transition={{ duration: .5, delay: .34, ease: "easeOut" }} type="button" data-tripwire-guard="true" onClick={launchAudit} className="mt-8 rounded-xl bg-[#FF5A1F] px-7 py-4 text-base font-bold text-white transition-colors hover:bg-[#ff6b35]">Diagnose My Reply Workflow</motion.button></section>
     </main>
-    <footer className="relative z-10 border-t border-white/[0.06] bg-[#0D0D0D] px-4 py-10 sm:px-6"><div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-5 md:flex-row"><p className="font-mono text-[10px] uppercase tracking-widest text-[#888888]">© 2026 FrameLeads. A BrandFlow Studio Company.</p><a href="mailto:akram@frameleads.io" aria-label="Email FrameLeads support at akram@frameleads.io" className="font-mono text-[10px] uppercase tracking-widest text-[#888888] transition-colors hover:text-white">Support &amp; inquiries · akram@frameleads.io</a><div className="flex gap-6 font-mono text-[10px] uppercase tracking-widest text-[#888888]"><Link href="/terms" className="hover:text-white">Terms</Link><Link href="/privacy" className="hover:text-white">Privacy</Link></div></div></footer><AuditModal returnFocusRef={auditTrigger} open={isAuditModalOpen} onClose={closeAudit} onComplete={setAuditResult} />{!isAuditModalOpen && <ExitIntentPopup />}
+    <footer className="relative z-10 border-t border-white/[0.06] bg-[#0D0D0D] px-4 py-10 sm:px-6"><div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-5 md:flex-row"><p className="font-mono text-[10px] uppercase tracking-widest text-[#888888]">© 2026 FrameLeads. A BrandFlow Studio Company.</p><a href="mailto:akram@frameleads.io" aria-label="Email FrameLeads support at akram@frameleads.io" className="font-mono text-[10px] uppercase tracking-widest text-[#888888] transition-colors hover:text-white">Support &amp; inquiries · akram@frameleads.io</a><div className="flex gap-6 font-mono text-[10px] uppercase tracking-widest text-[#888888]"><Link href="/terms" className="hover:text-white">Terms</Link><Link href="/privacy" className="hover:text-white">Privacy</Link></div></div></footer><AuditModal returnFocusRef={auditTrigger} open={isAuditModalOpen} onClose={closeAudit} onComplete={setAuditResult} />{!isAuditModalOpen && <ExitIntentPopup openRequest={isMicroPilotRequested} onOpenRequestChange={setIsMicroPilotRequested} />}
   </div>;
 }
 

@@ -335,6 +335,19 @@ test('mobile Micro-Pilot popup appears after qualified pricing and final CTA vie
     await p.evaluate("document.getElementById('commercial-close').scrollIntoView({block:'center',behavior:'instant'})");
     await pause(300);
     assert.equal(await p.evaluate(`!!${offer}`), false, 'one-time session offer must not reopen');
+    await p.evaluate("document.querySelector('[aria-label=\"Open navigation\"]').click()");
+    await p.wait(`!!document.querySelector('#mobile-navigation')`);
+    await p.evaluate("Array.from(document.querySelectorAll('#mobile-navigation button')).find((button) => button.textContent.trim() === 'Try it Risk-Free').click()");
+    await p.wait(`!!${offer}`, 'explicit CTA opens the offer after automatic session suppression');
+    assert.equal(await p.evaluate(`document.querySelector('#mobile-navigation') === null`), true, 'mobile menu closes before the popup opens');
+    assert.equal(await p.evaluate(`${offer}.querySelector('a[href="/checkout/micro-pilot"]')?.textContent.trim()`), 'Run the Micro-Pilot — $10');
+    await p.key('Escape');
+    await p.wait(`!${offer}`);
+    await p.evaluate("document.getElementById('how-it-works').scrollIntoView({block:'start',behavior:'instant'})");
+    await p.evaluate("Array.from(document.querySelectorAll('#how-it-works button')).find((button) => button.textContent.trim() === 'Try it Risk-Free').click()");
+    await p.wait(`!!${offer}`, 'How It Works CTA also opens after automatic session suppression');
+    await p.key('Escape');
+    await p.wait(`!${offer}`);
     assert.deepEqual(p.errors, []);
   } finally { await p.close(); }
 });
@@ -397,11 +410,53 @@ for (const width of [1440, 1280, 1024, 768, 390, 375, 320]) test(`real product p
     await p.wait(`!document.querySelector('[role=dialog][aria-modal=true]')`);
     if (width >= 1024) assert.equal(await p.evaluate(`document.activeElement.id`), 'proof-tab-1');
     else assert.equal(await p.evaluate(`document.activeElement.id`), 'proof-mobile-step-0');
-    await p.evaluate(`Array.from(document.querySelectorAll('button')).find((button) => button.textContent.trim() === 'Find my reply bottleneck').click()`);
-    await p.wait(`!!document.querySelector('[role=dialog][aria-labelledby="audit-modal-title"]')`, 'product proof Audit CTA opens the existing Audit flow');
+    await p.evaluate(`Array.from(document.querySelectorAll('#how-it-works button')).find((button) => button.textContent.trim() === 'Try it Risk-Free').click()`);
+    await p.wait(`!!document.querySelector('[role=dialog][aria-labelledby="micro-pilot-title"]')`, 'How It Works CTA opens the Micro-Pilot offer');
+    assert.equal(await p.evaluate(`document.querySelector('[role=dialog][aria-labelledby="micro-pilot-title"]').textContent.includes('$10 ONE-TIME')`), true);
+    assert.equal(await p.evaluate(`(() => { const r=document.querySelector('[role=dialog][aria-labelledby="micro-pilot-title"]').getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && document.documentElement.scrollWidth <= innerWidth; })()`), true, 'Micro-Pilot popup remains within the viewport');
+    assert.equal(await p.evaluate(`document.querySelector('[role=dialog][aria-labelledby="micro-pilot-title"] a[href="/checkout/micro-pilot"]')?.textContent.trim()`), 'Run the Micro-Pilot — $10');
+    await p.key('Escape');
+    await p.wait(`!document.querySelector('[role=dialog][aria-labelledby="micro-pilot-title"]')`);
+    if (width < 1024) {
+      await p.evaluate(`document.querySelector('[aria-label="Open navigation"]').click()`);
+      await p.wait(`!!document.querySelector('#mobile-navigation')`);
+      assert.equal(await p.evaluate(`document.documentElement.scrollWidth <= innerWidth`), true, 'mobile navigation does not cause horizontal scrolling');
+      await p.evaluate(`Array.from(document.querySelectorAll('#mobile-navigation button')).find((button) => button.textContent.trim() === 'Try it Risk-Free').click()`);
+      assert.equal(await p.evaluate(`document.querySelector('#mobile-navigation') === null`), true);
+    } else {
+      await p.evaluate(`document.querySelector('nav[aria-label="Primary navigation"] button:not([data-tripwire-guard])').click()`);
+    }
+    await p.wait(`!!document.querySelector('[role=dialog][aria-labelledby="micro-pilot-title"]')`, 'Navbar CTA opens the shared Micro-Pilot offer');
+    assert.equal(await p.evaluate(`(() => { const r=document.querySelector('[role=dialog][aria-labelledby="micro-pilot-title"]').getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && document.documentElement.scrollWidth <= innerWidth; })()`), true, 'Navbar offer remains within the viewport');
+    assert.equal(await p.evaluate(`document.querySelector('[role=dialog][aria-labelledby="micro-pilot-title"] a[href="/checkout/micro-pilot"]')?.textContent.trim()`), 'Run the Micro-Pilot — $10');
+    await p.key('Escape');
+    await p.wait(`!document.querySelector('[role=dialog][aria-labelledby="micro-pilot-title"]')`);
+    assert.equal(await p.evaluate(`document.querySelector('a[href="https://app.frameleads.io/login"]') !== null`), true, 'Log In keeps its existing destination');
+    if (width < 1024) {
+      await p.evaluate(`document.querySelector('[aria-label="Open navigation"]').click()`);
+      await p.wait(`!!document.querySelector('#mobile-navigation')`);
+      await p.evaluate(`document.querySelector('#mobile-navigation button[data-tripwire-guard="true"]').click()`);
+      assert.equal(await p.evaluate(`document.querySelector('#mobile-navigation') === null`), true);
+    } else {
+      await p.evaluate(`document.querySelector('nav[aria-label="Primary navigation"] button[data-tripwire-guard="true"]').click()`);
+    }
+    await p.wait(`!!document.querySelector('[role=dialog][aria-labelledby="audit-modal-title"]')`, 'Audit navigation continues to open the existing Audit flow');
     await p.key('Escape');
     await p.wait(`!document.querySelector('[role=dialog][aria-labelledby="audit-modal-title"]')`);
     assert.deepEqual(p.errors, []);
 
+  } finally { await p.close(); }
+});
+
+test('Try it Risk-Free purchase CTA reaches the existing Micro-Pilot checkout', async () => {
+  const p = await page(390, false);
+  try {
+    await p.goto('/');
+    await p.evaluate(`Array.from(document.querySelectorAll('#how-it-works button')).find((button) => button.textContent.trim() === 'Try it Risk-Free').click()`);
+    await p.wait(`!!document.querySelector('[role=dialog][aria-labelledby="micro-pilot-title"]')`);
+    await p.evaluate(`document.querySelector('[role=dialog][aria-labelledby="micro-pilot-title"] a[href="/checkout/micro-pilot"]').click()`);
+    await p.wait(`location.pathname === '/checkout/micro-pilot'`, 'existing checkout route receives the Micro-Pilot purchase click');
+    assert.equal(await p.evaluate(`location.pathname`), '/checkout/micro-pilot');
+    assert.deepEqual(p.errors, []);
   } finally { await p.close(); }
 });
