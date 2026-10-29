@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { sectionEyebrowMotion, sectionHeadingMotion, sectionSubheadingMotion, sectionVisualMotion } from "./section-motion";
@@ -14,9 +14,15 @@ const MicroPilotBurstIcon = () => (
   </svg>
 );
 
-export default function ExitIntentPopup() {
-  const [isOpen, setIsOpen] = useState(false);
+export default function ExitIntentPopup({ openRequest = false, onOpenRequestChange }: { openRequest?: boolean; onOpenRequestChange?: (open: boolean) => void }) {
+  const [isAutomaticOpen, setIsAutomaticOpen] = useState(false);
   const hasTriggered = useRef(false);
+  const isOpen = openRequest || isAutomaticOpen;
+
+  const closeOffer = useCallback(() => {
+    setIsAutomaticOpen(false);
+    onOpenRequestChange?.(false);
+  }, [onOpenRequestChange]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -42,7 +48,7 @@ export default function ExitIntentPopup() {
       if ((!pricingViewed && !force) || (hasTriggered.current && !force)) return;
       hasTriggered.current = true;
       try { sessionStorage.setItem(SESSION_KEY, "true"); } catch { /* Session storage is optional. */ }
-      setIsOpen(true);
+      setIsAutomaticOpen(true);
     };
     const handleExitIntent = (event: MouseEvent) => {
       if (event.relatedTarget === null && event.clientY <= 8) openOffer();
@@ -94,17 +100,17 @@ export default function ExitIntentPopup() {
     if (!isOpen) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const handleKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") setIsOpen(false); };
+    const handleKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") closeOffer(); };
     window.addEventListener("keydown", handleKeyDown);
     return () => { document.body.style.overflow = previousOverflow; window.removeEventListener("keydown", handleKeyDown); };
-  }, [isOpen]);
+  }, [closeOffer, isOpen]);
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center overflow-x-hidden bg-black/75 px-3 py-4 backdrop-blur-lg sm:px-6 sm:py-6" onMouseDown={(event) => { if (event.target === event.currentTarget) setIsOpen(false); }}>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center overflow-x-hidden bg-black/75 px-3 py-4 backdrop-blur-lg sm:px-6 sm:py-6" onMouseDown={(event) => { if (event.target === event.currentTarget) closeOffer(); }}>
           <motion.div initial={{ opacity: 0, y: 18, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.98 }} transition={{ duration: 0.25, ease: "easeOut" }} role="dialog" aria-modal="true" aria-labelledby="micro-pilot-title" className="relative box-border max-h-[calc(100dvh-2rem)] w-full min-w-0 max-w-6xl overflow-x-hidden overflow-y-auto overscroll-contain rounded-2xl border border-white/10 bg-[#1A1A1A] p-4 shadow-2xl sm:max-h-[calc(100dvh-3rem)] sm:p-6 lg:p-7">
-            <button type="button" onClick={() => setIsOpen(false)} aria-label="Close Micro-Pilot offer" className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-xl text-[#888888] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F]"><span aria-hidden="true">&times;</span></button>
+            <button type="button" onClick={closeOffer} aria-label="Close Micro-Pilot offer" className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-xl text-[#888888] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F]"><span aria-hidden="true">&times;</span></button>
             <div className="min-w-0 pr-10">
               <div className="flex min-w-0 items-start gap-2.5 sm:items-center sm:gap-3"><MicroPilotBurstIcon /><div className="min-w-0">
                 <motion.p variants={sectionEyebrowMotion} initial="hidden" animate="visible" className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#888888]">PRIVATE MICRO-PILOT</motion.p>

@@ -83,8 +83,7 @@ async function page(width = 1280, consent = false) {
   browser.on('Runtime.exceptionThrown', message => { if (message.sessionId === sessionId) errors.push(message.params.exceptionDetails.text); });
   await send('Runtime.enable'); await send('Page.enable');
   await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 700 });
-  // Emulate touch input as well as viewport size; real phones advertise coarse pointers.
-  if (width < 700) await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
+  if (width < 1024) await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
   await send('Fetch.enable', { patterns: [{ urlPattern: base + '/api/*' }, { urlPattern: 'https://*' }] });
   const initialConsent = consent === null ? '' : `localStorage.setItem('frameleads:privacy-consent:v1', JSON.stringify({analytics:${consent},advertising:${consent},savedAt:new Date().toISOString()}));`;
   await send('Page.addScriptToEvaluateOnNewDocument', { source: `
@@ -112,7 +111,22 @@ async function page(width = 1280, consent = false) {
     setOutcome: (value, code = 201) => { outcome = value; status = code; },
     goto: async route => { await send('Page.navigate', { url: base + route }); await wait(`document.querySelector('#top') && document.readyState === 'complete'`); await pause(400); },
     key: async (key, shift = false) => { const params = {key, code: key === ' ' ? 'Space' : key, windowsVirtualKeyCode: key === 'Tab' ? 9 : key === 'Escape' ? 27 : 32, modifiers: shift ? 8 : 0}; await send('Input.dispatchKeyEvent', {type:'keyDown',...params}); await send('Input.dispatchKeyEvent', {type:'keyUp',...params}); },
+    tap: async selector => {
+      await evaluate(`document.querySelector(${JSON.stringify(selector)}).scrollIntoView({block:'center',behavior:'instant'})`);
+      const point = await evaluate(`(() => { const r=document.querySelector(${JSON.stringify(selector)}).getBoundingClientRect(); return {x:r.x+r.width/2,y:r.y+r.height/2}; })()`);
+      await send('Input.dispatchMouseEvent', { type: 'mousePressed', ...point, button: 'left', clickCount: 1, pointerType: 'touch' });
+      await send('Input.dispatchMouseEvent', { type: 'mouseReleased', ...point, button: 'left', clickCount: 1, pointerType: 'touch' });
+    },
+    setReducedMotion: async () => send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] }),
     screenshot: async name => { mkdirSync('.next/audit-qa', { recursive: true }); const { data } = await send('Page.captureScreenshot', { format: 'png' }); writeFileSync('.next/audit-qa/' + name + '.png', Buffer.from(data, 'base64')); },
+    screenshotElement: async (selector, name) => {
+      const rect = await evaluate(`(() => { const r=document.querySelector(${JSON.stringify(selector)}).getBoundingClientRect(); return {x:r.x+scrollX,y:r.y+scrollY,width:r.width,height:r.height}; })()`);
+      await evaluate(`(() => { const button=Array.from(document.querySelectorAll('button')).find(item=>item.textContent.trim()==='Privacy settings'); if (button) { button.dataset.qaVisibility=button.style.visibility; button.style.visibility='hidden'; } })()`);
+      mkdirSync('.next/audit-qa', { recursive: true });
+      const { data } = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true, clip: { ...rect, scale: 1 } });
+      writeFileSync('.next/audit-qa/' + name + '.png', Buffer.from(data, 'base64'));
+      await evaluate(`(() => { const button=Array.from(document.querySelectorAll('button')).find(item=>item.textContent.trim()==='Privacy settings'); if (button) { button.style.visibility=button.dataset.qaVisibility || ''; delete button.dataset.qaVisibility; } })()`);
+    },
     close: () => browser.send('Target.closeTarget', { targetId }),
   };
 }
@@ -232,7 +246,7 @@ for (const width of [1280, 390]) test(`pricing exposure uses a visible heading, 
     await p.evaluate(`window.scrollTo({top:0,behavior:'instant'}); document.querySelector('#pricing h2').scrollIntoView({block:'center',behavior:'instant'})`);
     await pause(700);
     assert.equal(p.observations.filter(event => event.eventName === 'PRICING_VIEW').length, 1, 'scrolling and rerendering do not repeat the exposure');
-    const checkout = `document.querySelector('a[href*="whop.com/checkout/plan_"]')`;
+    const checkout = `document.querySelector('a[href^="/checkout/"]')`;
     await p.evaluate(`${checkout}.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true})); ${checkout}.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true}))`);
     await waitForObservation('CHECKOUT_CLICK');
     assert.equal(p.observations.filter(event => event.eventName === 'CHECKOUT_CLICK').length, 1, 'outbound clicks are recorded once and remain distinct from checkout confirmation');
@@ -301,6 +315,7 @@ test('failed capture, retry, consent denial, backdrop close and legacy links', a
 });
 
 
+
 // This is a real mobile Chromium interaction against the current homepage:
 // pricing qualification and the final close section must activate the $10 offer.
 test('mobile Micro-Pilot popup appears after qualified pricing and final CTA views', async () => {
@@ -314,11 +329,134 @@ test('mobile Micro-Pilot popup appears after qualified pricing and final CTA vie
     await p.evaluate("document.getElementById('commercial-close').scrollIntoView({block:'center',behavior:'instant'})");
     await p.wait(`!!${offer}`, 'qualified mobile visitor receives the one-time offer');
     assert.equal(await p.evaluate(`${offer}.textContent.includes('25 TOTAL PROSPECTS')`), true);
-    assert.equal(await p.evaluate(`${offer}.querySelector('a[href*="plan_8qLWfJZHQUYZf"]') !== null`), true);
+    assert.equal(await p.evaluate(`${offer}.querySelector('a[href="/checkout/micro-pilot"]') !== null`), true);
     await p.key('Escape');
     await p.wait(`!${offer}`, 'escape closes the offer');
     await p.evaluate("document.getElementById('commercial-close').scrollIntoView({block:'center',behavior:'instant'})");
     await pause(300);
     assert.equal(await p.evaluate(`!!${offer}`), false, 'one-time session offer must not reopen');
+    await p.evaluate("document.querySelector('[aria-label=\"Open navigation\"]').click()");
+    await p.wait(`!!document.querySelector('#mobile-navigation')`);
+    await p.evaluate("Array.from(document.querySelectorAll('#mobile-navigation button')).find((button) => button.textContent.trim() === 'Try it Risk-Free').click()");
+    await p.wait(`!!${offer}`, 'explicit CTA opens the offer after automatic session suppression');
+    assert.equal(await p.evaluate(`document.querySelector('#mobile-navigation') === null`), true, 'mobile menu closes before the popup opens');
+    assert.equal(await p.evaluate(`${offer}.querySelector('a[href="/checkout/micro-pilot"]')?.textContent.trim()`), 'Run the Micro-Pilot — $10');
+    await p.key('Escape');
+    await p.wait(`!${offer}`);
+    await p.evaluate("document.getElementById('how-it-works').scrollIntoView({block:'start',behavior:'instant'})");
+    await p.evaluate("Array.from(document.querySelectorAll('#how-it-works button')).find((button) => button.textContent.trim() === 'Try it Risk-Free').click()");
+    await p.wait(`!!${offer}`, 'How It Works CTA also opens after automatic session suppression');
+    await p.key('Escape');
+    await p.wait(`!${offer}`);
+    assert.deepEqual(p.errors, []);
+  } finally { await p.close(); }
+});
+
+for (const width of [1440, 1280, 1024, 768, 390, 375, 320]) test(`real product proof interaction, screenshot readability and responsive layout at ${width}px`, async () => {
+  const p = await page(width, false);
+  try {
+    await p.goto('/');
+    await p.evaluate(`document.querySelector('#how-it-works').scrollIntoView({block:'start',behavior:'instant'})`);
+    await p.wait(`${width >= 1024 ? "document.querySelector('#proof-panel img')" : "document.querySelector('#proof-mobile-panel img')"}?.complete && ${width >= 1024 ? "document.querySelector('#proof-panel img')" : "document.querySelector('#proof-mobile-panel img')"}?.naturalWidth > 0`);
+    assert.equal(await p.evaluate(`document.querySelectorAll('#how-it-works').length`), 1);
+    assert.equal(await p.evaluate(`document.querySelectorAll('#how-it-works [role=tab]').length`), 4);
+    assert.equal(await p.evaluate(width >= 1024 ? `document.querySelector('#how-it-works [role=tab][aria-selected=true]').textContent.includes('04')` : `document.querySelector('#proof-mobile-step-3').getAttribute('aria-pressed') === 'true'`), true);
+    assert.match(await p.evaluate(width >= 1024 ? `document.querySelector('#proof-panel img').getAttribute('src')` : `document.querySelector('#proof-mobile-panel img').getAttribute('src')`), /04-decision-packet\.png/);
+    assert.ok(await p.evaluate(width >= 1024 ? `document.querySelector('#proof-panel img').naturalWidth >= 280` : `document.querySelector('#proof-mobile-panel img').naturalWidth >= 280`));
+    assert.equal(await p.evaluate(width >= 1024 ? `Array.from(document.querySelectorAll('#how-it-works [role=tab] [aria-hidden="false"]')).length` : `Array.from(document.querySelectorAll('#how-it-works [id^="proof-mobile-description-"][aria-hidden="false"]')).length`), 1, 'exactly one description is expanded');
+    if (width === 375) {
+      await p.setReducedMotion();
+      assert.equal(await p.evaluate(`matchMedia('(prefers-reduced-motion: reduce)').matches`), true);
+      assert.equal(await p.evaluate(`getComputedStyle(document.querySelector('#proof-mobile-description-0')).transitionProperty.includes('none') || getComputedStyle(document.querySelector('#proof-mobile-description-0')).transitionDuration === '0s'`), true);
+    }
+    if (width < 1024) {
+      assert.equal(await p.evaluate(`document.querySelector('#proof-mobile-step-3').getAttribute('aria-pressed')`), 'true');
+      const mobileStepBottom = await p.evaluate(`document.querySelector('#proof-mobile-step-3').getBoundingClientRect().bottom`);
+      const mobileImageTop = await p.evaluate(`document.querySelector('#proof-mobile-panel').getBoundingClientRect().top`);
+      assert.ok(mobileImageTop >= mobileStepBottom, 'active step is immediately followed by its screenshot');
+    }
+    assert.equal(await p.evaluate(`document.documentElement.scrollWidth <= innerWidth`), true, 'no horizontal overflow');
+    if (width >= 1200) await p.screenshotElement('#how-it-works', width === 1440 ? 'product-proof-desktop' : 'product-proof-desktop-1280');
+    if (width === 375) await p.screenshotElement('#how-it-works', 'product-proof-mobile');
+
+    if (width >= 1024) {
+      await p.evaluate(`document.querySelector('#proof-tab-0').click()`);
+      await p.wait(`document.querySelector('#proof-tab-0').getAttribute('aria-selected') === 'true'`);
+      assert.match(await p.evaluate(`document.querySelector('#proof-panel img').getAttribute('src')`), /01-outbound-sandbox\.png/);
+      assert.ok(await p.evaluate(`document.querySelector('#proof-panel img').naturalWidth >= 300`));
+      await p.evaluate(`document.querySelector('#proof-tab-0').focus()`);
+      await p.key('ArrowRight');
+      await p.wait(`document.querySelector('#proof-tab-1').getAttribute('aria-selected') === 'true'`);
+      assert.equal(await p.evaluate(`document.activeElement.id`), 'proof-tab-1');
+      assert.match(await p.evaluate(`document.querySelector('#proof-panel img').getAttribute('src')`), /02-incoming-reply\.png/);
+      assert.equal(await p.evaluate(`document.querySelectorAll('#how-it-works [role=tab] [aria-hidden="false"]').length`), 1);
+      await p.evaluate(`document.querySelector('#proof-panel button').click()`);
+    } else {
+      await p.tap('#proof-mobile-step-0');
+      await p.wait(`document.querySelector('#proof-mobile-step-0').getAttribute('aria-pressed') === 'true'`);
+      assert.match(await p.evaluate(`document.querySelector('#proof-mobile-panel img').getAttribute('src')`), /01-outbound-sandbox\.png/);
+      assert.equal(await p.evaluate(`document.querySelector('#proof-mobile-step-0').parentElement.querySelector('#proof-mobile-panel') !== null`), true);
+      assert.equal(await p.evaluate(`document.querySelectorAll('#how-it-works [id^="proof-mobile-description-"][aria-hidden="false"]').length`), 1);
+      await p.evaluate(`document.querySelector('#proof-mobile-panel button').click()`);
+    }
+    await p.wait(`!!document.querySelector('[role=dialog][aria-modal=true]')`);
+    assert.match(await p.evaluate(`document.querySelector('[role=dialog][aria-modal=true]').getAttribute('aria-label')`), width >= 1024 ? /See replies/ : /Prepare outreach/);
+    await p.wait(`document.querySelector('[role=dialog][aria-modal=true] img')?.complete && document.querySelector('[role=dialog][aria-modal=true] img')?.naturalWidth > 0`);
+    assert.equal(await p.evaluate(`document.querySelector('[role=dialog][aria-modal=true] img').naturalWidth`), 1497);
+    if (width < 1497) assert.equal(await p.evaluate(`document.querySelector('[role=dialog][aria-modal=true] img').parentElement.scrollWidth > document.querySelector('[role=dialog][aria-modal=true] img').parentElement.clientWidth`), true, 'full-resolution screenshot remains natively scrollable on small screens');
+    await p.key('Tab');
+    assert.equal(await p.evaluate(`document.querySelector('[role=dialog][aria-modal=true]').contains(document.activeElement)`), true);
+    await p.key('Escape');
+    await p.wait(`!document.querySelector('[role=dialog][aria-modal=true]')`);
+    if (width >= 1024) assert.equal(await p.evaluate(`document.activeElement.id`), 'proof-tab-1');
+    else assert.equal(await p.evaluate(`document.activeElement.id`), 'proof-mobile-step-0');
+    await p.evaluate(`Array.from(document.querySelectorAll('#how-it-works button')).find((button) => button.textContent.trim() === 'Try it Risk-Free').click()`);
+    await p.wait(`!!document.querySelector('[role=dialog][aria-labelledby="micro-pilot-title"]')`, 'How It Works CTA opens the Micro-Pilot offer');
+    assert.equal(await p.evaluate(`document.querySelector('[role=dialog][aria-labelledby="micro-pilot-title"]').textContent.includes('$10 ONE-TIME')`), true);
+    assert.equal(await p.evaluate(`(() => { const r=document.querySelector('[role=dialog][aria-labelledby="micro-pilot-title"]').getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && document.documentElement.scrollWidth <= innerWidth; })()`), true, 'Micro-Pilot popup remains within the viewport');
+    assert.equal(await p.evaluate(`document.querySelector('[role=dialog][aria-labelledby="micro-pilot-title"] a[href="/checkout/micro-pilot"]')?.textContent.trim()`), 'Run the Micro-Pilot — $10');
+    await p.key('Escape');
+    await p.wait(`!document.querySelector('[role=dialog][aria-labelledby="micro-pilot-title"]')`);
+    if (width < 1024) {
+      await p.evaluate(`document.querySelector('[aria-label="Open navigation"]').click()`);
+      await p.wait(`!!document.querySelector('#mobile-navigation')`);
+      assert.equal(await p.evaluate(`document.documentElement.scrollWidth <= innerWidth`), true, 'mobile navigation does not cause horizontal scrolling');
+      await p.evaluate(`Array.from(document.querySelectorAll('#mobile-navigation button')).find((button) => button.textContent.trim() === 'Try it Risk-Free').click()`);
+      assert.equal(await p.evaluate(`document.querySelector('#mobile-navigation') === null`), true);
+    } else {
+      await p.evaluate(`document.querySelector('nav[aria-label="Primary navigation"] button:not([data-tripwire-guard])').click()`);
+    }
+    await p.wait(`!!document.querySelector('[role=dialog][aria-labelledby="micro-pilot-title"]')`, 'Navbar CTA opens the shared Micro-Pilot offer');
+    assert.equal(await p.evaluate(`(() => { const r=document.querySelector('[role=dialog][aria-labelledby="micro-pilot-title"]').getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && document.documentElement.scrollWidth <= innerWidth; })()`), true, 'Navbar offer remains within the viewport');
+    assert.equal(await p.evaluate(`document.querySelector('[role=dialog][aria-labelledby="micro-pilot-title"] a[href="/checkout/micro-pilot"]')?.textContent.trim()`), 'Run the Micro-Pilot — $10');
+    await p.key('Escape');
+    await p.wait(`!document.querySelector('[role=dialog][aria-labelledby="micro-pilot-title"]')`);
+    assert.equal(await p.evaluate(`document.querySelector('a[href="https://app.frameleads.io/login"]') !== null`), true, 'Log In keeps its existing destination');
+    if (width < 1024) {
+      await p.evaluate(`document.querySelector('[aria-label="Open navigation"]').click()`);
+      await p.wait(`!!document.querySelector('#mobile-navigation')`);
+      await p.evaluate(`document.querySelector('#mobile-navigation button[data-tripwire-guard="true"]').click()`);
+      assert.equal(await p.evaluate(`document.querySelector('#mobile-navigation') === null`), true);
+    } else {
+      await p.evaluate(`document.querySelector('nav[aria-label="Primary navigation"] button[data-tripwire-guard="true"]').click()`);
+    }
+    await p.wait(`!!document.querySelector('[role=dialog][aria-labelledby="audit-modal-title"]')`, 'Audit navigation continues to open the existing Audit flow');
+    await p.key('Escape');
+    await p.wait(`!document.querySelector('[role=dialog][aria-labelledby="audit-modal-title"]')`);
+    assert.deepEqual(p.errors, []);
+
+  } finally { await p.close(); }
+});
+
+test('Try it Risk-Free purchase CTA reaches the existing Micro-Pilot checkout', async () => {
+  const p = await page(390, false);
+  try {
+    await p.goto('/');
+    await p.evaluate(`Array.from(document.querySelectorAll('#how-it-works button')).find((button) => button.textContent.trim() === 'Try it Risk-Free').click()`);
+    await p.wait(`!!document.querySelector('[role=dialog][aria-labelledby="micro-pilot-title"]')`);
+    await p.evaluate(`document.querySelector('[role=dialog][aria-labelledby="micro-pilot-title"] a[href="/checkout/micro-pilot"]').click()`);
+    await p.wait(`location.pathname === '/checkout/micro-pilot'`, 'existing checkout route receives the Micro-Pilot purchase click');
+    assert.equal(await p.evaluate(`location.pathname`), '/checkout/micro-pilot');
+    assert.deepEqual(p.errors, []);
   } finally { await p.close(); }
 });
