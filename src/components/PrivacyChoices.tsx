@@ -27,6 +27,9 @@ export default function PrivacyChoices() {
   const [analytics, setAnalytics] = useState(false);
   const [advertising, setAdvertising] = useState(false);
   const [partnerReferral, setPartnerReferral] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [partnerConsentError, setPartnerConsentError] = useState<string | null>(null);
+  const [pendingServerWithdrawal, setPendingServerWithdrawal] = useState(false);
   const renewalNeeded = requiresAffiliateNoticeChoice(consent);
   const visible = consent === null || isOpen || renewalNeeded;
   // Disclosure copy remains staged until the independent affiliate privacy gate is approved.
@@ -47,11 +50,60 @@ export default function PrivacyChoices() {
     return () => window.removeEventListener("frameleads:open-privacy-choices", onOpen);
   }, []);
 
-  // Explicit checkbox required for the new compensated-referral purpose.
-  const save = (next: { analytics: boolean; advertising: boolean }, affiliateChoice: "accept" | "decline" = "decline") => {
-    savePrivacyConsent(next, affiliateChoice);
-    setIsOpen(false);
-    setManaging(false);
+  // A generic advertising choice NEVER creates a payable referral. Require a
+  // successful, consent-specific server receipt before saving local acceptance.
+  const save = async (
+    next: { analytics: boolean; advertising: boolean },
+    affiliateChoice: "accept" | "decline" = "decline",
+  ) => {
+    if (saving) return;
+    setSaving(true);
+    setPartnerConsentError(null);
+    const wantsPartner = partnerPurposeAvailable && next.advertising && affiliateChoice === "accept";
+    const hadPartner = hasCurrentAffiliateNoticeConsent(consent);
+    const request = async (payload: { action: "accept"; affiliateCode: string } | { action: "withdraw" }) => {
+      const response = await fetch("/api/affiliate/direct/consent", {
+        method: "POST", credentials: "same-origin", cache: "no-store",
+        headers: {
+          "Content-Type": "application/json",
+          "x-frameleads-intent": "affiliate-direct-v1",
+        },
+        body: JSON.stringify(payload),
+      });
+      const result: unknown = await response.json().catch(() => null);
+      const status = result && typeof result === "object" && "status" in result ? result.status : null;
+      return response.ok && status === (payload.action === "accept" ? "ACCEPTED" : "WITHDRAWN");
+    };
+    try {
+      if (wantsPartner && !hadPartner) {
+        const code = new URLSearchParams(window.location.search).get("a");
+        if (!code || !/^[A-Za-z0-9_-]{1,64}$/.test(code)) {
+          setPartnerConsentError("To credit a partner, open their referral link again before accepting this optional choice.");
+          return;
+        }
+        if (!await request({ action: "accept", affiliateCode: code })) {
+          setPartnerConsentError("Partner attribution could not be confirmed. Uncheck partner referrals to save other preferences without it.");
+          return;
+        }
+      } else if (!wantsPartner && (hadPartner || pendingServerWithdrawal)) {
+        // Scrub optional browser evidence immediately; never claim withdrawal
+        // is complete until the independent backend acknowledges it.
+        savePrivacyConsent(next, "decline");
+        setPendingServerWithdrawal(true);
+        if (!await request({ action: "withdraw" })) {
+          setPartnerConsentError("Partner tracking is off in this browser, but server withdrawal could not be confirmed. Please retry.");
+          return;
+        }
+        setPendingServerWithdrawal(false);
+      }
+      savePrivacyConsent(next, wantsPartner ? "accept" : "decline");
+      setIsOpen(false);
+      setManaging(false);
+    } catch {
+      setPartnerConsentError("The server could not confirm your partner choice. Your existing choice was not upgraded.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return <>
@@ -65,6 +117,8 @@ export default function PrivacyChoices() {
         {consent && <button type="button" onClick={() => renewalNeeded ? save({ analytics: consent.analytics, advertising: consent.advertising }, "decline") : setIsOpen(false)} aria-label="Close privacy choices" className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-white/10 text-lg text-white/65 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F]">×</button>}
       </div>
       <p id="privacy-choices-description" className="mt-2 text-sm leading-relaxed text-white/65">{renewalNeeded ? "Your earlier advertising preference stays as it was. We have added a separate compensated-partner purpose; only a fresh affirmative choice permits referral attribution." : "The Reply Workflow Audit works either way. Optional analytics and advertising tags stay off until you choose."}</p>
+      {partnerConsentError && <p role="status" className="mt-3 text-xs leading-relaxed text-[#FFAB75]">{partnerConsentError}</p>}
+      {saving && <p role="status" className="mt-3 text-xs text-white/60">Confirming your choice securely…</p>}
       {managing && <div className="mt-4 space-y-3 border-y border-white/10 py-4">
         <label className="flex cursor-pointer items-start gap-3 text-sm text-white/85">
           <input type="checkbox" checked={analytics} onChange={(event) => setAnalytics(event.target.checked)} className="mt-1 h-4 w-4 accent-[#FF5A1F]" />
