@@ -71,9 +71,17 @@ export function readAffiliateNativeSession(
   } catch { return null; }
 }
 export function nativeAffiliateEmbedEnabled(values: Record<string,string|undefined>): boolean {
-  return values.FRAMELEADS_AFFILIATE_NATIVE_EMBED_ENABLED === "true" &&
-    values.FRAMELEADS_AFFILIATE_CONTINUATION_BRIDGE_ENABLED === "true" &&
-    values.AUDIT_CHECKOUT_CONTINUATION_ENABLED === "true" &&
-    ((values.VERCEL_ENV === "production" && values.WHOP_ENVIRONMENT === "production") ||
-     (values.VERCEL_ENV === "preview" && values.WHOP_ENVIRONMENT === "sandbox"));
+  // Shared native checkout is usable by EITHER a verified Audit continuation
+  // or an independently verified direct buyer. A direct buyer never needs to
+  // take an Audit simply to reach their provider-attributed checkout.
+  const audit = values.FRAMELEADS_AFFILIATE_CONTINUATION_BRIDGE_ENABLED === "true"
+    && values.AUDIT_CHECKOUT_CONTINUATION_ENABLED === "true";
+  const direct = values.FRAMELEADS_DIRECT_AFFILIATE_CHECKOUT_ENABLED === "true"
+    && values.AFFILIATE_REFERRAL_PRIVACY_APPROVED === "true"
+    && values.AFFILIATE_CONSENT_EVIDENCE_ENABLED === "true"
+    && values.WHOP_AFFILIATE_CHECKOUT_ENABLED === "true";
+  return values.FRAMELEADS_AFFILIATE_NATIVE_EMBED_ENABLED === "true"
+    && (audit || direct)
+    && ((values.VERCEL_ENV === "production" && values.WHOP_ENVIRONMENT === "production" && audit) ||
+        (values.VERCEL_ENV === "preview" && values.WHOP_ENVIRONMENT === "sandbox"));
 }
