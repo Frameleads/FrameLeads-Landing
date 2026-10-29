@@ -121,9 +121,11 @@ async function page(width = 1280, consent = false) {
     screenshot: async name => { mkdirSync('.next/audit-qa', { recursive: true }); const { data } = await send('Page.captureScreenshot', { format: 'png' }); writeFileSync('.next/audit-qa/' + name + '.png', Buffer.from(data, 'base64')); },
     screenshotElement: async (selector, name) => {
       const rect = await evaluate(`(() => { const r=document.querySelector(${JSON.stringify(selector)}).getBoundingClientRect(); return {x:r.x+scrollX,y:r.y+scrollY,width:r.width,height:r.height}; })()`);
+      await evaluate(`(() => { const button=Array.from(document.querySelectorAll('button')).find(item=>item.textContent.trim()==='Privacy settings'); if (button) { button.dataset.qaVisibility=button.style.visibility; button.style.visibility='hidden'; } })()`);
       mkdirSync('.next/audit-qa', { recursive: true });
       const { data } = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true, clip: { ...rect, scale: 1 } });
       writeFileSync('.next/audit-qa/' + name + '.png', Buffer.from(data, 'base64'));
+      await evaluate(`(() => { const button=Array.from(document.querySelectorAll('button')).find(item=>item.textContent.trim()==='Privacy settings'); if (button) { button.style.visibility=button.dataset.qaVisibility || ''; delete button.dataset.qaVisibility; } })()`);
     },
     close: () => browser.send('Target.closeTarget', { targetId }),
   };
@@ -390,7 +392,7 @@ for (const width of [1440, 1280, 768, 375]) test(`real product proof interaction
     await p.key('Escape');
     await p.wait(`!document.querySelector('[role=dialog][aria-modal=true]')`);
     if (width >= 1024) assert.equal(await p.evaluate(`document.activeElement.id`), 'proof-tab-1');
-    else assert.equal(await p.evaluate(`document.activeElement.textContent.includes('View full screenshot')`), true);
+    else assert.match(await p.evaluate(`document.activeElement.getAttribute('aria-label')`), /^Open full-size screenshot:/);
     assert.deepEqual(p.errors, []);
 
   } finally { await p.close(); }

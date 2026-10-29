@@ -20,6 +20,46 @@ const steps: ProofStep[] = [
   { number: "04", title: "Choose the next action safely", description: "When a commercial exception needs authority, FrameLeads recommends human review rather than inventing approval.", src: "/images/product-proof/04-decision-packet.png", width: 1567, height: 771, alt: "FrameLeads Decision Packet analyzing a negotiation and requiring human review before a response is approved." },
 ];
 
+function ScreenshotVisual({
+  image,
+  active,
+  transitioning,
+  triggerRef,
+  onOpen,
+}: {
+  image: ProofStep;
+  active: boolean;
+  transitioning: boolean;
+  triggerRef: React.RefObject<HTMLButtonElement | null>;
+  onOpen: () => void;
+}) {
+  return (
+    <div className="relative isolate">
+      <div aria-hidden="true" className="pointer-events-none absolute -inset-14 z-0 rounded-[4rem] bg-[radial-gradient(ellipse_at_center,rgba(255,90,31,0.28),rgba(255,90,31,0.12)_45%,transparent_78%)] opacity-90 blur-3xl" />
+      <div className="relative z-10 overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.015] p-1.5 shadow-[0_34px_90px_-34px_rgba(0,0,0,.88),0_18px_46px_-30px_rgba(255,90,31,.2)] backdrop-blur-sm sm:p-2">
+        <button
+          ref={triggerRef}
+          type="button"
+          aria-label={`Open full-size screenshot: ${image.title}`}
+          onClick={onOpen}
+          className={`group block w-full cursor-zoom-in overflow-hidden rounded-xl bg-[#101010] p-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F] sm:p-2 ${transitioning ? "opacity-30" : "opacity-100"} transition-opacity duration-200 motion-reduce:transition-none`}
+        >
+          <Image
+            src={image.src}
+            alt={image.alt}
+            width={image.width}
+            height={image.height}
+            sizes="(max-width: 1023px) 100vw, 60vw"
+            priority={active}
+            loading={active ? "eager" : "lazy"}
+            className="h-auto w-full rounded-lg transition-transform duration-300 group-hover:scale-[1.006] motion-reduce:transition-none"
+          />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function ProductProofHowItWorks({ onAudit }: { onAudit: () => void }) {
   const [active, setActive] = useState(3);
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -82,19 +122,7 @@ export default function ProductProofHowItWorks({ onAudit }: { onAudit: () => voi
         </div>
 
         <div id="proof-panel" role="tabpanel" aria-labelledby={`proof-tab-${active}`} className="min-w-0" key={current.number}>
-          <div className="overflow-hidden rounded-xl border border-white/[0.1] bg-[#1A1A1A] shadow-[0_22px_55px_rgba(0,0,0,.38)]">
-            <div className="flex items-center justify-between border-b border-white/[0.07] px-4 py-3 sm:px-5">
-              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/55">{current.number} / 04 <span className="mx-2 text-white/20">·</span> Real product screen</p>
-              <button ref={triggerRef} type="button" onClick={() => setLightboxOpen(true)} className="rounded-md px-2 py-1.5 text-xs font-semibold text-[#FF8B61] underline decoration-[#FF5A1F]/40 underline-offset-4 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#FF5A1F]">View full screenshot</button>
-            </div>
-            <div className={`relative w-full bg-[#101010] p-2 transition-opacity duration-200 sm:p-3 motion-reduce:transition-none ${transitioning ? "opacity-30" : "opacity-100"}`}>
-              <Image src={current.src} alt={current.alt} width={current.width} height={current.height} sizes="(max-width: 1023px) 100vw, 60vw" priority={active === 3} loading={active === 3 ? "eager" : "lazy"} className="h-auto w-full rounded-md" />
-            </div>
-            <div className="flex items-center justify-between border-t border-white/[0.07] px-4 py-3 text-xs text-white/45 sm:px-5">
-              <span>Original screenshot · {current.width} × {current.height}</span>
-              <span className="font-mono text-[10px] text-[#FF8B61]">{current.number}</span>
-            </div>
-          </div>
+          <ScreenshotVisual image={current} active={active === 3} transitioning={transitioning} triggerRef={triggerRef} onOpen={() => setLightboxOpen(true)} />
         </div>
       </div>
 
@@ -104,16 +132,7 @@ export default function ProductProofHowItWorks({ onAudit }: { onAudit: () => voi
           <span className="min-w-0"><span className="block text-base font-semibold text-white">{current.title}</span><span className="mt-1.5 block text-sm leading-relaxed text-[#929292]">{current.description}</span></span>
         </button>
         <div id="proof-mobile-panel" role="region" aria-labelledby={`proof-mobile-step-${active}`} className="min-w-0" key={`mobile-${current.number}`}>
-          <div className="overflow-hidden rounded-xl border border-white/[0.1] bg-[#1A1A1A] shadow-[0_22px_55px_rgba(0,0,0,.38)]">
-            <div className="flex items-center justify-between border-b border-white/[0.07] px-4 py-3">
-              <p className="whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.14em] text-white/55">{current.number} / 04 · Product screen</p>
-              <button ref={triggerRef} type="button" onClick={() => setLightboxOpen(true)} className="shrink-0 whitespace-nowrap rounded-md px-2 py-1.5 text-xs font-semibold text-[#FF8B61] underline decoration-[#FF5A1F]/40 underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#FF5A1F]">View full screenshot</button>
-            </div>
-            <div className={`w-full bg-[#101010] p-2 transition-opacity duration-200 motion-reduce:transition-none ${transitioning ? "opacity-30" : "opacity-100"}`}>
-              <Image src={current.src} alt={current.alt} width={current.width} height={current.height} sizes="100vw" priority={active === 3} loading={active === 3 ? "eager" : "lazy"} className="h-auto w-full rounded-md" />
-            </div>
-            <div className="border-t border-white/[0.07] px-4 py-3 text-xs text-white/45">Original screenshot · {current.width} × {current.height}</div>
-          </div>
+          <ScreenshotVisual image={current} active={active === 3} transitioning={transitioning} triggerRef={triggerRef} onOpen={() => setLightboxOpen(true)} />
         </div>
         <div className="flex flex-col gap-2" aria-label="Other workflow steps">
           {steps.map((step, index) => index === active ? null : (
