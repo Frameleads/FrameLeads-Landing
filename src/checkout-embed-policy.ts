@@ -4,15 +4,24 @@ export const WHOP_EMBED_LOADER = "https://js.whop.com/static/checkout/loader.js"
 export const WHOP_CHECKOUT_RETURN_URL = "https://app.frameleads.io/login?source=whop-checkout";
 export const WHOP_SANDBOX_RETURN_URL_ENV = "FRAMELEADS_WHOP_SANDBOX_RETURN_URL";
 
-/** A referral parameter pauses checkout until consent; referrals stay hosted. */
-export type ReferralCheckoutDecision = "pending" | "hosted" | "allowed";
+/** Never silently strip a partner who received explicit affiliate consent.
+ * Native affiliate payments require a server-issued, provider-confirmed
+ * checkout configuration; neither raw ?a= nor advertising consent proves it.
+ */
+export type ReferralCheckoutDecision = "pending" | "hosted" | "await_verified" | "allowed";
 export function referralCheckoutDecision(input: {
   rawReferralPresent: boolean;
   advertisingConsent: boolean | null;
+  affiliateConsent?: boolean;
 }): ReferralCheckoutDecision {
-  if (input.rawReferralPresent && input.advertisingConsent === null) return "pending";
-  if (input.rawReferralPresent) return "hosted";
-  return "allowed";
+  if (!input.rawReferralPresent) return "allowed";
+  if (input.advertisingConsent === null) return "pending";
+  // An explicitly consenting, attributed visitor must never land on a
+  // generic Whop plan checkout that cannot pay the partner.
+  if (input.affiliateConsent === true) return "await_verified";
+  // Nonconsenting buyers retain the ordinary purchase option and have no
+  // promise of affiliate attribution.
+  return "hosted";
 }
 
 const tiers = {
