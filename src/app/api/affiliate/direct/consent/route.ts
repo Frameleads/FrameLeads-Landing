@@ -81,7 +81,8 @@ export async function POST(request: Request): Promise<NextResponse> {
     if (!upstream.ok) return respond(503, "UNAVAILABLE");
     const payload: unknown = await upstream.json();
     const status = payload && typeof payload === "object" && "status" in payload ? payload.status : null;
-    if (status !== (parsed.action === "accept" ? "ACCEPTED" : "WITHDRAWN"))
+    if (typeof status !== "string"
+      || status !== (parsed.action === "accept" ? "ACCEPTED" : "WITHDRAWN"))
       return respond(503, "UNAVAILABLE");
 
     const output = respond(200, status);
