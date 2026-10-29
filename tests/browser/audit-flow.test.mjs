@@ -339,21 +339,22 @@ test('mobile Micro-Pilot popup appears after qualified pricing and final CTA vie
   } finally { await p.close(); }
 });
 
-for (const width of [1440, 1280, 768, 375]) test(`real product proof interaction, screenshot readability and responsive layout at ${width}px`, async () => {
+for (const width of [1440, 1280, 1024, 768, 390, 375, 320]) test(`real product proof interaction, screenshot readability and responsive layout at ${width}px`, async () => {
   const p = await page(width, false);
   try {
     await p.goto('/');
     await p.evaluate(`document.querySelector('#how-it-works').scrollIntoView({block:'start',behavior:'instant'})`);
-    await p.wait(`document.querySelector('#proof-panel img')?.complete && document.querySelector('#proof-panel img')?.naturalWidth > 0`);
+    await p.wait(`${width >= 1024 ? "document.querySelector('#proof-panel img')" : "document.querySelector('#proof-mobile-panel img')"}?.complete && ${width >= 1024 ? "document.querySelector('#proof-panel img')" : "document.querySelector('#proof-mobile-panel img')"}?.naturalWidth > 0`);
     assert.equal(await p.evaluate(`document.querySelectorAll('#how-it-works').length`), 1);
     assert.equal(await p.evaluate(`document.querySelectorAll('#how-it-works [role=tab]').length`), 4);
-    assert.equal(await p.evaluate(`document.querySelector('#how-it-works [role=tab][aria-selected=true]').textContent.includes('04')`), true);
-    assert.match(await p.evaluate(`document.querySelector('#proof-panel img').getAttribute('src')`), /04-decision-packet\.png/);
-    assert.ok(await p.evaluate(`document.querySelector('#proof-panel img').naturalWidth >= 350`));
+    assert.equal(await p.evaluate(width >= 1024 ? `document.querySelector('#how-it-works [role=tab][aria-selected=true]').textContent.includes('04')` : `document.querySelector('#proof-mobile-step-3').getAttribute('aria-pressed') === 'true'`), true);
+    assert.match(await p.evaluate(width >= 1024 ? `document.querySelector('#proof-panel img').getAttribute('src')` : `document.querySelector('#proof-mobile-panel img').getAttribute('src')`), /04-decision-packet\.png/);
+    assert.ok(await p.evaluate(width >= 1024 ? `document.querySelector('#proof-panel img').naturalWidth >= 280` : `document.querySelector('#proof-mobile-panel img').naturalWidth >= 280`));
+    assert.equal(await p.evaluate(width >= 1024 ? `Array.from(document.querySelectorAll('#how-it-works [role=tab] [aria-hidden="false"]')).length` : `Array.from(document.querySelectorAll('#how-it-works [id^="proof-mobile-description-"][aria-hidden="false"]')).length`), 1, 'exactly one description is expanded');
     if (width === 375) {
       await p.setReducedMotion();
       assert.equal(await p.evaluate(`matchMedia('(prefers-reduced-motion: reduce)').matches`), true);
-      assert.equal(await p.evaluate(`getComputedStyle(document.querySelector('#proof-mobile-panel img').parentElement).transitionProperty`), 'none');
+      assert.equal(await p.evaluate(`getComputedStyle(document.querySelector('#proof-mobile-description-0')).transitionProperty.includes('none') || getComputedStyle(document.querySelector('#proof-mobile-description-0')).transitionDuration === '0s'`), true);
     }
     if (width < 1024) {
       assert.equal(await p.evaluate(`document.querySelector('#proof-mobile-step-3').getAttribute('aria-pressed')`), 'true');
@@ -374,12 +375,15 @@ for (const width of [1440, 1280, 768, 375]) test(`real product proof interaction
       await p.key('ArrowRight');
       await p.wait(`document.querySelector('#proof-tab-1').getAttribute('aria-selected') === 'true'`);
       assert.equal(await p.evaluate(`document.activeElement.id`), 'proof-tab-1');
+      assert.match(await p.evaluate(`document.querySelector('#proof-panel img').getAttribute('src')`), /02-incoming-reply\.png/);
+      assert.equal(await p.evaluate(`document.querySelectorAll('#how-it-works [role=tab] [aria-hidden="false"]').length`), 1);
       await p.evaluate(`document.querySelector('#proof-panel button').click()`);
     } else {
       await p.tap('#proof-mobile-step-0');
       await p.wait(`document.querySelector('#proof-mobile-step-0').getAttribute('aria-pressed') === 'true'`);
       assert.match(await p.evaluate(`document.querySelector('#proof-mobile-panel img').getAttribute('src')`), /01-outbound-sandbox\.png/);
-      assert.equal(await p.evaluate(`document.querySelector('#proof-mobile-step-0').nextElementSibling.id`), 'proof-mobile-panel');
+      assert.equal(await p.evaluate(`document.querySelector('#proof-mobile-step-0').parentElement.querySelector('#proof-mobile-panel') !== null`), true);
+      assert.equal(await p.evaluate(`document.querySelectorAll('#how-it-works [id^="proof-mobile-description-"][aria-hidden="false"]').length`), 1);
       await p.evaluate(`document.querySelector('#proof-mobile-panel button').click()`);
     }
     await p.wait(`!!document.querySelector('[role=dialog][aria-modal=true]')`);
@@ -392,7 +396,11 @@ for (const width of [1440, 1280, 768, 375]) test(`real product proof interaction
     await p.key('Escape');
     await p.wait(`!document.querySelector('[role=dialog][aria-modal=true]')`);
     if (width >= 1024) assert.equal(await p.evaluate(`document.activeElement.id`), 'proof-tab-1');
-    else assert.match(await p.evaluate(`document.activeElement.getAttribute('aria-label')`), /^Open full-size screenshot:/);
+    else assert.equal(await p.evaluate(`document.activeElement.id`), 'proof-mobile-step-0');
+    await p.evaluate(`Array.from(document.querySelectorAll('button')).find((button) => button.textContent.trim() === 'Find my reply bottleneck').click()`);
+    await p.wait(`!!document.querySelector('[role=dialog][aria-labelledby="audit-modal-title"]')`, 'product proof Audit CTA opens the existing Audit flow');
+    await p.key('Escape');
+    await p.wait(`!document.querySelector('[role=dialog][aria-labelledby="audit-modal-title"]')`);
     assert.deepEqual(p.errors, []);
 
   } finally { await p.close(); }

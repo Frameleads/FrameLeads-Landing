@@ -98,14 +98,14 @@ export default function ProductProofHowItWorks({ onAudit }: { onAudit: () => voi
   }
 
   return (
-    <section id="how-it-works" aria-labelledby="proof-heading" className="mx-auto max-w-6xl scroll-mt-32 border-t border-white/[0.06] px-0 py-16 md:py-24">
+    <section id="how-it-works" aria-labelledby="proof-heading" className="relative mx-auto w-full max-w-7xl scroll-mt-32 overflow-x-clip border-t border-white/[0.06] px-4 py-16 sm:px-6 lg:px-8 md:py-24">
       <div className="mx-auto max-w-3xl text-center">
         <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-[#FF5A1F]">Inside FrameLeads · Actual product screens</p>
         <h2 id="proof-heading" className="mt-4 text-balance font-[family-name:var(--font-oxanium)] text-3xl font-bold tracking-tight text-white sm:text-4xl">See what happens after a prospect replies.</h2>
         <p className="mx-auto mt-4 max-w-2xl text-pretty text-base leading-relaxed text-[#A1A1AA]">From the incoming signal to a governed next action. Explore the actual interface behind the decision.</p>
       </div>
 
-      <div className="mt-10 hidden items-start gap-6 lg:grid lg:grid-cols-[minmax(0,0.78fr)_minmax(0,1.22fr)] lg:gap-8">
+      <div className="mt-10 hidden min-w-0 items-start gap-8 lg:grid lg:grid-cols-[minmax(0,0.78fr)_minmax(0,1.22fr)] xl:gap-10">
         <div role="tablist" aria-label="FrameLeads workflow steps" className="flex flex-col gap-2">
           {steps.map((step, index) => (
             <button key={step.number} id={`proof-tab-${index}`} type="button" role="tab" aria-selected={active === index} aria-controls="proof-panel" tabIndex={active === index ? 0 : -1} onClick={() => selectStep(index)} onKeyDown={(event) => {
@@ -114,32 +114,28 @@ export default function ProductProofHowItWorks({ onAudit }: { onAudit: () => voi
               const next = event.key === "Home" ? 0 : event.key === "End" ? steps.length - 1 : (index + (event.key === "ArrowDown" || event.key === "ArrowRight" ? 1 : -1) + steps.length) % steps.length;
               selectStep(next);
               document.getElementById(`proof-tab-${next}`)?.focus();
-            }} className={`group flex min-h-20 w-full items-start gap-4 rounded-xl border p-4 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F] sm:p-5 ${active === index ? "border-[#FF5A1F]/45 bg-[#1A1A1A]" : "border-white/[0.07] bg-[#151515] hover:border-white/20"}`}>
+            }} className={`group flex min-h-[4.5rem] w-full items-start gap-4 rounded-xl border p-4 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F] sm:p-5 ${active === index ? "border-[#FF5A1F]/45 bg-[#1A1A1A]" : "border-white/[0.07] bg-[#151515] hover:border-white/20"}`}>
               <span className={`mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-lg border font-mono text-xs ${active === index ? "border-[#FF5A1F]/40 bg-[#FF5A1F]/10 text-[#FF5A1F]" : "border-white/10 bg-white/[0.03] text-white/50"}`}>{step.number}</span>
-              <span className="min-w-0"><span className={`block text-base font-semibold ${active === index ? "text-white" : "text-white/75"}`}>{step.title}</span><span className="mt-1.5 block text-sm leading-relaxed text-[#929292]">{step.description}</span></span>
+              <span className="min-w-0 flex-1"><span className={`block text-base font-semibold ${active === index ? "text-white" : "text-white/75"}`}>{step.title}</span><span aria-hidden={active !== index} className={`grid transition-[grid-template-rows,opacity] duration-200 ease-out motion-reduce:transition-none ${active === index ? "mt-1.5 grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}><span className="overflow-hidden text-sm leading-relaxed text-[#929292]">{step.description}</span></span></span>
             </button>
           ))}
         </div>
 
-        <div id="proof-panel" role="tabpanel" aria-labelledby={`proof-tab-${active}`} className="min-w-0" key={current.number}>
+        <div id="proof-panel" role="tabpanel" aria-labelledby={`proof-tab-${active}`} className="min-w-0 pt-1" key={current.number}>
           <ScreenshotVisual image={current} active={active === 3} transitioning={transitioning} triggerRef={triggerRef} onOpen={() => setLightboxOpen(true)} />
         </div>
       </div>
 
-      <div className="mt-8 flex flex-col gap-3 lg:hidden" role="group" aria-label="Explore FrameLeads workflow steps">
-        <button id={`proof-mobile-step-${active}`} type="button" aria-pressed="true" aria-controls="proof-mobile-panel" onClick={() => selectStep(active)} className="flex min-h-20 w-full items-start gap-4 rounded-xl border border-[#FF5A1F]/45 bg-[#1A1A1A] p-4 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F]">
-          <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-[#FF5A1F]/40 bg-[#FF5A1F]/10 font-mono text-xs text-[#FF5A1F]">{current.number}</span>
-          <span className="min-w-0"><span className="block text-base font-semibold text-white">{current.title}</span><span className="mt-1.5 block text-sm leading-relaxed text-[#929292]">{current.description}</span></span>
-        </button>
-        <div id="proof-mobile-panel" role="region" aria-labelledby={`proof-mobile-step-${active}`} className="min-w-0" key={`mobile-${current.number}`}>
-          <ScreenshotVisual image={current} active={active === 3} transitioning={transitioning} triggerRef={triggerRef} onOpen={() => setLightboxOpen(true)} />
-        </div>
-        <div className="flex flex-col gap-2" aria-label="Other workflow steps">
-          {steps.map((step, index) => index === active ? null : (
-            <button key={step.number} id={`proof-mobile-step-${index}`} type="button" aria-pressed="false" aria-controls="proof-mobile-panel" onClick={() => selectStep(index)} className="flex min-h-16 w-full items-start gap-4 rounded-xl border border-white/[0.07] bg-[#151515] p-4 text-left transition-colors hover:border-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F]">
-              <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/[0.03] font-mono text-xs text-white/50">{step.number}</span>
-              <span className="min-w-0"><span className="block text-sm font-semibold text-white/75">{step.title}</span><span className="mt-1 block text-sm leading-relaxed text-[#929292]">{step.description}</span></span>
-            </button>
+      <div className="mt-8 min-w-0 lg:hidden" role="group" aria-label="Explore FrameLeads workflow steps">
+        <div className="flex min-w-0 flex-col gap-2">
+          {steps.map((step, index) => (
+            <div key={step.number} className="min-w-0">
+              <button id={`proof-mobile-step-${index}`} type="button" aria-pressed={active === index} aria-controls={active === index ? "proof-mobile-panel" : `proof-mobile-description-${index}`} onClick={() => selectStep(index)} className={`flex min-h-16 w-full min-w-0 items-start gap-4 rounded-xl border p-4 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F] ${active === index ? "border-[#FF5A1F]/45 bg-[#1A1A1A]" : "border-white/[0.07] bg-[#151515] hover:border-white/20"}`}>
+                <span className={`mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg border font-mono text-xs ${active === index ? "border-[#FF5A1F]/40 bg-[#FF5A1F]/10 text-[#FF5A1F]" : "border-white/10 bg-white/[0.03] text-white/50"}`}>{step.number}</span>
+                <span className="min-w-0 flex-1"><span className={`block text-sm font-semibold sm:text-base ${active === index ? "text-white" : "text-white/75"}`}>{step.title}</span><span id={`proof-mobile-description-${index}`} aria-hidden={active !== index} className={`grid transition-[grid-template-rows,opacity] duration-200 ease-out motion-reduce:transition-none ${active === index ? "mt-1 grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}><span className="overflow-hidden text-sm leading-relaxed text-[#929292]">{step.description}</span></span></span>
+              </button>
+              {active === index && <div id="proof-mobile-panel" role="region" aria-labelledby={`proof-mobile-step-${index}`} className="min-w-0 pt-3" key={`mobile-${current.number}`}><ScreenshotVisual image={current} active={active === 3} transitioning={transitioning} triggerRef={triggerRef} onOpen={() => setLightboxOpen(true)} /></div>}
+            </div>
           ))}
         </div>
       </div>
