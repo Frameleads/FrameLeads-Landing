@@ -207,7 +207,12 @@ test("Whop Elements only exposes hosted fallback on load failure", () => {
   assert.match(component, /onComplete=\{\(completion\) =>/);
   assert.match(component, /completion\.result === "payment"/);
   assert.match(component, /setCheckoutFinished\(true\)/);
-  assert.doesNotMatch(component, /window\.location\.(?:assign|replace)/);
+  // Explicit verified partner initiation may navigate to a same-origin
+  // checkout, but Whop's onComplete must never grant access or navigate.
+  assert.match(component, /if \(response\.ok && next === "\/checkout\/affiliate\/core"\)/);
+  assert.match(component, /window\.location\.assign\(next\)/);
+  const onComplete = component.split("onComplete={(completion) => {")[1]?.split("}}")[0] ?? "";
+  assert.doesNotMatch(onComplete, /window\.location\.(?:assign|replace)/);
   assert.doesNotMatch(component, /observeMeasurement\(["'](?:Purchase|PURCHASE)["']/);
   assert.match(component, /<CheckoutElement/);
   assert.match(component, /if \(elementsUnavailable\)/);
