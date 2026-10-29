@@ -7,6 +7,8 @@ on:
       - "src/app/privacy/page.tsx"
       - "src/affiliate-checkout-return.ts"
       - "src/affiliate-native-session.ts"
+      - "src/direct-affiliate-handoff.ts"
+      - "tests/direct-affiliate-handoff.test.ts"
       - "src/components/VerifiedAffiliateCheckout.tsx"
       - "src/app/checkout/affiliate/**"
       - "tests/affiliate-native-session.test.ts"
@@ -47,7 +49,7 @@ jobs:
       - name: Verify gated notice and unchanged hosted fallback
         run: node --test tests/affiliate-disclosure-gate.test.mjs
       - name: Verify checkout return host/plan and fail-closed flags
-        run: npx tsx --test tests/affiliate-checkout-return.test.ts tests/affiliate-native-session.test.ts
+        run: npx tsx --test tests/affiliate-checkout-return.test.ts tests/affiliate-native-session.test.ts tests/direct-affiliate-handoff.test.ts
       - name: test reviewed referral capture and withdrawal
         run: npx tsx --test tests/marketing-attribution.test.ts tests/marketing-events.test.ts
       - name: TypeScript check
