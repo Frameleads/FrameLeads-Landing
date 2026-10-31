@@ -136,6 +136,33 @@ test("Preview Sandbox requires its own company, all tier plans, safe hosted URLs
   assert.deepEqual(embeddedCheckoutPolicy("core", { ...sandbox, VERCEL_ENV: "production" }), { available: false, reason: "wrong_environment" });
 });
 
+test("Core direct affiliate Sandbox CTA is independent of ordinary all-tier Preview checkout", () => {
+  const page = fs.readFileSync(new URL("../src/app/checkout/[plan]/page.tsx", import.meta.url), "utf8");
+  const checkout = fs.readFileSync(new URL("../src/components/EmbeddedWhopCheckout.tsx", import.meta.url), "utf8");
+  // Ordinary Preview checkout still needs all three Sandbox tiers; direct
+  // partner verification is independently gated and may test Core alone.
+  assert.match(page, /const directPartnerPreviewEnabled = plan === "core"/);
+  assert.match(page, /WHOP_SANDBOX_COMPANY_ID === "biz_6YudF3G7nc8Wdw"/);
+  assert.match(page, /WHOP_CORE_SANDBOX_PLAN_ID === "plan_kgrX8LpuAH2Ba"/);
+  assert.match(page, /FRAMELEADS_DIRECT_AFFILIATE_CHECKOUT_ENABLED === "true"/);
+  assert.match(page, /AFFILIATE_REFERRAL_PRIVACY_APPROVED === "true"/);
+  assert.match(page, /AFFILIATE_CONSENT_EVIDENCE_ENABLED === "true"/);
+  assert.match(page, /WHOP_AFFILIATE_CHECKOUT_ENABLED === "true"/);
+  assert.match(page, /directPartnerPreviewEnabled=\\{directPartnerPreviewEnabled\\}/);
+  assert.match(checkout, /directPartnerPreviewEnabled = false/);
+  assert.match(checkout, /if \\(decision === "await_verified"\\)/);
+  assert.ok(checkout.indexOf('if (decision === "await_verified")') < checkout.indexOf('if (!hostedFallback)'),
+    "a verified consented referral must reach its Core-only Sandbox CTA even without a generic hosted plan fallback");
+  assert.match(checkout, /if \\(!embedEnabled \\|\\| !hostedFallback \\|\\| decision !== "allowed"\\) return/);
+  assert.doesNotMatch(checkout, /process\\.env\\.NEXT_PUBLIC_FRAMELEADS_DIRECT_AFFILIATE_CHECKOUT_ENABLED/);
+  const unconfigured = embeddedCheckoutPolicy("core", {
+    VERCEL_ENV: "preview", WHOP_ENVIRONMENT: "sandbox",
+    WHOP_SANDBOX_COMPANY_ID: "biz_6YudF3G7nc8Wdw",
+    WHOP_CORE_SANDBOX_PLAN_ID: "plan_kgrX8LpuAH2Ba",
+  });
+  assert.equal(unconfigured.available, false, "ordinary plan checkout remains disabled with Core-only Sandbox setup");
+});
+
 test("partner-consented referrals cannot silently lose attribution on generic checkout", () => {
   assert.equal(referralCheckoutDecision({ rawReferralPresent: true, advertisingConsent: null }), "pending");
   assert.equal(referralCheckoutDecision({ rawReferralPresent: true, advertisingConsent: false }), "hosted");
