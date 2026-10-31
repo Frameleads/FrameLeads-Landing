@@ -25,6 +25,7 @@ export default function PipelineAudit({ onAuditComplete, onClose, standalone = f
   const [index, setIndex] = useState(0);
   const [result, setResult] = useState<AuditResult | null>(null);
   const [captured, setCaptured] = useState(false);
+  const [checkoutContinuation, setCheckoutContinuation] = useState<{ prospectId: string } | null>(null);
   const completionTracked = useRef(false);
   const workflowMapTracked = useRef(false);
   const startTracked = useRef(false);
@@ -55,7 +56,7 @@ export default function PipelineAudit({ onAuditComplete, onClose, standalone = f
   const back = () => { if (advanceTimer.current) clearTimeout(advanceTimer.current); advanceTimer.current = null; setIndex((current) => Math.max(0, current - 1)); };
   return <div>
     <header className="mb-7 flex items-start justify-between gap-4 border-b border-white/5 pb-6 sm:items-center"><div><p className="font-heading text-sm font-bold uppercase tracking-[0.16em] text-[#FF5A1F]">Reply Workflow Audit</p><p className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[#8A8A93]">5 questions · Instant diagnosis</p></div><button type="button" onClick={onClose} aria-label="Close reply workflow audit" className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-white/10 text-lg text-white/45 hover:border-white/20 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F]">×</button></header>
-    {!result ? <Question active={active} index={index} selected={answers[active.key]} onChoose={choose} onBack={back} /> : captured ? <WorkflowMap result={result} onClose={onClose} standalone={standalone} /> : <Diagnosis result={result} onCaptured={() => setCaptured(true)} />}
+    {!result ? <Question active={active} index={index} selected={answers[active.key]} onChoose={choose} onBack={back} /> : captured ? <WorkflowMap result={result} onClose={onClose} standalone={standalone} checkoutContinuation={checkoutContinuation} /> : <Diagnosis result={result} onCaptured={(continuation) => { setCheckoutContinuation(continuation); setCaptured(true); }} />}
   </div>;
 }
 
@@ -65,12 +66,12 @@ function Question({ active, index, selected, onChoose, onBack }: { active: (type
   return <motion.fieldset ref={fieldset} tabIndex={-1} key={active.key} initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} className="min-w-0"><legend className="text-xl font-semibold leading-snug text-white sm:text-2xl">{active.question}</legend>{active.helper && <p className="mt-2 text-sm text-[#888888]">{active.helper}</p>}<div className="mt-6 grid gap-3 sm:grid-cols-2">{active.options.map((option) => <label key={option} className={`flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition-colors ${selected === option ? "border-[#FF5A1F]/45 bg-[#FF5A1F]/[0.07]" : "border-white/[0.08] bg-white/[0.025] hover:border-white/20"}`}><input type="radio" name={active.key} value={option} checked={selected === option} onClick={() => { if (selected === option) onChoose(option); }} onChange={() => onChoose(option)} className="h-4 w-4 accent-[#FF5A1F]" /><span className="text-sm font-medium text-white/90">{option}</span></label>)}</div><div className="mt-7 flex items-center justify-between"><button type="button" onClick={onBack} disabled={index === 0} className="text-sm text-white/45 hover:text-white disabled:invisible">Back</button><span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[#888888]">{index + 1} / {questions.length}</span></div></motion.fieldset>;
 }
 
-function Diagnosis({ result, onCaptured }: { result: AuditResult; onCaptured: () => void }) {
+function Diagnosis({ result, onCaptured }: { result: AuditResult; onCaptured: (continuation: { prospectId: string } | null) => void }) {
   const copy = diagnosisCopy[result.diagnosis];
   return <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}><p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-white/50">Your diagnosis</p><h3 className="mt-3 text-3xl font-bold tracking-tight text-white">{copy.title}</h3><p className="mt-4 text-base leading-relaxed text-gray-300">{copy.body}</p><p className="mt-4 border-l-2 border-[#FF5A1F] pl-4 font-semibold leading-relaxed text-white">{copy.emphasis}</p><div className="mt-7 grid gap-3 rounded-xl border border-white/[0.08] bg-black/10 p-4 sm:grid-cols-2"><State label="Current state" text={`Outbound → Reply → ${currentOwner(result)} → Decision → Next action`} /><State label="Target state" text="Reply → FrameLeads Decision Layer → Routine continues / Consequential human review" accent /></div><div className="mt-6 grid gap-2 sm:grid-cols-3"><Context label="Conversation volume" value={result.answers.monthlyQualifiedConversations} /><Context label="Typical engagement" value={result.answers.dealValue} /><Context label="Weekly manual burden" value={result.answers.weeklyManualBurden} /></div><LeadCapture result={result} onCaptured={onCaptured} /></motion.div>;
 }
 
-function LeadCapture({ result, onCaptured }: { result: AuditResult; onCaptured: () => void }) {
+function LeadCapture({ result, onCaptured }: { result: AuditResult; onCaptured: (continuation: { prospectId: string } | null) => void }) {
   const [firstName, setFirstName] = useState(""); const [workEmail, setWorkEmail] = useState(""); const [websiteInput, setWebsiteInput] = useState(""); const [busy, setBusy] = useState(false); const [error, setError] = useState("");
   const submitting = useRef(false);
   const emailSuggestion = suggestAuditEmailCorrection(workEmail);
@@ -94,7 +95,12 @@ function LeadCapture({ result, onCaptured }: { result: AuditResult; onCaptured: 
         return;
       }
       trackLeadCaptureIfSuccessful(true, { source: "REPLY_WORKFLOW_AUDIT", diagnosis: result.diagnosis });
-      onCaptured();
+      const receiptFields = receipt as Record<string, unknown>;
+      const continuation = process.env.NEXT_PUBLIC_FRAMELEADS_AUDIT_CHECKOUT_CONTINUATION_ENABLED === "true" &&
+        receiptFields.checkoutContinuationAvailable === true && typeof receiptFields.prospectId === "string" &&
+        /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(receiptFields.prospectId)
+        ? { prospectId: receiptFields.prospectId } : null;
+      onCaptured(continuation);
     } catch {
       setError("We couldn't save your workflow map. Please try again.");
     } finally {
@@ -105,10 +111,36 @@ function LeadCapture({ result, onCaptured }: { result: AuditResult; onCaptured: 
   return <form onSubmit={submit} aria-busy={busy} className="mt-8 border-t border-white/[0.08] pt-7"><h4 className="text-xl font-semibold text-white">Want your personalized Reply Workflow Map?</h4><p className="mt-2 text-sm leading-relaxed text-[#888888]">Enter your work email and company website and we&apos;ll map where FrameLeads would sit in your current workflow.</p><div data-audit-bonus="true" className="mt-5 rounded-lg border border-white/[0.08] bg-white/[0.02] px-4 py-3"><p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#FF5A1F]">Bonus included</p><p className="mt-1 text-sm font-semibold text-white">AI SDR Prompt Framework</p><p className="mt-1 text-xs leading-relaxed text-[#888888]">We&apos;ll also send the 5-prompt framework for classifying, deciding, controlling, prioritizing and escalating prospect replies safely.</p></div><div className="mt-5 grid gap-3 sm:grid-cols-2"><div><Field label="Work email" type="email" required value={workEmail} onChange={setWorkEmail} placeholder="you@company.com" />{emailSuggestion && <p className="mt-1.5 text-xs leading-relaxed text-[#FFB58F]" aria-live="polite">Possible email typo. Did you mean <button type="button" onClick={() => { setWorkEmail(emailSuggestion); setError(""); }} className="font-semibold underline underline-offset-2 hover:text-white">{emailSuggestion}</button>?</p>}</div><Field label="Company website" required value={websiteInput} onChange={setWebsiteInput} placeholder="company.com" /><div className="sm:col-span-2"><Field label="First name (optional)" value={firstName} onChange={setFirstName} placeholder="Alex" /></div></div><p className="mt-4 text-xs leading-relaxed text-white/40">We&apos;ll send your workflow result and relevant FrameLeads follow-up. Unsubscribe anytime.</p>{error && <p role="alert" className="mt-3 text-sm text-red-300">{error}</p>}<button type="submit" disabled={busy} className="mt-5 w-full rounded-xl bg-[#FF5A1F] px-6 py-4 font-bold text-white hover:bg-[#ff6b35] disabled:cursor-wait disabled:opacity-60">{busy ? <span role="status" aria-live="polite">Creating your map…</span> : "Get My Workflow Map"}</button></form>;
 }
 
-function WorkflowMap({ result, onClose, standalone }: { result: AuditResult; onClose: () => void; standalone: boolean }) {
+function WorkflowMap({ result, onClose, standalone, checkoutContinuation }: { result: AuditResult; onClose: () => void; standalone: boolean; checkoutContinuation: { prospectId: string } | null }) {
   const low = result.diagnosis === "LOW_CURRENT_PRESSURE"; const target = low ? "capabilities" : "simulation"; const copy = diagnosisCopy[result.diagnosis];
   const go = () => { onClose(); window.setTimeout(() => document.getElementById(target)?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start" }), 320); };
-  return <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}><p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#FF5A1F]">Your Reply Workflow Map</p><h3 className="mt-3 text-3xl font-bold text-white">{copy.title}</h3><div className="mt-7 grid gap-3"><State label="Current state" text={`Reply decisions currently route through: ${currentOwner(result)}.`} /><State label="Gap" text={copy.gap} /><State label="Recommended operating state" text="Reply → FrameLeads Decision Layer → Routine continues / Consequential human review" accent /><State label="Why" text={`${result.answers.monthlyQualifiedConversations} qualified conversations per month · ${result.answers.dealValue} typical engagement · ${result.answers.weeklyManualBurden} of weekly manual decision work.`} /></div>{standalone ? <Link href={`/#${target}`} className="mt-7 flex w-full items-center justify-center rounded-xl bg-[#FF5A1F] px-6 py-4 text-center font-bold text-white hover:bg-[#ff6b35]">{low ? "See How the System Works" : "See FrameLeads Handle This"}</Link> : <button type="button" onClick={go} className="mt-7 w-full rounded-xl bg-[#FF5A1F] px-6 py-4 font-bold text-white hover:bg-[#ff6b35]">{low ? "See How the System Works" : "See FrameLeads Handle This"}</button>}</motion.div>;
+  return <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}><p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#FF5A1F]">Your Reply Workflow Map</p><h3 className="mt-3 text-3xl font-bold text-white">{copy.title}</h3><div className="mt-7 grid gap-3"><State label="Current state" text={`Reply decisions currently route through: ${currentOwner(result)}.`} /><State label="Gap" text={copy.gap} /><State label="Recommended operating state" text="Reply → FrameLeads Decision Layer → Routine continues / Consequential human review" accent /><State label="Why" text={`${result.answers.monthlyQualifiedConversations} qualified conversations per month · ${result.answers.dealValue} typical engagement · ${result.answers.weeklyManualBurden} of weekly manual decision work.`} /></div>{standalone ? <Link href={`/#${target}`} className="mt-7 flex w-full items-center justify-center rounded-xl bg-[#FF5A1F] px-6 py-4 text-center font-bold text-white hover:bg-[#ff6b35]">{low ? "See How the System Works" : "See FrameLeads Handle This"}</Link> : <button type="button" onClick={go} className="mt-7 w-full rounded-xl bg-[#FF5A1F] px-6 py-4 font-bold text-white hover:bg-[#ff6b35]">{low ? "See How the System Works" : "See FrameLeads Handle This"}</button>}{checkoutContinuation && <CheckoutContinuationCTA prospectId={checkoutContinuation.prospectId} />}</motion.div>;
+}
+
+
+function CheckoutContinuationCTA({ prospectId }: { prospectId: string }) {
+  const [status, setStatus] = useState<"READY" | "SENDING" | "SENT" | "NOT_ELIGIBLE" | "UNAVAILABLE">("READY");
+  const requestLink = async () => {
+    if (status !== "READY") return;
+    setStatus("SENDING");
+    try {
+      const response = await fetch("/api/audit-lead/continue", { method: "POST", cache: "no-store",
+        headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prospectId }) });
+      const result: unknown = await response.json().catch(() => null);
+      const value = result && typeof result === "object" && "status" in result ? result.status : null;
+      setStatus(response.ok && value === "SENT" ? "SENT"
+        : value === "NOT_ELIGIBLE" ? "NOT_ELIGIBLE" : "UNAVAILABLE");
+    } catch { setStatus("UNAVAILABLE"); }
+  };
+  return <div className="mt-5 rounded-xl border border-white/10 p-4">
+    <p className="text-sm text-white/70">Want to review a plan later? Request a secure checkout link by email.</p>
+    {status === "SENT" ? <p role="status" className="mt-3 text-sm text-white/80">Check your Audit email for your secure checkout link.</p> :
+      status === "NOT_ELIGIBLE" || status === "UNAVAILABLE" ? <p role="status" className="mt-3 text-sm text-white/75">A secure continuation link is unavailable. You can still purchase through the normal pricing page.</p> :
+      <button type="button" disabled={status === "SENDING"} onClick={requestLink}
+        className="mt-3 rounded-xl border border-white/30 px-4 py-3 text-sm font-semibold disabled:opacity-50">
+        {status === "SENDING" ? "Sending link…" : "Email me a secure checkout link"}
+      </button>}
+  </div>;
 }
 
 function currentOwner(result: AuditResult) { if (result.diagnosis === "FOUNDER_DECISION_BOTTLENECK") return "Founder"; if (result.diagnosis === "UNCONTROLLED_AUTOMATION") return "AI / Automation"; if (result.diagnosis === "FRAGMENTED_REPLY_WORKFLOW" && result.signals.includes("INCONSISTENT_OWNERSHIP")) return "Inconsistent owner"; if (result.answers.decisionOwner === "SDR / salesperson" || result.answers.decisionOwner === "VA / assistant") return "Team / Individual operator"; return "Human workflow"; }

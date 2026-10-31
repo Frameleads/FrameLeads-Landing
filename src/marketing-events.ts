@@ -1,6 +1,6 @@
 import type { AuditLeadPayload, DiagnosisType } from "./audit";
 import {initializeMeasurementPixels} from './measurement.ts';
-import {getPrivacyConsent} from './privacy-consent.ts';
+import {clearStoredAffiliateReferral, discardAffiliateReferral, getPrivacyConsent, hasCurrentAffiliateNoticeConsent, isAffiliateCaptureBlockedForCurrentPage} from './privacy-consent.ts';
 
 export const marketingEventNames = [
   "LANDING_VIEW",
@@ -37,7 +37,7 @@ const attributionStorageKey = "frameleads:marketing-attribution:v1";
 const eventStoragePrefix = "frameleads:marketing-event:v1:";
 const trackedInMemory = new Set<string>();
 const utmKeys = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"] as const;
-const attributionKeys = ["utmSource", "utmMedium", "utmCampaign", "utmContent", "utmTerm", "referrer", "landingPath"] as const;
+const attributionKeys = ["utmSource", "utmMedium", "utmCampaign", "utmContent", "utmTerm", "referrer", "landingPath", "affiliateCode"] as const;
 
 function browserWindow(): Window | null {
   return typeof window === "undefined" ? null : window;
@@ -59,6 +59,11 @@ function safeReferrer(referrer: string): string | undefined {
   }
 }
 
+export function captureAffiliateCode(value: string | null, advertisingConsent: boolean, affiliateReferralApproved = false): string | undefined {
+  const code = value?.trim();
+  return advertisingConsent && affiliateReferralApproved && code && /^[A-Za-z0-9_-]{1,64}$/.test(code) ? code : undefined;
+}
+
 export function mergeMarketingAttribution(
   existing: MarketingAttribution,
   incoming: MarketingAttribution,
@@ -66,16 +71,29 @@ export function mergeMarketingAttribution(
   const merged: MarketingAttribution = { ...existing };
   for (const key of attributionKeys) {
     const value = cleanString(incoming[key]);
+    if (key === "affiliateCode") {
+      if (value && /^[A-Za-z0-9_-]{1,64}$/.test(value)) merged.affiliateCode = value;
+      continue;
+    }
     if (!cleanString(merged[key]) && value) merged[key] = value;
   }
   return merged;
 }
 
-export function captureMarketingAttribution(): MarketingAttribution {
+export function captureMarketingAttribution(
+  affiliateReferralApproved = process.env.NEXT_PUBLIC_AFFILIATE_REFERRAL_PRIVACY_APPROVED === "true",
+): MarketingAttribution {
   const currentWindow = browserWindow();
   if (!currentWindow) return {};
   const consent = getPrivacyConsent();
-  if (!consent || (!consent.analytics && !consent.advertising)) return {};
+  if (!consent) {
+    // No choice yet: don't persist or expose referral data, but retain the
+    // incoming URL parameter so a later affirmative choice can qualify it.
+    clearStoredAffiliateReferral();
+    return {};
+  }
+  if (!consent.advertising) discardAffiliateReferral();
+  if (!consent.analytics && !consent.advertising) return {};
 
   let existing: MarketingAttribution = {};
   try {
@@ -88,6 +106,13 @@ export function captureMarketingAttribution(): MarketingAttribution {
     // Storage may be unavailable in private browsing; the current URL still works.
   }
 
+  // A withdrawal invalidates the previously stored referral for this page even
+  // if sessionStorage removal was unavailable. A different fresh referral URL
+  // can still qualify after consent is restored.
+  // A previous advertising opt-in never becomes permission for a newly added
+  // compensated referral purpose. Outdated referral data is not reusable.
+  if (isAffiliateCaptureBlockedForCurrentPage() || !hasCurrentAffiliateNoticeConsent(consent)) delete existing.affiliateCode;
+
   const params = new URLSearchParams(currentWindow.location.search);
   const incoming: MarketingAttribution = { landingPath: currentWindow.location.pathname };
   const mapping = {
@@ -98,6 +123,12 @@ export function captureMarketingAttribution(): MarketingAttribution {
     utm_term: "utmTerm",
   } as const;
   for (const key of utmKeys) incoming[mapping[key]] = cleanString(params.get(key));
+  if (!affiliateReferralApproved) discardAffiliateReferral();
+  const queryAffiliateCode = params.get("a");
+  const affiliateCode = isAffiliateCaptureBlockedForCurrentPage(queryAffiliateCode ?? undefined)
+    ? undefined
+    : captureAffiliateCode(queryAffiliateCode, hasCurrentAffiliateNoticeConsent(consent), affiliateReferralApproved);
+  if (affiliateCode) incoming.affiliateCode = affiliateCode;
   incoming.referrer = safeReferrer(currentWindow.document.referrer);
 
   const merged = mergeMarketingAttribution(existing, incoming);
@@ -131,6 +162,8 @@ export function sanitizeMarketingEventProperties(input: Record<string, unknown>)
     const raw = input.attribution as Record<string, unknown>;
     const attribution: MarketingAttribution = {};
     for (const key of attributionKeys) {
+      // Affiliate identifiers are restricted to the audit referral payload and never sent to generic analytics events.
+      if (key === "affiliateCode") continue;
       const value = cleanString(raw[key]);
       if (!value) continue;
       attribution[key] = key === "landingPath" ? value.split(/[?#]/, 1)[0] : key === "referrer" ? safeReferrer(value) : value;

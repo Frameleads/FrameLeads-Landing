@@ -3,7 +3,7 @@
 import { WhopElements, Checkout, CheckoutElement } from "@whop/elements-react";
 import { loadWhop } from "@whop/elements";
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { getPrivacyConsent, subscribePrivacyConsent } from "../privacy-consent";
+import { getPrivacyConsent, hasCurrentAffiliateNoticeConsent, isAffiliateCaptureBlockedForCurrentPage, subscribePrivacyConsent } from "../privacy-consent";
 import { referralCheckoutDecision } from "../checkout-embed-policy";
 
 // Whop hosts every payment field. Raw card data must never reach FrameLeads.
@@ -18,6 +18,7 @@ export default function EmbeddedWhopCheckout({
   environment,
   referralHintPresent,
   embedEnabled,
+  directPartnerPreviewEnabled = false,
 }: {
   planId: string;
   returnUrl: string;
@@ -25,27 +26,83 @@ export default function EmbeddedWhopCheckout({
   environment: "production" | "sandbox";
   referralHintPresent: boolean;
   embedEnabled: boolean;
+  directPartnerPreviewEnabled?: boolean;
 }) {
   const [elementsUnavailable, setElementsUnavailable] = useState(false);
   const [whopElements, setWhopElements] = useState<ReturnType<typeof loadWhop> | null>(null);
 
+  const [checkoutFinished, setCheckoutFinished] = useState(false);
+  const [directStatus, setDirectStatus] = useState<"idle" | "sending" | "unavailable">("idle");
+  // Validated by the server separately from ordinary Preview payment plans.
+  // Missing Micro-Pilot or Enterprise Sandbox plans must not silently expose
+  // or block an otherwise isolated, consent-verified Core affiliate test.
+
+  async function beginVerifiedDirectCheckout() {
+    if (!directPartnerPreviewEnabled || directStatus === "sending") return;
+    setDirectStatus("sending");
+    try {
+      const response = await fetch("/api/affiliate/direct/initialize", {
+        method: "POST", credentials: "same-origin", cache: "no-store",
+        headers: { "Content-Type": "application/json", "x-frameleads-intent": "affiliate-direct-v1" },
+        body: JSON.stringify({ plan: "CORE" }),
+      });
+      const result: unknown = await response.json();
+      const next = result && typeof result === "object" && "next" in result ? result.next : null;
+      if (response.ok && next === "/checkout/affiliate/core") {
+        window.location.assign(next);
+        return;
+      }
+    } catch { /* No fallback to an unattributed purchase. */ }
+    setDirectStatus("unavailable");
+  }
+  const consent = useSyncExternalStore(subscribePrivacyConsent, getPrivacyConsent, () => null);
+  // The server saw ?a= before the client selected a privacy preference.
+  // An explicit decline scrubs the URL; do not keep the stale server prop as
+  // evidence that this buyer still has an active partner referral.
+  const activeReferralHint = referralHintPresent && !isAffiliateCaptureBlockedForCurrentPage();
+  const decision = referralCheckoutDecision({
+    rawReferralPresent: activeReferralHint,
+    advertisingConsent: consent?.advertising ?? null,
+    affiliateConsent: hasCurrentAffiliateNoticeConsent(consent),
+  });
+
   useEffect(() => {
-    // Disabled checkouts, referrals routed to hosted checkout and server-side
-    // renders must never initialize third-party payment elements.
-    if (!embedEnabled || !hostedFallback || referralHintPresent) return;
+    // Ineligible raw referrals must never initialize a generic plan payment
+    // that could silently deny commission to the intended partner.
+    if (!embedEnabled || !hostedFallback || decision !== "allowed") return;
     try {
       setWhopElements(loadWhop());
     } catch {
       setElementsUnavailable(true);
     }
-  }, [embedEnabled, hostedFallback, referralHintPresent]);
-  const [checkoutFinished, setCheckoutFinished] = useState(false);
-  const consent = useSyncExternalStore(subscribePrivacyConsent, getPrivacyConsent, () => null);
+  }, [embedEnabled, hostedFallback, decision]);
 
-  const decision = referralCheckoutDecision({
-    rawReferralPresent: referralHintPresent,
-    advertisingConsent: consent?.advertising ?? null,
-  });
+  if (decision === "pending") {
+    return <div role="status" aria-live="polite" className="min-h-[26rem] rounded-xl border border-[#E3E3E3] bg-[#F7F7F7] p-6 text-sm text-[#5C5C5C]">
+      Preparing secure checkout…
+    </div>;
+  }
+
+  if (decision === "await_verified") {
+    return <section role="alert" className="rounded-xl border border-[#FF5A1F]/40 bg-[#FF5A1F]/[0.06] p-6 text-sm leading-relaxed text-[#414141]">
+      <h2 className="text-lg font-semibold text-[#1A1A1A]">Partner-linked checkout needs verification</h2>
+      <p className="mt-3">You selected optional partner attribution. This link has not been connected to a verified Whop affiliate checkout session, so we will not silently redirect you to a purchase that could exclude the partner&apos;s commission.</p>
+      <p className="mt-3">You can change your optional tracking choice and use the normal checkout without partner attribution. Otherwise, a verified partner checkout will be required.</p>
+      {directPartnerPreviewEnabled && <button type="button"
+        disabled={directStatus === "sending"}
+        onClick={beginVerifiedDirectCheckout}
+        className="mt-5 rounded-lg bg-[#FF5A1F] px-4 py-3 font-semibold text-white disabled:opacity-50">
+        {directStatus === "sending" ? "Verifying partner checkout…" : "Continue with verified partner checkout"}
+      </button>}
+      {directStatus === "unavailable" && <p role="status" className="mt-3 text-xs text-[#8C431B]">
+        Partner checkout is not ready. No payment was taken or attribution reassigned.
+      </p>}
+      <button type="button" className="mt-5 rounded-lg border border-[#D5D5D5] px-4 py-3 font-semibold text-[#1A1A1A]"
+        onClick={() => window.dispatchEvent(new Event("frameleads:open-privacy-choices"))}>
+        Review privacy choices
+      </button>
+    </section>;
+  }
 
   if (!hostedFallback) {
     return <section role="status" className="rounded-xl border border-[#E4E4E4] bg-[#F7F7F7] p-6 text-sm leading-relaxed text-[#444444]">
@@ -53,12 +110,6 @@ export default function EmbeddedWhopCheckout({
       <p className="mt-3">This preview has no verified Sandbox checkout link. Payment checkout is unavailable until its Sandbox plan and return settings are configured.</p>
       {returnUrl && <p className="mt-3 text-xs text-[#666666]">Already purchased? <a className="underline underline-offset-4" href={returnUrl}>Sign in to FrameLeads Preview</a></p>}
     </section>;
-  }
-
-  if (decision === "pending") {
-    return <div role="status" aria-live="polite" className="min-h-[26rem] rounded-xl border border-[#E3E3E3] bg-[#F7F7F7] p-6 text-sm text-[#5C5C5C]">
-      Preparing secure checkout…
-    </div>;
   }
 
   if (decision === "hosted") {

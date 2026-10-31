@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { getPrivacyConsent, hasCurrentAffiliateNoticeConsent, requiresAffiliateNoticeChoice, savePrivacyConsent, subscribePrivacyConsent } from "../src/privacy-consent.ts";
 import {
   captureMarketingAttribution,
   initializeMarketingPixels,
@@ -11,36 +12,131 @@ import {
   type MarketingEvent,
 } from "../src/marketing-events.ts";
 
-function withBrowser<T>(run: (events: MarketingEvent[], storage: Map<string, string>, location: { search: string; pathname: string }) => T): T {
+function withBrowser<T>(run: (events: MarketingEvent[], storage: Map<string, string>, location: { search: string; pathname: string; hash: string; hostname: string; href: string }, local: Map<string, string>, fireStorageChange: (newValue: string | null) => void) => T): T {
   const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
   const storage = new Map<string, string>();
+  const local = new Map<string, string>([["frameleads:privacy-consent:v1", JSON.stringify({ analytics: true, advertising: true, savedAt: "2026-10-13T00:00:00.000Z" })]]);
   const events: MarketingEvent[] = [];
-  const location = { search: "", pathname: "/" };
+  const listeners = new Map<string, EventListener>();
+  const location = { search: "", pathname: "/", hash: "", hostname: "frameleads.io", get href() { return `https://frameleads.io${this.pathname}${this.search}${this.hash}`; } };
   const fakeWindow = {
     location,
+    history: { state: null, replaceState: (_state: unknown, _title: string, url: string) => {
+      const parsed = new URL(url, "https://frameleads.io");
+      location.pathname = parsed.pathname;
+      location.search = parsed.search;
+      location.hash = parsed.hash;
+    } },
     document: { referrer: "" },
     localStorage: {
-      getItem: (key: string) => key === "frameleads:privacy-consent:v1"
-        ? JSON.stringify({ analytics: true, advertising: true, savedAt: "2026-10-13T00:00:00.000Z" })
-        : null,
+      getItem: (key: string) => local.get(key) ?? null,
+      setItem: (key: string, value: string) => local.set(key, value),
+      removeItem: (key: string) => local.delete(key),
     },
     sessionStorage: {
       getItem: (key: string) => storage.get(key) ?? null,
       setItem: (key: string, value: string) => storage.set(key, value),
+      removeItem: (key: string) => storage.delete(key),
     },
     dispatchEvent: (event: Event) => {
       events.push((event as CustomEvent<MarketingEvent>).detail);
       return true;
     },
+    addEventListener: (type: string, listener: EventListener) => listeners.set(type, listener),
+    removeEventListener: (type: string) => listeners.delete(type),
   };
   Object.defineProperty(globalThis, "window", { configurable: true, value: fakeWindow });
   try {
-    return run(events, storage, location);
+    return run(events, storage, location, local, (newValue) => listeners.get("storage")?.({ key: "frameleads:privacy-consent:v1", newValue } as StorageEvent as unknown as Event));
   } finally {
     if (previousWindow) Object.defineProperty(globalThis, "window", previousWindow);
     else Reflect.deleteProperty(globalThis, "window");
   }
 }
+
+// One reviewed test notice only. Production requires independently approved public notice text.
+process.env.NEXT_PUBLIC_AFFILIATE_REFERRAL_PRIVACY_APPROVED = "true";
+process.env.NEXT_PUBLIC_AFFILIATE_CONSENT_NOTICE_VERSION = "affiliate-test-v1";
+
+test("a historical advertising opt-in cannot be silently upgraded to affiliate permission", () => {
+  withBrowser((_events, _storage, location) => {
+    location.search = "?a=partner_old&utm_source=affiliate";
+    assert.equal(hasCurrentAffiliateNoticeConsent(getPrivacyConsent()), false);
+    assert.equal(requiresAffiliateNoticeChoice(getPrivacyConsent()), true);
+    assert.equal(captureMarketingAttribution(true).affiliateCode, undefined);
+    assert.equal(new URL(location.href).searchParams.get("a"), "partner_old",
+      "undecided new purpose must not erase a potential referral before choice");
+    savePrivacyConsent({ analytics: true, advertising: true }, "decline");
+    assert.equal(requiresAffiliateNoticeChoice(getPrivacyConsent()), false);
+    assert.equal(hasCurrentAffiliateNoticeConsent(getPrivacyConsent()), false);
+    assert.equal(getPrivacyConsent()?.advertising, true, "unrelated advertising choice remains accepted");
+    assert.equal(new URL(location.href).searchParams.has("a"), false, "declined referral is scrubbed");
+    assert.equal(captureMarketingAttribution(true).affiliateCode, undefined);
+    savePrivacyConsent({ analytics: true, advertising: true });
+    assert.equal(hasCurrentAffiliateNoticeConsent(getPrivacyConsent()), false,
+      "general advertising save is not an explicit affiliate opt-in");
+    assert.equal(captureMarketingAttribution(true).affiliateCode, undefined);
+    savePrivacyConsent({ analytics: true, advertising: true }, "accept");
+    assert.equal(hasCurrentAffiliateNoticeConsent(getPrivacyConsent()), true);
+    assert.equal(captureMarketingAttribution(true).affiliateCode, undefined,
+      "prior refused referral cannot be restored by new consent alone");
+    location.search = "?a=partner_fresh";
+    assert.equal(captureMarketingAttribution(true).affiliateCode, "partner_fresh");
+  });
+});
+
+test("general marketing acceptance never grants compensated affiliate consent", () => {
+  withBrowser((_events, _storage, location) => {
+    location.search = "?a=partner_generic_accept";
+    savePrivacyConsent({ analytics: true, advertising: true });
+    assert.equal(getPrivacyConsent()?.advertising, true);
+    assert.equal(hasCurrentAffiliateNoticeConsent(getPrivacyConsent()), false);
+    assert.equal(new URL(location.href).searchParams.has("a"), false);
+    assert.equal(captureMarketingAttribution(true).affiliateCode, undefined);
+    // Separate, affirmative partner choice is required even if ads were accepted.
+    savePrivacyConsent({ analytics: true, advertising: true }, "accept");
+    assert.equal(hasCurrentAffiliateNoticeConsent(getPrivacyConsent()), true);
+    location.search = "?a=partner_fresh_optin";
+    assert.equal(captureMarketingAttribution(true).affiliateCode, "partner_fresh_optin");
+  });
+});
+
+test("cross-tab partner-only decline removes the stored code without rejecting advertising", () => {
+  withBrowser((_events, storage, location, local, fireStorageChange) => {
+    savePrivacyConsent({ analytics: true, advertising: true }, "accept");
+    location.search = "?a=partner_tab_decline&utm_source=video";
+    assert.equal(captureMarketingAttribution(true).affiliateCode, "partner_tab_decline");
+    const unsubscribe = subscribePrivacyConsent(() => {});
+    const newer = JSON.stringify({
+      analytics: true, advertising: true, affiliateNoticeDeclinedVersion: "affiliate-test-v1",
+      savedAt: "2026-10-28T00:00:00.000Z",
+    });
+    local.set("frameleads:privacy-consent:v1", newer);
+    fireStorageChange(newer);
+    assert.equal(new URL(location.href).searchParams.has("a"), false);
+    assert.equal(JSON.parse(storage.get("frameleads:marketing-attribution:v1")!).affiliateCode, undefined);
+    assert.equal(JSON.parse(storage.get("frameleads:marketing-attribution:v1")!).utmSource, "video");
+    assert.equal(hasCurrentAffiliateNoticeConsent(getPrivacyConsent()), false);
+    unsubscribe();
+  });
+});
+
+test("notice version rotation requires new affirmative consent before another referral", () => {
+  withBrowser((_events, _storage, location) => {
+    location.search = "?a=partner_rotate";
+    savePrivacyConsent({ analytics: true, advertising: true }, "accept");
+    assert.equal(captureMarketingAttribution(true).affiliateCode, "partner_rotate");
+    process.env.NEXT_PUBLIC_AFFILIATE_CONSENT_NOTICE_VERSION = "affiliate-test-v2";
+    try {
+      assert.equal(captureMarketingAttribution(true).affiliateCode, undefined);
+      assert.equal(requiresAffiliateNoticeChoice(getPrivacyConsent()), true);
+      savePrivacyConsent({ analytics: true, advertising: true }, "accept");
+      assert.equal(captureMarketingAttribution(true).affiliateCode, "partner_rotate");
+    } finally {
+      process.env.NEXT_PUBLIC_AFFILIATE_CONSENT_NOTICE_VERSION = "affiliate-test-v1";
+    }
+  });
+});
 
 test("canonical marketing event names are stable and do not include client-side purchase confirmation", () => {
   assert.deepEqual(marketingEventNames, [
@@ -117,4 +213,67 @@ test("attribution merging never replaces known campaign values with empty values
     { utmSource: "newsletter", utmCampaign: "launch", landingPath: "/" },
     { utmSource: "", utmCampaign: undefined, landingPath: "/audit" },
   ), { utmSource: "newsletter", utmCampaign: "launch", landingPath: "/" });
+});
+
+test("advertising withdrawal removes session affiliate data and URL referral while preserving analytics attribution", () => {
+  withBrowser((_events, storage, location) => {
+    savePrivacyConsent({ analytics: true, advertising: true }, "accept");
+    location.search = "?a=partner_alpha&utm_source=partner&utm_campaign=spring";
+    const captured = captureMarketingAttribution(true);
+    assert.equal(captured.affiliateCode, "partner_alpha");
+    assert.equal(captured.utmSource, "partner");
+
+    savePrivacyConsent({ analytics: true, advertising: false });
+    const saved = JSON.parse(storage.get("frameleads:marketing-attribution:v1")!);
+    assert.equal(saved.affiliateCode, undefined);
+    assert.equal(saved.utmSource, "partner");
+    assert.equal(saved.utmCampaign, "spring");
+    assert.equal(new URL(location.href).searchParams.has("a"), false);
+
+    savePrivacyConsent({ analytics: true, advertising: true }, "accept");
+    assert.equal(captureMarketingAttribution().affiliateCode, undefined);
+    location.search = "?a=partner_beta&utm_source=partner";
+    assert.equal(captureMarketingAttribution(true).affiliateCode, "partner_beta");
+  });
+});
+
+test("analytics-only consent retains allowed UTM attribution but never captures affiliate referrals", () => {
+  withBrowser((_events, _storage, location) => {
+    savePrivacyConsent({ analytics: true, advertising: false });
+    location.search = "?a=partner_alpha&utm_source=partner";
+    const attribution = captureMarketingAttribution();
+    assert.equal(attribution.affiliateCode, undefined);
+    assert.equal(attribution.utmSource, "partner");
+  });
+});
+
+test("a consent withdrawal in another tab clears this tab's referral and leaves its UTM attribution", () => {
+  withBrowser((_events, storage, location, local, fireStorageChange) => {
+    savePrivacyConsent({ analytics: true, advertising: true }, "accept");
+    location.search = "?a=partner_other_tab&utm_source=partner";
+    captureMarketingAttribution(true);
+    const unsubscribe = subscribePrivacyConsent(() => {});
+    const changedChoice = JSON.stringify({ analytics: true, advertising: false, savedAt: "2026-10-22T12:00:00.000Z" });
+    local.set("frameleads:privacy-consent:v1", changedChoice);
+    fireStorageChange(changedChoice);
+    const saved = JSON.parse(storage.get("frameleads:marketing-attribution:v1")!);
+    assert.equal(saved.affiliateCode, undefined);
+    assert.equal(saved.utmSource, "partner");
+    assert.equal(new URL(location.href).searchParams.has("a"), false);
+    unsubscribe();
+  });
+});
+
+test("undecided first visit keeps the referral URL but neither stores nor returns affiliate attribution before opt-in", () => {
+  withBrowser((_events, storage, location, local) => {
+    local.delete("frameleads:privacy-consent:v1");
+    location.search = "?a=partner_first&utm_source=partner";
+
+    assert.deepEqual(captureMarketingAttribution(), {});
+    assert.equal(storage.has("frameleads:marketing-attribution:v1"), false);
+    assert.equal(new URL(location.href).searchParams.get("a"), "partner_first");
+
+    savePrivacyConsent({ analytics: true, advertising: true }, "accept");
+    assert.equal(captureMarketingAttribution(true).affiliateCode, "partner_first");
+  });
 });
