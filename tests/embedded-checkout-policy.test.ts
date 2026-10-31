@@ -187,7 +187,9 @@ test("native form uses Whop fields and contains no custom payment or ledger rout
   assert.doesNotMatch(component, /observeMeasurement\("CHECKOUT_CLICK"\)/);
   assert.doesNotMatch(component, /track\(\s*["']purchase/i);
   assert.doesNotMatch(component, /data-whop-affiliate\s*=/);
-  assert.doesNotMatch(page, /brand.?brain|checkout\/continue|receipt|ledger/i);
+  // The server page may describe receipt verification, but must never perform
+  // payment-ledger writes or call Brand Brain directly during rendering.
+  assert.doesNotMatch(page, /checkout\/continue|\bfetch\(|\bsupabase\b|from [^\n]*brand.?brain/i);
   assert.match(page, /hostedFallback=\{config\.hostedFallback \?\? ""\}/);
   assert.match(page, /environment=\{config\.environment \?\? "sandbox"\}/);
   assert.match(page, /embedEnabled=\{config\.available\}/);
