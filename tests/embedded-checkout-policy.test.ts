@@ -148,13 +148,13 @@ test("Core direct affiliate Sandbox CTA is independent of ordinary all-tier Prev
   assert.match(page, /AFFILIATE_REFERRAL_PRIVACY_APPROVED === "true"/);
   assert.match(page, /AFFILIATE_CONSENT_EVIDENCE_ENABLED === "true"/);
   assert.match(page, /WHOP_AFFILIATE_CHECKOUT_ENABLED === "true"/);
-  assert.match(page, /directPartnerPreviewEnabled=\\{directPartnerPreviewEnabled\\}/);
+  assert.match(page, /directPartnerPreviewEnabled=\{directPartnerPreviewEnabled\}/);
   assert.match(checkout, /directPartnerPreviewEnabled = false/);
-  assert.match(checkout, /if \\(decision === "await_verified"\\)/);
+  assert.match(checkout, /if \(decision === "await_verified"\)/);
   assert.ok(checkout.indexOf('if (decision === "await_verified")') < checkout.indexOf('if (!hostedFallback)'),
     "a verified consented referral must reach its Core-only Sandbox CTA even without a generic hosted plan fallback");
-  assert.match(checkout, /if \\(!embedEnabled \\|\\| !hostedFallback \\|\\| decision !== "allowed"\\) return/);
-  assert.doesNotMatch(checkout, /process\\.env\\.NEXT_PUBLIC_FRAMELEADS_DIRECT_AFFILIATE_CHECKOUT_ENABLED/);
+  assert.match(checkout, /if \(!embedEnabled \|\| !hostedFallback \|\| decision !== "allowed"\) return/);
+  assert.doesNotMatch(checkout, /process\.env\.NEXT_PUBLIC_FRAMELEADS_DIRECT_AFFILIATE_CHECKOUT_ENABLED/);
   const unconfigured = embeddedCheckoutPolicy("core", {
     VERCEL_ENV: "preview", WHOP_ENVIRONMENT: "sandbox",
     WHOP_SANDBOX_COMPANY_ID: "biz_6YudF3G7nc8Wdw",
