@@ -34,6 +34,18 @@ export default async function FrameLeadsCheckout({ params, searchParams }: Props
   const referralHintPresent = Object.prototype.hasOwnProperty.call(query, "a")
     || Boolean(jar.get(DIRECT_AFFILIATE_ACTOR_COOKIE)?.value);
   const config = embeddedCheckoutPolicy(plan, process.env);
+  // This is NOT the ordinary multi-plan Sandbox payment switch. The separate
+  // direct-affiliate backend enforces receipt, plan, provider, and nonce again.
+  // Only the fixed Sandbox Core offer may expose the verified affiliate CTA.
+  const directPartnerPreviewEnabled = plan === "core"
+    && process.env.VERCEL_ENV === "preview"
+    && process.env.WHOP_ENVIRONMENT === "sandbox"
+    && process.env.WHOP_SANDBOX_COMPANY_ID === "biz_6YudF3G7nc8Wdw"
+    && process.env.WHOP_CORE_SANDBOX_PLAN_ID === "plan_kgrX8LpuAH2Ba"
+    && process.env.FRAMELEADS_DIRECT_AFFILIATE_CHECKOUT_ENABLED === "true"
+    && process.env.AFFILIATE_REFERRAL_PRIVACY_APPROVED === "true"
+    && process.env.AFFILIATE_CONSENT_EVIDENCE_ENABLED === "true"
+    && process.env.WHOP_AFFILIATE_CHECKOUT_ENABLED === "true";
   const termsVerified = process.env.VERCEL_ENV === "preview"
     ? config.available
     : process.env.FRAMELEADS_WHOP_PLAN_TERMS_VERIFIED === "true";
@@ -51,6 +63,7 @@ export default async function FrameLeadsCheckout({ params, searchParams }: Props
             environment={config.environment ?? "sandbox"}
             referralHintPresent={referralHintPresent}
             embedEnabled={config.available}
+            directPartnerPreviewEnabled={directPartnerPreviewEnabled}
           />
 
           <footer aria-label="FrameLeads policies" className="mt-8 border-t border-[#E8E8E8] pt-5 text-center text-xs leading-5 text-[#666666]">
