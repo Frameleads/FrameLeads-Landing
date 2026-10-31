@@ -18,6 +18,7 @@ export default function EmbeddedWhopCheckout({
   environment,
   referralHintPresent,
   embedEnabled,
+  directPartnerPreviewEnabled = false,
 }: {
   planId: string;
   returnUrl: string;
@@ -25,15 +26,16 @@ export default function EmbeddedWhopCheckout({
   environment: "production" | "sandbox";
   referralHintPresent: boolean;
   embedEnabled: boolean;
+  directPartnerPreviewEnabled?: boolean;
 }) {
   const [elementsUnavailable, setElementsUnavailable] = useState(false);
   const [whopElements, setWhopElements] = useState<ReturnType<typeof loadWhop> | null>(null);
 
   const [checkoutFinished, setCheckoutFinished] = useState(false);
   const [directStatus, setDirectStatus] = useState<"idle" | "sending" | "unavailable">("idle");
-  const directPartnerPreviewEnabled = environment === "sandbox"
-    && planId === "plan_kgrX8LpuAH2Ba"
-    && process.env.NEXT_PUBLIC_FRAMELEADS_DIRECT_AFFILIATE_CHECKOUT_ENABLED === "true";
+  // Validated by the server separately from ordinary Preview payment plans.
+  // Missing Micro-Pilot or Enterprise Sandbox plans must not silently expose
+  // or block an otherwise isolated, consent-verified Core affiliate test.
 
   async function beginVerifiedDirectCheckout() {
     if (!directPartnerPreviewEnabled || directStatus === "sending") return;
@@ -75,14 +77,6 @@ export default function EmbeddedWhopCheckout({
     }
   }, [embedEnabled, hostedFallback, decision]);
 
-  if (!hostedFallback) {
-    return <section role="status" className="rounded-xl border border-[#E4E4E4] bg-[#F7F7F7] p-6 text-sm leading-relaxed text-[#444444]">
-      <h2 className="text-lg font-semibold text-[#1A1A1A]">Sandbox checkout is not configured</h2>
-      <p className="mt-3">This preview has no verified Sandbox checkout link. Payment checkout is unavailable until its Sandbox plan and return settings are configured.</p>
-      {returnUrl && <p className="mt-3 text-xs text-[#666666]">Already purchased? <a className="underline underline-offset-4" href={returnUrl}>Sign in to FrameLeads Preview</a></p>}
-    </section>;
-  }
-
   if (decision === "pending") {
     return <div role="status" aria-live="polite" className="min-h-[26rem] rounded-xl border border-[#E3E3E3] bg-[#F7F7F7] p-6 text-sm text-[#5C5C5C]">
       Preparing secure checkout…
@@ -107,6 +101,14 @@ export default function EmbeddedWhopCheckout({
         onClick={() => window.dispatchEvent(new Event("frameleads:open-privacy-choices"))}>
         Review privacy choices
       </button>
+    </section>;
+  }
+
+  if (!hostedFallback) {
+    return <section role="status" className="rounded-xl border border-[#E4E4E4] bg-[#F7F7F7] p-6 text-sm leading-relaxed text-[#444444]">
+      <h2 className="text-lg font-semibold text-[#1A1A1A]">Sandbox checkout is not configured</h2>
+      <p className="mt-3">This preview has no verified Sandbox checkout link. Payment checkout is unavailable until its Sandbox plan and return settings are configured.</p>
+      {returnUrl && <p className="mt-3 text-xs text-[#666666]">Already purchased? <a className="underline underline-offset-4" href={returnUrl}>Sign in to FrameLeads Preview</a></p>}
     </section>;
   }
 
