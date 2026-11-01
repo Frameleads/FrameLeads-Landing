@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { observeMeasurement } from "../measurement";
 
 type ProofStep = {
   number: string;
@@ -90,6 +91,8 @@ export default function ProductProofHowItWorks({ onMicroPilot }: { onMicroPilot:
 
   function selectStep(index: number) {
     if (index === active) return;
+    // Only actual visitor selection, never the preselected/default screenshot.
+    observeMeasurement("HOW_IT_WORKS_INTERACTED");
     setTransitioning(true);
     window.setTimeout(() => {
       setActive(index);
@@ -122,7 +125,7 @@ export default function ProductProofHowItWorks({ onMicroPilot }: { onMicroPilot:
         </div>
 
         <div id="proof-panel" role="tabpanel" aria-labelledby={`proof-tab-${active}`} className="min-w-0 pt-1" key={current.number}>
-          <ScreenshotVisual image={current} active={active === 3} transitioning={transitioning} triggerRef={triggerRef} onOpen={() => setLightboxOpen(true)} />
+          <ScreenshotVisual image={current} active={active === 3} transitioning={transitioning} triggerRef={triggerRef} onOpen={() => { observeMeasurement("HOW_IT_WORKS_INTERACTED"); setLightboxOpen(true); }} />
         </div>
       </div>
 
@@ -134,7 +137,7 @@ export default function ProductProofHowItWorks({ onMicroPilot }: { onMicroPilot:
                 <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg border font-mono text-xs ${active === index ? "border-[#FF5A1F]/40 bg-[#FF5A1F]/10 text-[#FF5A1F]" : "border-white/10 bg-white/[0.03] text-white/50"}`}>{step.number}</span>
                 <span className="min-w-0 flex-1"><span className="flex min-h-8 items-center"><span className={`text-sm font-semibold sm:text-base ${active === index ? "text-white" : "text-white/75"}`}>{step.title}</span></span><span id={`proof-mobile-description-${index}`} aria-hidden={active !== index} className={`grid transition-[grid-template-rows,opacity] duration-200 ease-out motion-reduce:transition-none ${active === index ? "mt-1 grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}><span className="overflow-hidden text-sm leading-relaxed text-[#929292]">{step.description}</span></span></span>
               </button>
-              {active === index && <div id="proof-mobile-panel" role="region" aria-labelledby={`proof-mobile-step-${index}`} className="min-w-0 pt-3" key={`mobile-${current.number}`}><ScreenshotVisual image={current} active={active === 3} transitioning={transitioning} triggerRef={triggerRef} onOpen={() => setLightboxOpen(true)} /></div>}
+              {active === index && <div id="proof-mobile-panel" role="region" aria-labelledby={`proof-mobile-step-${index}`} className="min-w-0 pt-3" key={`mobile-${current.number}`}><ScreenshotVisual image={current} active={active === 3} transitioning={transitioning} triggerRef={triggerRef} onOpen={() => { observeMeasurement("HOW_IT_WORKS_INTERACTED"); setLightboxOpen(true); }} /></div>}
             </div>
           ))}
         </div>
