@@ -106,7 +106,7 @@ export function getMeasurementAttribution(): Attribution {
 
     const params = new URLSearchParams(window.location.search);
     for (const key of attributionFields) {
-      if (["anonymous_id", "session_id", "fbp", "fbc", "ttp", "referrer_host", "landing_path"].includes(key)) continue;
+      if (["anonymous_id", "session_id", "measurement_origin", "fbp", "fbc", "ttp", "referrer_host", "landing_path"].includes(key)) continue;
       if (!consent.advertising && ["fbclid", "ttclid"].includes(key)) continue;
       const v = bounded(params.get(key), key);
       if (v) attribution[key] = v;
