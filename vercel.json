@@ -1,0 +1,4 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "ignoreCommand": "if [ \"$VERCEL_GIT_COMMIT_REF\" = \"phase-c/measurement-only-20261101\" ]; then echo 'Phase C measurement development: skip all Vercel builds'; exit 0; else exit 1; fi"
+}
