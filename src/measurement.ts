@@ -1,8 +1,8 @@
 import { getPrivacyConsent, hasAdvertisingConsent } from "./privacy-consent.ts";
 
-export const browserEvents = ["PAGE_VIEW", "VSL_ENGAGED", "AUDIT_STARTED", "AUDIT_COMPLETED", "PRICING_VIEW", "CHECKOUT_CLICK"] as const;
+export const browserEvents = ["PAGE_VIEW", "VSL_ENGAGED", "AUDIT_STARTED", "AUDIT_COMPLETED", "PRICING_VIEW", "CHECKOUT_CLICK", "HOW_IT_WORKS_INTERACTED"] as const;
 export type BrowserEvent = (typeof browserEvents)[number];
-export const attributionFields = ["anonymous_id", "session_id", "source", "medium", "utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "campaign_id", "adset_id", "ad_id", "creative_id", "creative_concept", "creative_angle", "creative_format", "landing_variant", "referrer_host", "landing_path", "fbclid", "fbp", "fbc", "ttclid", "ttp"] as const;
+export const attributionFields = ["anonymous_id", "session_id", "source", "medium", "utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "campaign_id", "adset_id", "ad_id", "creative_id", "creative_concept", "creative_angle", "creative_format", "landing_variant", "measurement_origin", "referrer_host", "landing_path", "fbclid", "fbp", "fbc", "ttclid", "ttp"] as const;
 export type Attribution = Partial<Record<(typeof attributionFields)[number], string>>;
 export const opaqueId = /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/;
 type Pixel = ((...args: unknown[]) => void) & { callMethod?: (...args: unknown[]) => void; queue: unknown[][]; push?: Pixel; loaded: boolean; version: string };
@@ -12,11 +12,24 @@ let memorySession: { id: string; last: number; attribution: Attribution } | unde
 const emitted = new Set<string>();
 const emittedAds = new Set<string>();
 
+/** Opt-in QA flag, scoped to this browser tab. It is self-declared and never proves owner identity. */
+const ownerTestKey = "frameleads:b71:owner-test";
+export function isDeclaredOwnerTest(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const mode = new URLSearchParams(window.location.search).get("fl_owner_test");
+    if (mode === "1") window.sessionStorage.setItem(ownerTestKey, "1");
+    if (mode === "0") window.sessionStorage.removeItem(ownerTestKey);
+    return window.sessionStorage.getItem(ownerTestKey) === "1";
+  } catch { return false; }
+}
+
 function bounded(value: unknown, key: string): string | undefined {
   if (typeof value !== "string") return;
   const v = key === "landing_path" ? value.trim().split(/[?#]/)[0] : value.trim();
   const max = key === "landing_path" ? 512 : key === "referrer_host" ? 253 : ["fbclid", "fbp", "fbc", "ttclid", "ttp"].includes(key) ? 256 : ["utm_campaign", "utm_content", "utm_term", "creative_concept", "creative_angle"].includes(key) ? 160 : 128;
   if (!v || v.length > max || /[\x00-\x1f<>@]|%40|https?:\/\//i.test(v)) return;
+  if (key === "measurement_origin" && v !== "owner_test") return;
   if (["anonymous_id", "session_id"].includes(key) && !opaqueId.test(v)) return;
   if (["campaign_id", "adset_id", "ad_id", "creative_id", "fbclid", "fbp", "fbc", "ttclid", "ttp"].includes(key) && !/^[a-zA-Z0-9._:-]+$/.test(v)) return;
   if (key === "landing_path" && !/^\/(?!\/)/.test(v)) return;
@@ -86,6 +99,11 @@ export function getMeasurementAttribution(): Attribution {
       } catch { /* No referrer is normal. */ }
     }
 
+    // The owner marker is local-only until consented attribution is sent.
+    // Never trust this field for purchases, entitlements, or canonical outcomes.
+    delete attribution.measurement_origin;
+    if (isDeclaredOwnerTest()) attribution.measurement_origin = "owner_test";
+
     const params = new URLSearchParams(window.location.search);
     for (const key of attributionFields) {
       if (["anonymous_id", "session_id", "fbp", "fbc", "ttp", "referrer_host", "landing_path"].includes(key)) continue;
@@ -121,7 +139,7 @@ export async function observationEventId(id: string) { return digest(jsonArray([
 export async function providerEventId(provider: "META" | "TIKTOK", canonicalId: string) { return digest(jsonArray(["b7.v1", "PAID_CONVERSION", jsonArray([provider, canonicalId, 1])])); }
 
 export function initializeMeasurementPixels() {
-  if (typeof window === "undefined" || !hasAdvertisingConsent()) return;
+  if (typeof window === "undefined" || !hasAdvertisingConsent() || isDeclaredOwnerTest()) return;
   const w = window as Browser;
   w.__b71Pixels ??= new Set();
   try {
@@ -150,7 +168,7 @@ export function initializeMeasurementPixels() {
 
 /** Browser and server-side copies use provider-scoped IDs when both are intended. */
 export function sendPixelCopy(provider: "META" | "TIKTOK", eventName: string, eventId: string) {
-  if (typeof window === "undefined" || !hasAdvertisingConsent() || !/^[a-f0-9]{64}$/.test(eventId)) return;
+  if (typeof window === "undefined" || !hasAdvertisingConsent() || isDeclaredOwnerTest() || !/^[a-f0-9]{64}$/.test(eventId)) return;
   try {
     const w = window as Browser;
     if (provider === "META" && process.env.NEXT_PUBLIC_META_TRACKING_ENABLED === "true" && /^\d{5,32}$/.test(process.env.NEXT_PUBLIC_META_PIXEL_ID ?? "")) w.fbq?.(["PageView", "InitiateCheckout", "Lead", "Purchase"].includes(eventName) ? "track" : "trackCustom", eventName, {}, { eventID: eventId });
@@ -158,7 +176,7 @@ export function sendPixelCopy(provider: "META" | "TIKTOK", eventName: string, ev
   } catch { /* Optional pixel failures never block product use. */ }
 }
 
-const mapping: Record<BrowserEvent, string> = { PAGE_VIEW: "PageView", VSL_ENGAGED: "FrameLeadsVslEngaged", AUDIT_STARTED: "AuditStarted", AUDIT_COMPLETED: "AuditCompleted", PRICING_VIEW: "FrameLeadsPricingView", CHECKOUT_CLICK: "FrameLeadsCheckoutClick" };
+const mapping: Record<BrowserEvent, string> = { PAGE_VIEW: "PageView", VSL_ENGAGED: "FrameLeadsVslEngaged", AUDIT_STARTED: "AuditStarted", AUDIT_COMPLETED: "AuditCompleted", PRICING_VIEW: "FrameLeadsPricingView", CHECKOUT_CLICK: "FrameLeadsCheckoutClick", HOW_IT_WORKS_INTERACTED: "FrameLeadsHowItWorksInteracted" };
 export function observeMeasurement(name: BrowserEvent, once = true) {
   if (typeof window === "undefined" || !browserEvents.includes(name)) return;
   const consent = getPrivacyConsent();
@@ -168,7 +186,9 @@ export function observeMeasurement(name: BrowserEvent, once = true) {
     if (consent.analytics && (!attribution.anonymous_id || !attribution.session_id)) return;
     const key = [attribution.session_id ?? "", window.location.pathname, name].join(":");
     let sendAnalytics = consent.analytics;
-    let sendAdvertising = consent.advertising;
+    // User-declared QA traffic must not populate advertising pixels. Proof
+    // interaction is first-party analytics only, never an ad conversion.
+    let sendAdvertising = consent.advertising && attribution.measurement_origin !== "owner_test" && name !== "HOW_IT_WORKS_INTERACTED";
     if (name === "PAGE_VIEW") {
       const browser = window as Browser;
       sendAnalytics = consent.analytics && browser.__b71LastAnalyticsPageViewPath !== window.location.pathname;
