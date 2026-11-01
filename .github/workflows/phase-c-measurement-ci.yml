@@ -24,3 +24,8 @@ jobs:
         run: npx --no-install tsc --noEmit
       - name: Lint touched files
         run: npx --no-install eslint src/measurement.ts src/components/ProductProofHowItWorks.tsx tests/measurement.test.ts
+      - name: Verify isolated production-style Next.js build without provider keys
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
+          NODE_OPTIONS: --max-old-space-size=4096
+        run: npm run build
