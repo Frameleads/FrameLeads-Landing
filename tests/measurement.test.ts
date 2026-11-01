@@ -6,13 +6,16 @@ const wait=()=>new Promise(resolve=>setTimeout(resolve,20));
 test('strict observation contract accepts opaque PAGE_VIEW and rejects canonical events, unknown fields and PII',()=>{
  const e={observationId:randomUUID(),eventName:'PAGE_VIEW',occurredAt:new Date().toISOString(),attribution:{anonymous_id:randomUUID(),session_id:randomUUID(),utm_source:'META'}};
  assert.equal(validateObservation(e)?.attribution.utm_source,'meta');
- for(const eventName of ['PRICING_VIEW','CHECKOUT_CLICK'])assert.equal(validateObservation({...e,eventName})?.eventName,eventName);
+ for(const eventName of ['PRICING_VIEW','CHECKOUT_CLICK','HOW_IT_WORKS_INTERACTED'])assert.equal(validateObservation({...e,eventName})?.eventName,eventName);
  for(const eventName of ['CAPTURED_LEAD','QUALIFIED_LEAD','PURCHASE','FIRST_GOVERNED_DECISION'])assert.equal(validateObservation({...e,eventName}),null);
  assert.equal(validateObservation({...e,prospect_id:randomUUID()}),null);
  assert.equal(validateObservation({...e,attribution:{...e.attribution,answers:{private:true}}}),null);
  assert.equal(validateObservation({...e,attribution:{...e.attribution,anonymous_id:'private@example.com'}}),null);
  assert.equal(validateObservation({...e,occurredAt:'2020-01-01'}),null);
  assert.deepEqual(normalizeAttribution({utm_term:'private@example.com',campaign_id:'x'.repeat(129),landing_path:'/audit?email=private@example.com',fbclid:'click_fixture'}),{landing_path:'/audit',fbclid:'click_fixture'});
+ assert.equal(validateObservation({...e,attribution:{...e.attribution,measurement_origin:'owner_test'}})?.attribution.measurement_origin,'owner_test');
+ assert.equal(validateObservation({...e,attribution:{...e.attribution,measurement_origin:'external_buyer'}}),null);
+ assert.equal(validateObservation({...e,attribution:{...e.attribution,measurement_origin:'owner_test',answers:'private'}}),null);
 });
 test('provider ID derivation matches PostgreSQL canonical byte representation; different logical events remain distinct',async()=>{
  const id=randomUUID(),json=(a:unknown[])=>'['+a.map(x=>JSON.stringify(x)).join(', ')+']';const sha=(v:string)=>createHash('sha256').update(v).digest('hex');
@@ -53,6 +56,20 @@ test('consent-gated identifiers, 30-minute session rotation, cookies, pixel fail
     ['CHECKOUT_CLICK','PRICING_VIEW'],'pricing exposure and checkout clicks remain distinct and deduplicated');
   const id=await providerEventId('META','a'.repeat(64));sendPixelCopy('META','Lead',id);sendPixelCopy('META','Lead',id);assert.equal((pixelCalls.at(-1)?.[3] as {eventID:string}).eventID,id);
   process.env.NEXT_PUBLIC_META_TRACKING_ENABLED='false';const before=pixelCalls.length;sendPixelCopy('META','Lead',id);assert.equal(pixelCalls.length,before);
+  // Explicit owner-test mode is scoped to the tab; it does not include PII or
+  // grant payment authority. Pixel events are suppressed but consented analytics
+  // can retain separately labeled observations for operational QA.
+  location.search='?fl_owner_test=1&utm_source=meta';
+  assert.equal(getMeasurementAttribution().measurement_origin,'owner_test');
+  const beforeOwnerPixels=pixelCalls.length, beforeOwnerRequests=requests.length;
+  initializeMeasurementPixels();sendPixelCopy('META','Lead',id);
+  observeMeasurement('HOW_IT_WORKS_INTERACTED');await wait();
+  assert.equal(pixelCalls.length,beforeOwnerPixels);
+  assert.equal(requests.length,beforeOwnerRequests+1);
+  assert.equal((requests.at(-1) as {eventName:string;attribution:{measurement_origin:string}}).eventName,'HOW_IT_WORKS_INTERACTED');
+  assert.equal((requests.at(-1) as {attribution:{measurement_origin:string}}).attribution.measurement_origin,'owner_test');
+  location.search='?fl_owner_test=0';
+  assert.equal(getMeasurementAttribution().measurement_origin,undefined,'owner-test marker clears explicitly');
   const browserObservationCount=requests.length;observeMeasurement('PURCHASE' as never);await wait();assert.equal(requests.length,browserObservationCount);
   savePrivacyConsent({analytics:true,advertising:false});
   const analyticsOnly=getMeasurementAttribution();assert.equal(analyticsOnly.utm_source,'meta');for(const key of ['fbp','fbc','fbclid','ttp','ttclid'])assert.equal(analyticsOnly[key as keyof typeof analyticsOnly],undefined);
