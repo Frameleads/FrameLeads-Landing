@@ -13,41 +13,9 @@ const progressSteps = ["Read the incoming reply", "Check conversation context", 
 const revealSections = ["AI interpretation", "Relevant context", "Seller rule", "Intent and governance", "Recommended action", "Final safeguard"] as const;
 const REVEAL_INTERVAL_MS = 640;
 
-const gatewayNodes = [
-  { label: "Incoming reply", icon: "M4 5h16v11H8l-4 4V5Z" },
-  { label: "Prospect context", icon: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4 21a8 8 0 0 1 16 0" },
-  { label: "Intent signals", icon: "M4 18V6m0 12h16M7 15l4-4 3 2 6-7" },
-  { label: "Seller rules", icon: "M12 2 20 6v5c0 5-3.5 8-8 11-4.5-3-8-6-8-11V6l8-4Z" },
-  { label: "Governance & approval", icon: "M8 11a4 4 0 1 0 8 0 4 4 0 0 0-8 0ZM3 21a9 9 0 0 1 18 0m-9-6v3" },
-  { label: "Recommended action", icon: "M4 12h15m-6-6 6 6-6 6" },
-] as const;
-
-function DecisionNetworkVisual({ reducedMotion }: { reducedMotion: boolean }) {
-  const lineClass = "fill-none stroke-[#8A4A2D]/55 stroke-[1.2]";
-  return <div className="relative mx-auto mt-7 max-w-[900px] rounded-3xl border border-white/[.08] bg-[linear-gradient(rgba(255,255,255,.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.025)_1px,transparent_1px),radial-gradient(ellipse_at_50%_48%,rgba(255,90,31,.1),transparent_48%),#101011] bg-[size:34px_34px,34px_34px,auto,auto] px-4 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,.035)] sm:px-7 sm:py-7 md:h-[390px] md:px-0 md:py-0">
-    <svg aria-hidden="true" viewBox="0 0 900 390" preserveAspectRatio="none" className="pointer-events-none absolute inset-0 hidden h-full w-full md:block">
-      <path className={lineClass} d="M145 78 C250 78 275 145 382 169"/><path className={lineClass} d="M300 52 C350 75 370 112 414 146"/><path className={lineClass} d="M145 310 C250 310 290 246 382 220"/>
-      <path className={lineClass} d="M755 78 C650 78 625 145 518 169"/><path className={lineClass} d="M600 52 C550 75 530 112 486 146"/><path className={lineClass} d="M755 310 C650 310 610 246 518 220"/>
-      {!reducedMotion && <g className="text-[#FF7C49]" fill="none" stroke="currentColor" strokeWidth="2.2" strokeDasharray="4 210" strokeLinecap="round">
-        <path d="M145 78 C250 78 275 145 382 169"><animate attributeName="stroke-dashoffset" values="220;0" dur="4s" repeatCount="indefinite"/></path>
-        <path d="M145 310 C250 310 290 246 382 220"><animate attributeName="stroke-dashoffset" values="220;0" dur="5s" begin="1.2s" repeatCount="indefinite"/></path>
-        <path d="M518 169 C625 145 650 78 755 78"><animate attributeName="stroke-dashoffset" values="0;220" dur="4.5s" begin=".7s" repeatCount="indefinite"/></path>
-        <path d="M518 220 C610 246 650 310 755 310"><animate attributeName="stroke-dashoffset" values="0;220" dur="5.2s" begin="1.8s" repeatCount="indefinite"/></path>
-      </g>}
-    </svg>
-    <div className="relative z-10 grid grid-cols-2 gap-3 md:absolute md:inset-0 md:block">
-      {gatewayNodes.map((node, index) => <div key={node.label} className={`flex min-h-[58px] min-w-0 items-center gap-2 rounded-xl border border-white/[.1] bg-[#19191a]/95 px-2.5 py-2 shadow-[0_8px_25px_rgba(0,0,0,.22)] sm:gap-3 sm:px-3.5 ${index < 3 ? "order-1" : "order-3"} ${index === 0 ? "md:absolute md:left-[5%] md:top-[12%] md:w-[175px]" : index === 1 ? "md:absolute md:left-[32%] md:top-[5%] md:w-[175px]" : index === 2 ? "md:absolute md:left-[5%] md:bottom-[12%] md:w-[175px]" : index === 3 ? "md:absolute md:right-[5%] md:bottom-[12%] md:w-[175px]" : index === 4 ? "md:absolute md:right-[32%] md:top-[5%] md:w-[175px]" : "md:absolute md:right-[5%] md:top-[12%] md:w-[175px]"}`}>
-        <span aria-hidden="true" className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-[#FF5A1F]/25 bg-[#FF5A1F]/[.08] text-[#FF956A]"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d={node.icon}/></svg></span>
-        <span className="min-w-0 text-[11px] font-medium leading-tight text-[#D5D2D1] sm:text-xs">{node.label}</span>
-      </div>)}
-      <div className="order-2 col-span-2 flex flex-col items-center py-2 md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:py-0">
-        <div aria-hidden="true" className="relative grid h-[104px] w-[104px] place-items-center rounded-[25px] border border-[#FF5A1F]/45 bg-[radial-gradient(circle_at_50%_35%,rgba(255,105,52,.18),transparent_62%),linear-gradient(145deg,#242120,#151516)] shadow-[0_0_34px_rgba(255,90,31,.14),inset_0_1px_0_rgba(255,255,255,.08)] transition-[transform,box-shadow,border-color] duration-300 group-hover/gateway:scale-[.97] group-hover/gateway:translate-y-[2px] group-hover/gateway:border-[#FF713C]/80 group-hover/gateway:shadow-[0_0_46px_rgba(255,90,31,.28),inset_0_5px_12px_rgba(0,0,0,.34)] group-active/gateway:scale-[.94] group-active/gateway:translate-y-[4px] motion-reduce:transition-none motion-reduce:transform-none">
-          <Image src="/logo.png" alt="" aria-hidden="true" width={56} height={56} sizes="56px" className="h-14 w-14 rounded-xl object-cover transition-[filter,transform] duration-300 group-hover/gateway:brightness-125"/>
-        </div>
-        <span className="mt-2 text-xs font-semibold text-white">Explore decisions</span>
-        <p className="mt-9 max-w-[200px] text-center font-mono text-[9px] uppercase tracking-[.14em] text-[#969194] md:mt-10">Decision intelligence core</p>
-      </div>
-    </div>
+function DecisionNetworkVisual() {
+  return <div className="mx-auto mt-7 w-full max-w-[900px] min-w-0">
+    <Image src="/images/neon_orange_tech_network_hub.png" alt="FrameLeads decision intelligence network" width={1916} height={821} sizes="(max-width: 900px) 100vw, 900px" unoptimized className="block h-auto w-full" />
   </div>;
 }
 
@@ -299,7 +267,7 @@ export default function ReplyDecisionPreview() {
         <button type="button" onClick={openScenarios} className="mb-4 inline-flex min-h-11 items-center justify-center rounded-xl border border-[#FF5A1F]/40 bg-[#FF5A1F]/[.09] px-5 py-2.5 text-sm font-semibold text-[#FFD0BC] shadow-[0_0_22px_rgba(255,90,31,.08)] transition-colors hover:border-[#FF5A1F]/70 hover:bg-[#FF5A1F]/[.14] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F]">Explore 3 reply scenarios <span aria-hidden="true" className="ml-2">↓</span></button>
         <details ref={gatewayRef} onToggle={(event) => { if (event.currentTarget.open) window.requestAnimationFrame(() => scenarioRef.current?.scrollIntoView({ behavior: reducedMotion ? "instant" : "smooth", block: "start" })); }} className="group/gateway min-w-0" data-testid="decision-gateway">
           <summary onClick={(event) => { event.preventDefault(); openScenarios(); }} aria-label="Explore FrameLeads reply decision scenarios" className="group/gateway block cursor-pointer list-none rounded-3xl outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F] focus-visible:ring-offset-4 focus-visible:ring-offset-[#131313] [&::-webkit-details-marker]:hidden">
-            <DecisionNetworkVisual reducedMotion={Boolean(reducedMotion)} />
+            <DecisionNetworkVisual />
           </summary>
           <div className="pt-7">
       <section ref={scenarioRef} className="scroll-mt-5" aria-labelledby="choose-scenario">

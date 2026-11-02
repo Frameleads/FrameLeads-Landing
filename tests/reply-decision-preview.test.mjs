@@ -88,11 +88,13 @@ test("decision gateway provides an accessible inline disclosure and matching CTA
   assert.match(component, /<details ref=\{gatewayRef\}/);
   assert.match(component, /<summary onClick=\{\(event\) => \{ event\.preventDefault\(\); openScenarios\(\); \}\} aria-label="Explore FrameLeads reply decision scenarios"/);
   assert.match(component, /gatewayRef\.current\.open = true/);
-  assert.match(component, /src="\/logo\.png"/);
+  assert.match(component, /src="\/images\/neon_orange_tech_network_hub\.png"/);
+  assert.match(component, /width=\{1916\} height=\{821\}/);
+  assert.match(component, /sizes="\(max-width: 900px\) 100vw, 900px" unoptimized/);
+  assert.match(component, /className="block h-auto w-full"/);
   for (const concept of ["Incoming reply", "Prospect context", "Intent signals", "Seller rules", "Governance & approval", "Recommended action"]) {
     assert.ok(component.includes(concept), "Missing gateway concept: " + concept);
   }
-  assert.match(component, /prefers-reduced-motion|reducedMotion \? "/);
 });
 
 
