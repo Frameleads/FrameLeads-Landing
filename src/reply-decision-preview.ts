@@ -15,6 +15,9 @@ export type ReplyScenario = {
   reply: string;
   company: string;
   role: string;
+  prospectName: string;
+  prospectEmail: string;
+  subject: string;
   pain: string;
   currentWorkaround: string;
   intent: string;
@@ -36,7 +39,8 @@ export const replyScenarios: readonly ReplyScenario[] = [
     title: "The polite maybe",
     teaser: "Is this genuine interest, or a brush-off?",
     reply: "Sounds interesting. Send me more information and I'll take a look.",
-    company: "Northstar Studio", role: "Founder · B2B consultancy",
+    company: "Northstar Studio", role: "Founder",
+    prospectName: "Maya Chen", prospectEmail: "maya@northstar-studio.example", subject: "Re: Working together",
     pain: "A positive-sounding reply is easy to mistake for a sales-ready opportunity.",
     currentWorkaround: "The founder rereads the thread, checks the prospect and decides whether to qualify or push for a meeting.",
     intent: "Possible interest / requesting resources",
@@ -60,7 +64,8 @@ export const replyScenarios: readonly ReplyScenario[] = [
     title: "The pricing question",
     teaser: "A serious question that needs context and authority.",
     reply: "Before we book, can you clarify the pricing and what is included?",
-    company: "Acme Advisory", role: "Managing partner · Agency prospect",
+    company: "Acme Advisory", role: "Managing partner",
+    prospectName: "Daniel Brooks", prospectEmail: "daniel@acme-advisory.example", subject: "Re: Your proposal",
     pain: "Someone must understand the commercial context before making a promise.",
     currentWorkaround: "The founder checks the offer, prior discussion and discount rules before responding.",
     intent: "Pricing inquiry",
@@ -84,7 +89,8 @@ export const replyScenarios: readonly ReplyScenario[] = [
     title: "The security handoff",
     teaser: "Interest is real, but who owns the next move?",
     reply: "We're interested, but our security team needs to review your setup before we can proceed.",
-    company: "Vertex Partners", role: "Operations lead · B2B agency",
+    company: "Vertex Partners", role: "Operations lead",
+    prospectName: "Nadia Hassan", prospectEmail: "nadia@vertex-partners.example", subject: "Re: Next steps",
     pain: "The prospect is waiting for specialist information, not another generic sales follow-up.",
     currentWorkaround: "The SDR forwards the message and hopes the right internal owner responds.",
     intent: "Security review / stakeholder handoff",

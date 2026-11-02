@@ -52,3 +52,19 @@ test("conversion path uses existing pilot and optional audit without altering ho
   assert.match(homepage, /AuditModal/);
   assert.doesNotMatch(homepage, /ReplyDecisionPreview/);
 });
+
+test("fictional inbox personas use locally hosted AI-generated portraits and explicit disclosure", () => {
+  assert.match(component, /reply-preview-prospects\.jpg/);
+  assert.match(component, /Fictional prospect/);
+  for (const name of ["Maya Chen", "Daniel Brooks", "Nadia Hassan"]) assert.ok(source.includes(name));
+  assert.match(component, /Illustrative inbound email/);
+});
+
+test("sample decision reveal animates after 2.6 seconds, supports replay and reduced motion", () => {
+  assert.match(component, /\[650, 1300, 1950, 2600\]/);
+  assert.match(component, /useReducedMotion/);
+  assert.match(component, /AnimatePresence/);
+  assert.match(component, /Skip animation/);
+  assert.match(component, /setSequence\(\(current\) => current \+ 1\)/);
+  assert.match(component, /not a live AI analysis/);
+});
