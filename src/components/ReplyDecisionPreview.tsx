@@ -11,6 +11,8 @@ const card = "min-w-0 rounded-2xl border border-white/[.09] bg-[#191919] shadow-
 const titleClass = "text-xl font-semibold leading-snug tracking-[-.025em] sm:text-[23px]";
 const progressSteps = ["Read the incoming reply", "Check conversation context", "Match the seller's rules", "Choose a controlled next step"] as const;
 const revealSections = ["AI interpretation", "Relevant context", "Why human review / seller rule", "Intent", "Governance", "Recommended action", "Final safeguard"] as const;
+// After the 2.6s illustration, deliver one meaningful module every 640ms.
+const REVEAL_INTERVAL_MS = 640;
 
 function ProspectPortrait({ scenario, size = "md" }: { scenario: ReplyScenario; size?: "sm" | "md" }) {
   const portrait = "/images/reply-preview-prospects.jpg";
@@ -22,36 +24,68 @@ function ProspectPortrait({ scenario, size = "md" }: { scenario: ReplyScenario; 
 }
 
 function DecisionProcessing({ stage, onSkip }: { stage: number; onSkip: () => void }) {
-  return <div className="flex min-h-[360px] flex-col justify-center px-5 py-7 sm:px-8" role="status" aria-label="Illustrative decision sequence">
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <p className={mono + " text-[#FF956A]"}>Illustrating the decision path</p>
-      <button type="button" onClick={onSkip} className="rounded-md border border-white/[.14] px-3 py-2 text-xs text-[#CBCBCD] transition-colors hover:border-[#FF5A1F]/50 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F]">Skip animation</button>
+  return <div className="flex min-h-[490px] flex-col justify-center px-4 py-6 sm:px-6 lg:min-h-[570px]" role="status" aria-label="Illustrative decision sequence">
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <p className={mono + " text-[#FF956A]"}>Building your sample decision packet</p>
+      <button type="button" onClick={onSkip} className="rounded-md border border-white/[.14] px-3 py-2 text-xs text-[#CBCBCD] hover:border-[#FF5A1F]/50 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F]">Skip animation</button>
     </div>
-    <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-white/[.08]">
-      <motion.div className="h-full rounded-full bg-[#FF5A1F] shadow-[0_0_14px_rgba(255,90,31,.5)]" animate={{ width: `${(stage + 1) * 25}%` }} transition={{ duration: .3, ease: "easeOut" }} />
+    <div className="mt-6 flex flex-col items-center gap-4 text-center">
+      <motion.div className="relative grid h-24 w-24 place-items-center rounded-2xl border border-[#FF5A1F]/30 bg-[#171718]"
+        animate={{ boxShadow: ["0 0 0px rgba(255,90,31,0)", "0 0 36px rgba(255,90,31,.52)", "0 0 0px rgba(255,90,31,0)"], borderColor: ["rgba(255,90,31,.24)", "rgba(255,90,31,.76)", "rgba(255,90,31,.24)"] }}
+        transition={{ duration: 1.15, repeat: Infinity, ease: "easeInOut" }}>
+        <motion.div animate={{ opacity: [.55, 1, .55], scale: [.96, 1.06, .96], filter: ["drop-shadow(0 0 0px rgba(255,90,31,0))", "drop-shadow(0 0 17px rgba(255,90,31,.95))", "drop-shadow(0 0 0px rgba(255,90,31,0))"] }}
+          transition={{ duration: 1.15, repeat: Infinity, ease: "easeInOut" }}>
+          <Image src="/icon-192.png" alt="" aria-hidden="true" width={60} height={60} className="h-[60px] w-[60px] object-contain" priority />
+        </motion.div>
+        <span className="absolute -bottom-2 left-1/2 h-1.5 w-9 -translate-x-1/2 rounded-full bg-[#FF5A1F]/70 blur-[5px]" aria-hidden="true" />
+      </motion.div>
+      <p className="text-[17px] font-semibold text-white">Processing reply<span className="text-[#FF8655]">…</span></p>
+      <p className="text-xs text-[#ADADB0]">Illustrative analysis · no live AI request</p>
     </div>
-    <div className="mt-7 space-y-2.5">
-      {progressSteps.map((step, index) => <div key={step} className={`flex items-center gap-3 rounded-lg border px-4 py-3 transition-colors duration-300 ${index <= stage ? "border-[#FF5A1F]/25 bg-[#FF5A1F]/[.06] text-white" : "border-white/[.06] bg-white/[.015] text-[#727277]"}`}>
-        <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full border font-mono text-[10px] ${index <= stage ? "border-[#FF5A1F] bg-[#FF5A1F] text-white" : "border-white/[.12]"}`}>{index < stage ? "✓" : String(index + 1).padStart(2, "0")}</span>
-        <span className="text-sm font-medium">{step}</span>
-        {index === stage && <motion.span aria-hidden="true" className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-[#FF5A1F]" animate={{ opacity: [.35, 1, .35] }} transition={{ duration: .9, repeat: Infinity }} />}
+    <div className="mt-6 h-1.5 overflow-hidden rounded-full bg-white/[.08]">
+      <motion.div className="h-full rounded-full bg-[#FF5A1F] shadow-[0_0_15px_rgba(255,90,31,.55)]"
+        animate={{ width: `${(stage + 1) * 25}%` }} transition={{ duration: .43, ease: "easeOut" }} />
+    </div>
+    <div className="mt-4 grid grid-cols-2 gap-2">
+      {progressSteps.map((step, index) => <div key={step} className={`flex min-w-0 items-center gap-2 rounded-lg border px-2.5 py-2.5 transition-colors duration-300 ${index <= stage ? "border-[#FF5A1F]/25 bg-[#FF5A1F]/[.055] text-white" : "border-white/[.06] bg-white/[.015] text-[#76767A]"}`}>
+        <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border font-mono text-[10px] ${index <= stage ? "border-[#FF5A1F]/60 bg-[#FF5A1F]/15 text-[#FFAB85]" : "border-white/[.12]"}`}>{index < stage ? "✓" : String(index + 1).padStart(2, "0")}</span>
+        <span className="min-w-0 text-[11px] leading-snug">{step}</span>
       </div>)}
     </div>
-    <p className="mt-6 text-xs leading-relaxed text-[#919195]">A staged illustration using fictional data, not a live AI analysis or a message being sent.</p>
   </div>;
 }
 
-function NumberedSection({
-  index, label, children, prominent = false,
-}: { index: string; label: string; children: React.ReactNode; prominent?: boolean }) {
-  return <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .2, ease: "easeOut" }}
-    className={`min-w-0 rounded-xl border p-4 transition-colors duration-500 sm:p-5 ${prominent ? "border-[#FF5A1F]/35 bg-[radial-gradient(ellipse_at_100%_0%,rgba(120,55,27,.2),transparent_65%),linear-gradient(145deg,#2b201b,#211c19)] shadow-[inset_0_1px_0_rgba(255,255,255,.04)]" : "border-white/[.075] bg-[#1e1e20]"}`}>
-    <div className="mb-3 flex flex-wrap items-center gap-3">
+type DecisionIconName = "interpretation" | "context" | "rule" | "intent" | "governance" | "action" | "safeguard";
+const decisionIconPaths: Record<DecisionIconName, string[]> = {
+  interpretation: ["M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z", "M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"],
+  context: ["M3 5.5h18", "M3 12h15", "M3 18.5h11", "M18 16l3 2.5-3 2.5"],
+  rule: ["M12 2.5 20 6v5.5c0 5.2-3.5 8.1-8 10-4.5-1.9-8-4.8-8-10V6l8-3.5Z", "m9 12 2 2 4-4"],
+  intent: ["M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z", "M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z", "M12 12h.01"],
+  governance: ["M8 7a4 4 0 1 0 8 0 4 4 0 0 0-8 0Z", "M4 21v-2a8 8 0 0 1 14.5-4.7", "m17 18 2 2 3-4"],
+  action: ["M4 12h16", "m13 5 7 7-7 7"],
+  safeguard: ["M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z", "m8 12 2.5 2.5L16 9"]
+};
+function DecisionIcon({ name }: { name: DecisionIconName }) {
+  return <span aria-hidden="true" className="grid h-6 w-6 shrink-0 place-items-center rounded-md border border-[#FF5A1F]/25 bg-[#FF5A1F]/[.075] text-[#FF986B]">
+    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      {decisionIconPaths[name].map((path) => <path key={path} d={path} />)}
+    </svg>
+  </span>;
+}
+
+function NumberedSection({ index, label, icon, children, prominent = false, wide = false }: {
+  index: string; label: string; icon: DecisionIconName; children: React.ReactNode; prominent?: boolean; wide?: boolean
+}) {
+  return <motion.section initial={{ opacity: 0, y: 16, scale: .985 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+    transition={{ duration: .46, ease: [0.22, 1, 0.36, 1] }}
+    className={`min-w-0 rounded-xl border px-3.5 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,.03)] sm:px-4 ${wide ? "lg:col-span-2" : ""} ${prominent ? "border-[#FF5A1F]/40 bg-[radial-gradient(ellipse_at_100%_0%,rgba(152,70,29,.24),transparent_64%),linear-gradient(145deg,#30221c,#211c19)]" : "border-white/[.085] bg-[#1E1E20]"}`}>
+    <h4 className="mb-2 flex min-w-0 items-center gap-2.5">
       <span className={mono + " text-[#FF8556]"}>{index}</span>
-      <span className={mono + " text-[#B4B4B6]"}>{label}</span>
-    </div>
+      <DecisionIcon name={icon} />
+      <span className="min-w-0 text-[10px] font-bold uppercase leading-[1.35] tracking-[.1em] text-[#D0C6C1]">{label}</span>
+    </h4>
     {children}
-  </motion.div>;
+  </motion.section>;
 }
 
 function DecisionDetails({ scenario, stage, revealCount, onSkip }: { scenario: ReplyScenario; stage: number; revealCount: number; onSkip: () => void }) {
@@ -91,43 +125,50 @@ function DecisionDetails({ scenario, stage, revealCount, onSkip }: { scenario: R
       </div>
     </aside>
     <div className={card + " min-w-0 overflow-hidden"}>
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[.08] bg-gradient-to-r from-[#241C18] to-[#191919] px-5 py-4 sm:px-7">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[.08] bg-gradient-to-r from-[#281e18] to-[#191919] px-4 py-3 sm:px-5">
         <div className="min-w-0">
           <p className={mono + " text-[#FF9061]"}>FrameLeads decision layer</p>
-          <h3 className="mt-1 text-lg font-semibold">From reply to next action</h3>
+          <h3 className="mt-0.5 text-[17px] font-semibold">From reply to next action</h3>
         </div>
-        <span className="rounded-full border border-[#FF5A1F]/30 bg-[#FF5A1F]/10 px-3 py-1.5 font-mono text-[10px] font-semibold text-[#FFAC87]">Illustrative preview</span>
+        <span className="rounded-full border border-[#FF5A1F]/30 bg-[#FF5A1F]/10 px-2.5 py-1.5 font-mono text-[9px] text-[#FFAC87]">Illustrative preview</span>
       </div>
-      {stage < 4 ? <DecisionProcessing stage={stage} onSkip={onSkip} /> : <div className="space-y-3 px-5 py-5 sm:px-7 sm:py-7" aria-live="off" data-reveal-count={revealCount}>
-        {revealCount > 0 && <NumberedSection index="01" label={revealSections[0]}>
-          <p className="text-sm leading-relaxed text-white"><span className="sr-only">Understand the reply: </span>{scenario.intent}. {scenario.confidence}</p>
-          <p className="mt-2 text-xs leading-relaxed text-[#AFAFB1]">The reply alone cannot establish a confirmed purchase, budget, timing, or authority unless stated in the fixture.</p>
-        </NumberedSection>}
-        {revealCount > 1 && <NumberedSection index="02" label={revealSections[1]}>
-          <p className="sr-only">Read the context</p><ul className="space-y-2">{scenario.context.map((item) => <li key={item} className="flex min-w-0 items-start gap-3 text-sm leading-relaxed text-[#CBCBCD]"><span aria-hidden="true" className="mt-1 text-[#FF7640]">◆</span><span className="min-w-0 break-words">{item}</span></li>)}</ul>
-          <p className="mt-3 border-t border-white/[.08] pt-3 text-xs text-[#929296]">Unknown beyond the information shown in this fictional message and scenario.</p>
-        </NumberedSection>}
-        {revealCount > 2 && <NumberedSection index="03" label={revealSections[2]}>
-          <p className="sr-only">Apply the seller&#39;s rules</p><p className="text-sm font-semibold leading-relaxed text-[#F5D1C1]">{scenario.rule}</p>
-          <p className="mt-2 text-xs leading-relaxed text-[#A5A0A0]">{scenario.ruleSource}</p>
-        </NumberedSection>}
-        {revealCount > 3 && <NumberedSection index="04" label={revealSections[3]}>
-          <p className="text-lg font-semibold text-white">{scenario.intent}</p><p className="mt-2 text-sm leading-relaxed text-[#AFAFB1]">{scenario.confidence}</p>
-        </NumberedSection>}
-        {revealCount > 4 && <NumberedSection index="05" label={revealSections[4]}>
-          <p className="text-sm font-semibold text-white">{scenario.authority}</p><p className="mt-1 text-xs leading-relaxed text-[#ADADB1]">{scenario.authorityDetail}</p>
-        </NumberedSection>}
-        {revealCount > 5 && <NumberedSection index="06" label="Recommended next action" prominent>
-          <div className="flex flex-wrap items-center justify-between gap-2"><span className="rounded-full border border-[#FF5A1F]/35 px-2.5 py-1 font-mono text-[9px] text-[#FFB28C]">Human-controlled</span></div>
-          <h4 className="mt-3 text-lg font-bold leading-snug text-white sm:text-xl">{scenario.nextAction}</h4>
-          <p className="mt-2 text-sm leading-relaxed text-[#D7C6BD]">{scenario.why}</p>
-        </NumberedSection>}
-        {revealCount > 6 && <NumberedSection index="07" label={revealSections[6]}>
-          <p className="text-sm font-semibold text-white">{scenario.result}</p><p className="mt-1 text-xs leading-relaxed text-[#9B9B9F]">{scenario.safeguard}</p>
-        </NumberedSection>}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-          <p className="text-[11px] leading-relaxed text-[#919195]">Illustrative decision preview · no live inference or action executed.</p>
-          {revealCount < revealSections.length && <button type="button" onClick={onSkip} className="rounded-md border border-white/[.14] px-3 py-2 text-xs text-[#CBCBCD] transition-colors hover:border-[#FF5A1F]/50 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F]">Skip animation</button>}
+      {stage < 4 ? <DecisionProcessing stage={stage} onSkip={onSkip} /> : <div className="px-3 py-3 sm:px-4 sm:py-4" data-reveal-count={revealCount} aria-live="off">
+        <div className="grid min-w-0 grid-cols-1 gap-2.5 lg:grid-cols-2" data-testid="compact-decision-grid">
+          {revealCount > 0 && <NumberedSection index="01" icon="interpretation" label="AI interpretation" wide>
+            <p className="text-[13px] font-medium leading-snug text-white"><span className="sr-only">Understand the reply: </span>{scenario.confidence}</p>
+            <p className="mt-1 text-[11px] leading-snug text-[#AAA9AB]">{scenario.pain}</p>
+          </NumberedSection>}
+          {revealCount > 1 && <NumberedSection index="02" icon="context" label="Relevant context">
+            <span className="sr-only">Read the context</span>
+            <ul className="space-y-1.5">{scenario.context.map((item) => <li key={item} className="flex min-w-0 items-start gap-2 text-[11px] leading-[1.38] text-[#CAC9CB]"><span aria-hidden="true" className="mt-[3px] text-[8px] text-[#FF7640]">◆</span><span className="min-w-0 break-words">{item}</span></li>)}</ul>
+          </NumberedSection>}
+          {revealCount > 2 && <NumberedSection index="03" icon="rule" label="Why human review / seller rule">
+            <span className="sr-only">Apply the seller&#39;s rules</span>
+            <p className="text-[12px] font-semibold leading-snug text-[#F5D1C1]">{scenario.rule}</p>
+            <p className="mt-2 text-[11px] leading-snug text-[#AAA4A1]">{scenario.ruleSource}</p>
+          </NumberedSection>}
+          {revealCount > 3 && <NumberedSection index="04" icon="intent" label="Intent">
+            <p className="text-[13px] font-semibold leading-snug text-white">{scenario.intent}</p>
+          </NumberedSection>}
+          {revealCount > 4 && <NumberedSection index="05" icon="governance" label="Governance">
+            <p className="text-[12px] font-semibold leading-snug text-white">{scenario.authority}</p>
+            <p className="mt-1 text-[11px] leading-snug text-[#ADADB1]">{scenario.authorityDetail}</p>
+          </NumberedSection>}
+          {revealCount > 5 && <NumberedSection index="06" icon="action" label="Recommended next action" prominent wide>
+            <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
+              <p className="min-w-0 flex-1 text-[14px] font-bold leading-snug text-white">{scenario.nextAction}</p>
+              <span className="shrink-0 rounded-full border border-[#FF5A1F]/30 px-2 py-1 font-mono text-[9px] text-[#FFB28C]">Human-controlled</span>
+            </div>
+            <p className="mt-1.5 text-[11px] leading-snug text-[#D5C5BC]">{scenario.why}</p>
+          </NumberedSection>}
+          {revealCount > 6 && <NumberedSection index="07" icon="safeguard" label="Final safeguard" wide>
+            <p className="text-[12px] font-medium leading-snug text-white">{scenario.result}</p>
+            <p className="mt-1 text-[11px] leading-snug text-[#AAA9AB]">{scenario.safeguard}</p>
+          </NumberedSection>}
+        </div>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[10px] leading-snug text-[#919195]">Illustrative decision preview · no live AI inference or action executed.</p>
+          {revealCount < revealSections.length && <button type="button" onClick={onSkip} className="rounded-md border border-white/[.14] px-2.5 py-1.5 text-[11px] text-[#CBCBCD] hover:border-[#FF5A1F]/50 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F]">Skip animation</button>}
         </div>
       </div>}
     </div>
@@ -152,7 +193,7 @@ export default function ReplyDecisionPreview() {
       setStage(index + 1);
       if (index === 3) {
         revealSections.forEach((_, revealIndex) => {
-          const timer = window.setTimeout(() => setRevealCount(revealIndex + 1), (revealIndex + 1) * 220);
+          const timer = window.setTimeout(() => setRevealCount(revealIndex + 1), 360 + revealIndex * REVEAL_INTERVAL_MS);
           timersRef.current = [...timersRef.current, timer];
         });
       }
@@ -173,8 +214,9 @@ export default function ReplyDecisionPreview() {
     setRevealCount(reducedMotion ? revealSections.length : 0);
     setSelectedId(id);
     setSequence((current) => current + 1);
-    if (typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches) {
-      window.requestAnimationFrame(() => detailsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    // Keep the bolt loader visible immediately after selection, including desktop.
+    if (typeof window !== "undefined") {
+      window.requestAnimationFrame(() => detailsRef.current?.scrollIntoView({ behavior: reducedMotion ? "instant" : "smooth", block: "start" }));
     }
   };
 

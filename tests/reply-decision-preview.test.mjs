@@ -79,3 +79,25 @@ test("scenario description sits below the title and cards use layered charcoal w
   assert.match(component, /radial-gradient\(ellipse_at_100%_0%/);
   assert.match(component, /hover:-translate-y-0\.5/);
 });
+
+
+test("brand-bolt loader visibly pulses before any decision layer is revealed", () => {
+  assert.match(component, /src="\/icon-192\.png"/);
+  assert.match(component, /Processing reply/);
+  assert.match(component, /boxShadow: \[/);
+  assert.match(component, /drop-shadow\(/);
+  assert.match(component, /stage < 4 \? <DecisionProcessing/);
+  assert.match(component, /\[650, 1300, 1950, 2600\]/);
+  assert.match(component, /scrollIntoView/);
+});
+
+test("seven decision layers use icon headers and a compact two-column grid", () => {
+  assert.match(component, /data-testid="compact-decision-grid"/);
+  assert.match(component, /lg:grid-cols-2/);
+  assert.match(component, /decisionIconPaths/);
+  for (const title of ["AI interpretation", "Relevant context", "Why human review \/ seller rule", "Intent", "Governance", "Recommended next action", "Final safeguard"]) {
+    assert.ok(component.includes(title), "Missing layer: " + title);
+  }
+  assert.match(component, /REVEAL_INTERVAL_MS = 640/);
+  assert.match(component, /revealIndex \* REVEAL_INTERVAL_MS/);
+});
