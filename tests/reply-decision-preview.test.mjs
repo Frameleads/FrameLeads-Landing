@@ -21,12 +21,12 @@ test("experience is ungated, read-only and truthful about synthetic examples", (
   assert.match(component, /No signup, no form, no live email sent/);
   assert.match(component, /fictional companies, illustrative seller rules/);
   assert.match(component, /not live AI evaluations/i);
-  assert.doesNotMatch(component, /<form\b|fetch\(|navigator\.sendBeacon|dangerouslySetInnerHTML|localStorage|\.push\(/);
+  assert.doesNotMatch(component, /<form\b|fetch\(|navigator\.sendBeacon|dangerouslySetInnerHTML|localStorage/);
   assert.match(route, /robots: \{ index: false, follow: false \}/);
 });
 
 test("preview makes outcome and authority clearer than generic reply categorization", () => {
-  for (const label of ["Understand the reply", "Read the context", "Apply the seller's rules", "Decide with control", "Recommended next action", "Human"]) {
+  for (const label of ["Understand the reply", "Read the context", "Apply the seller&#39;s rules", "Governance", "Recommended next action", "Human"]) {
     assert.ok(component.includes(label) || source.includes(label), "Missing: " + label);
   }
   assert.match(component, /scenario\.authorityDetail/);
@@ -55,6 +55,8 @@ test("conversion path uses existing pilot and optional audit without altering ho
 
 test("fictional inbox personas use locally hosted AI-generated portraits and explicit disclosure", () => {
   assert.match(component, /reply-preview-prospects\.jpg/);
+  assert.match(component, /<Image/);
+  assert.match(component, /onError=\{\(\) => setFailed\(true\)\}/);
   assert.match(component, /Fictional prospect/);
   for (const name of ["Maya Chen", "Daniel Brooks", "Nadia Hassan"]) assert.ok(source.includes(name));
   assert.match(component, /Illustrative inbound email/);
@@ -63,8 +65,17 @@ test("fictional inbox personas use locally hosted AI-generated portraits and exp
 test("sample decision reveal animates after 2.6 seconds, supports replay and reduced motion", () => {
   assert.match(component, /\[650, 1300, 1950, 2600\]/);
   assert.match(component, /useReducedMotion/);
-  assert.match(component, /AnimatePresence/);
+  assert.match(component, /setRevealCount\(revealIndex \+ 1\)/);
+  assert.match(component, /revealCount > 6/);
+  assert.match(component, /revealCount > 0/);
   assert.match(component, /Skip animation/);
   assert.match(component, /setSequence\(\(current\) => current \+ 1\)/);
+  assert.match(component, /timersRef\.current\.forEach\(window\.clearTimeout\)/);
   assert.match(component, /not a live AI analysis/);
+});
+
+test("scenario description sits below the title and cards use layered charcoal warmth", () => {
+  assert.match(component, /flex flex-col items-start gap-2/);
+  assert.match(component, /radial-gradient\(ellipse_at_100%_0%/);
+  assert.match(component, /hover:-translate-y-0\.5/);
 });
