@@ -40,7 +40,7 @@ function DecisionProcessing({ stage, onSkip }: { stage: number; onSkip: () => vo
         <span className="absolute -bottom-2 left-1/2 h-1.5 w-9 -translate-x-1/2 rounded-full bg-[#FF5A1F]/70 blur-[5px]" aria-hidden="true" />
       </motion.div>
       <p className="text-[17px] font-semibold text-white">Processing reply<span className="text-[#FF8655]">…</span></p>
-      <p className="text-xs text-[#ADADB0]">Illustrative analysis · no live AI request</p>
+      <p className="text-xs text-[#ADADB0]">A staged illustration, not a live AI analysis or sent message.</p>
     </div>
     <div className="mt-6 h-1.5 overflow-hidden rounded-full bg-white/[.08]">
       <motion.div className="h-full rounded-full bg-[#FF5A1F] shadow-[0_0_15px_rgba(255,90,31,.55)]"
