@@ -86,12 +86,16 @@ test("decision gateway provides an accessible inline disclosure and matching CTA
   assert.match(component, /FrameLeads connects reply intent, prospect context and seller rules/);
   assert.match(component, /Explore 3 reply scenarios/);
   assert.match(component, /<details ref=\{gatewayRef\}/);
-  assert.match(component, /<summary onClick=\{\(event\) => \{ event\.preventDefault\(\); openScenarios\(\); \}\} aria-label="Explore FrameLeads reply decision scenarios"/);
+  assert.match(component, /<summary className="sr-only/);
+  assert.match(component, /<DecisionNetworkVisual onExplore=\\{openScenarios\\}/);
+  assert.match(component, /aria-label="Explore FrameLeads reply decision scenarios"/);
   assert.match(component, /gatewayRef\.current\.open = true/);
   assert.match(component, /src="\/images\/neon_orange_tech_network_hub\.png"/);
   assert.match(component, /width=\{1916\} height=\{821\}/);
   assert.match(component, /sizes="\(max-width: 900px\) 100vw, 900px" unoptimized/);
-  assert.match(component, /className="block h-auto w-full"/);
+  assert.match(component, /mix-blend-screen/);
+  assert.match(component, /data-testid="integrated-decision-artwork"/);
+  assert.match(component, /onClick=\\{onExplore\\}/);
   for (const concept of ["Incoming reply", "Recommended action"]) {
     assert.ok(component.includes(concept), "Missing gateway concept: " + concept);
   }
@@ -117,4 +121,16 @@ test("seven decision concepts use six compact icon modules", () => {
   }
   assert.match(component, /REVEAL_INTERVAL_MS = 640/);
   assert.match(component, /revealIndex \* REVEAL_INTERVAL_MS/);
+});
+
+test("gateway is one continuous responsive visual, not a framed thumbnail", () => {
+  assert.match(component, /w-screen max-w-\\[1500px\\]/);
+  assert.match(component, /mix-blend-screen/);
+  assert.match(component, /\\[mask-image:linear-gradient/);
+  assert.match(component, /left-\\[48\\.7%\\] top-\\[42%\\]/);
+  assert.match(component, /min-w-\\[44px\\]/);
+  assert.match(component, /w-\\[145%\\]/);
+  assert.match(component, /onClick=\\{onExplore\\}/);
+  assert.match(component, /Tap the FrameLeads core/);
+  assert.doesNotMatch(component, /max-w-\\[900px\\]/);
 });

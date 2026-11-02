@@ -13,9 +13,21 @@ const progressSteps = ["Read the incoming reply", "Check conversation context", 
 const revealSections = ["AI interpretation", "Relevant context", "Seller rule", "Intent and governance", "Recommended action", "Final safeguard"] as const;
 const REVEAL_INTERVAL_MS = 640;
 
-function DecisionNetworkVisual() {
-  return <div className="mx-auto mt-7 w-full max-w-[900px] min-w-0">
-    <Image src="/images/neon_orange_tech_network_hub.png" alt="FrameLeads decision intelligence network" width={1916} height={821} sizes="(max-width: 900px) 100vw, 900px" unoptimized className="block h-auto w-full" />
+function DecisionNetworkVisual({ onExplore, reducedMotion }: { onExplore: () => void; reducedMotion: boolean }) {
+  // Use the exact approved PNG as an edge-blended layer, not a boxed image.
+  // The artwork pixels remain unchanged; only the presentation blends with the page.
+  return <div className="relative left-1/2 mt-0 w-screen max-w-[1500px] -translate-x-1/2 overflow-hidden bg-[#131313]" data-testid="integrated-decision-artwork">
+    <div className="relative left-1/2 w-[145%] -translate-x-1/2 sm:w-[110%] lg:w-full">
+      <div className="relative aspect-[1916/650] w-full">
+        <Image src="/images/neon_orange_tech_network_hub.png" alt="FrameLeads decision intelligence network with connected reply, context, intent, governance, rules and action icons"
+          width={1916} height={821} sizes="(max-width: 639px) 145vw, (max-width: 1023px) 110vw, 1500px"
+          unoptimized priority className="pointer-events-none absolute inset-0 h-auto w-full max-w-none mix-blend-screen [mask-image:linear-gradient(to_bottom,transparent_0%,black_8%,black_79%,transparent_100%)]" />
+        <button type="button" onClick={onExplore} aria-label="Explore FrameLeads reply decision scenarios"
+          data-reduced-motion={reducedMotion}
+          className="absolute left-[48.7%] top-[42%] z-10 aspect-square w-[9%] min-w-[44px] -translate-x-1/2 -translate-y-1/2 cursor-pointer rounded-[24%] bg-transparent outline-none transition-[box-shadow,transform] duration-300 hover:scale-[.97] hover:shadow-[0_0_24px_7px_rgba(255,90,31,.23),inset_0_5px_14px_rgba(0,0,0,.32)] active:scale-[.93] focus-visible:ring-2 focus-visible:ring-[#FF8756] focus-visible:ring-offset-2 focus-visible:ring-offset-[#131313] motion-reduce:transition-none"
+          title="Explore 3 reply scenarios"><span className="sr-only">Explore 3 reply scenarios</span></button>
+      </div>
+    </div>
   </div>;
 }
 
@@ -257,18 +269,19 @@ export default function ReplyDecisionPreview() {
         </p>
       </div>
 
-      <section className="mt-2" aria-labelledby="gateway-heading">
-        <div className="mb-4 max-w-3xl">
+      <section className="relative mt-0" aria-labelledby="gateway-heading">
+        <div className="relative z-10 mx-auto max-w-3xl text-center">
           <p className={mono + " text-[#FF9167]"}>The Decision Intelligence Layer</p>
           <h2 id="gateway-heading" className="mt-3 font-heading text-[25px] font-semibold leading-tight sm:text-[32px]">See what happens between a reply and the next move.</h2>
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#B5B2B2] sm:text-base">FrameLeads connects reply intent, prospect context and seller rules to recommend the next action, with human control where it matters.</p>
-          <p className="mt-3 text-xs text-[#8E8B8B]">Click the FrameLeads core to explore three sample reply scenarios.</p>
+          <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-[#B5B2B2] sm:text-base">FrameLeads connects reply intent, prospect context and seller rules to recommend the next action, with human control where it matters.</p>
         </div>
-        <button type="button" onClick={openScenarios} className="mb-4 inline-flex min-h-11 items-center justify-center rounded-xl border border-[#FF5A1F]/40 bg-[#FF5A1F]/[.09] px-5 py-2.5 text-sm font-semibold text-[#FFD0BC] shadow-[0_0_22px_rgba(255,90,31,.08)] transition-colors hover:border-[#FF5A1F]/70 hover:bg-[#FF5A1F]/[.14] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F]">Explore 3 reply scenarios <span aria-hidden="true" className="ml-2">↓</span></button>
-        <details ref={gatewayRef} onToggle={(event) => { if (event.currentTarget.open) window.requestAnimationFrame(() => scenarioRef.current?.scrollIntoView({ behavior: reducedMotion ? "instant" : "smooth", block: "start" })); }} className="group/gateway min-w-0" data-testid="decision-gateway">
-          <summary onClick={(event) => { event.preventDefault(); openScenarios(); }} aria-label="Explore FrameLeads reply decision scenarios" className="group/gateway block cursor-pointer list-none rounded-3xl outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F] focus-visible:ring-offset-4 focus-visible:ring-offset-[#131313] [&::-webkit-details-marker]:hidden">
-            <DecisionNetworkVisual />
-          </summary>
+        <DecisionNetworkVisual onExplore={openScenarios} reducedMotion={Boolean(reducedMotion)} />
+        <div className="relative z-10 -mt-3 flex flex-col items-center justify-center gap-3 px-3 sm:-mt-8">
+          <p className="text-center text-xs leading-relaxed text-[#9E9793]">Tap the FrameLeads core to explore three sample reply scenarios.</p>
+          <button type="button" onClick={openScenarios} className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#FF5A1F]/40 bg-[#FF5A1F]/[.09] px-5 py-2.5 text-sm font-semibold text-[#FFD0BC] shadow-[0_0_22px_rgba(255,90,31,.08)] transition-colors hover:border-[#FF5A1F]/70 hover:bg-[#FF5A1F]/[.14] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F]">Explore 3 reply scenarios <span aria-hidden="true" className="ml-2">↓</span></button>
+        </div>
+        <details ref={gatewayRef} className="group/gateway min-w-0" data-testid="decision-gateway">
+          <summary className="sr-only focus:not-sr-only focus:relative focus:z-20 focus:mx-auto focus:w-fit focus:rounded-lg focus:border focus:border-[#FF5A1F] focus:bg-[#232020] focus:px-4 focus:py-2 focus:text-sm focus:text-white">Explore FrameLeads reply decision scenarios</summary>
           <div className="pt-7">
       <section ref={scenarioRef} className="scroll-mt-5" aria-labelledby="choose-scenario">
         <div className="mb-5 flex flex-col items-start gap-2">
