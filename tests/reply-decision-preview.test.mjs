@@ -1,0 +1,54 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { readFileSync } from "node:fs";
+
+const source = readFileSync("src/reply-decision-preview.ts", "utf8");
+const component = readFileSync("src/components/ReplyDecisionPreview.tsx", "utf8");
+const route = readFileSync("src/app/reply-decision-preview/page.tsx", "utf8");
+const homepage = readFileSync("src/app/page.tsx", "utf8");
+
+test("three buyer-problem scenarios cover ambiguous, pricing and security handoff", () => {
+  for (const id of ['id: "ambiguous"', 'id: "pricing"', 'id: "handoff"']) assert.ok(source.includes(id));
+  for (const phrase of ["possible interest", "Commercial exceptions", "Security or compliance", "human", "illustrative"]) {
+    assert.match(source.toLowerCase(), new RegExp(phrase.toLowerCase()));
+  }
+  assert.match(source, /No invented lead score/);
+  assert.match(source, /No discount is granted/);
+  assert.match(source, /No security assurance is fabricated/);
+});
+
+test("experience is ungated, read-only and truthful about synthetic examples", () => {
+  assert.match(component, /No signup, no form, no live email sent/);
+  assert.match(component, /fictional companies, illustrative seller rules/);
+  assert.match(component, /not live AI evaluations/i);
+  assert.doesNotMatch(component, /<form\b|fetch\(|navigator\.sendBeacon|dangerouslySetInnerHTML|localStorage|\.push\(/);
+  assert.match(route, /robots: \{ index: false, follow: false \}/);
+});
+
+test("preview makes outcome and authority clearer than generic reply categorization", () => {
+  for (const label of ["Understand the reply", "Read the context", "Apply the seller's rules", "Decide with control", "Recommended next action", "Human"]) {
+    assert.ok(component.includes(label) || source.includes(label), "Missing: " + label);
+  }
+  assert.match(component, /scenario\.authorityDetail/);
+  assert.match(component, /scenario\.safeguard/);
+  assert.match(component, /scenario\.currentWorkaround/);
+});
+
+test("one-click scenario selection and responsive no-squeeze layout", () => {
+  assert.match(component, /onClick=\{\(\) => selectScenario\(s\.id\)\}/);
+  assert.match(component, /aria-pressed=\{selected\}/);
+  assert.match(component, /md:grid-cols-3/);
+  assert.match(component, /lg:grid-cols-\[minmax\(0,\.78fr\)_minmax\(0,1\.22fr\)\]/);
+  assert.match(component, /max-w-\[1220px\]/);
+  assert.match(component, /min-w-0/);
+  assert.match(component, /break-words/);
+  assert.match(component, /scrollIntoView/);
+});
+
+test("conversion path uses existing pilot and optional audit without altering homepage", () => {
+  assert.match(component, /href="\/checkout\/micro-pilot"/);
+  assert.match(component, /href="\/\?audit=open"/);
+  assert.match(component, /\$10 Micro-Pilot/);
+  assert.match(homepage, /AuditModal/);
+  assert.doesNotMatch(homepage, /ReplyDecisionPreview/);
+});
