@@ -154,15 +154,13 @@ export default function ReplyDecisionPreview() {
   const active = replyScenarios.find((scenario) => scenario.id === selectedId) ?? null;
 
   useEffect(() => {
-    if (!selectedId) return;
-    if (reducedMotion) { setStage(4); return; }
-    setStage(0);
+    if (!selectedId || reducedMotion) return;
     const timers = [650, 1300, 1950, 2600].map((ms, index) => window.setTimeout(() => setStage(index + 1), ms));
     return () => timers.forEach(window.clearTimeout);
   }, [selectedId, sequence, reducedMotion]);
 
   const selectScenario = (id: ReplyScenario["id"]) => {
-    setStage(0);
+    setStage(reducedMotion ? 4 : 0);
     setSelectedId(id);
     setSequence((current) => current + 1);
     if (typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches) {
@@ -239,7 +237,7 @@ export default function ReplyDecisionPreview() {
             </div>
             <span className="text-xs text-[#98989C]">Sample scenario {active.number} of 03</span>
           </div>
-          <DecisionDetails key={active.id} scenario={active} stage={stage} reducedMotion={Boolean(reducedMotion)} onSkip={() => setStage(4)} />
+          <DecisionDetails key={active.id} scenario={active} stage={reducedMotion ? 4 : stage} reducedMotion={Boolean(reducedMotion)} onSkip={() => setStage(4)} />
         </> : <section className="mt-8 flex min-h-[186px] flex-col items-center justify-center rounded-2xl border border-dashed border-[#49413C] bg-gradient-to-br from-[#211B18] via-[#1B1A19] to-[#171717] p-7 text-center">
           <span aria-hidden="true" className="mb-3 text-3xl text-[#FF8558]">◇</span>
           <h2 className="text-lg font-semibold">The interesting part comes after the reply.</h2>
