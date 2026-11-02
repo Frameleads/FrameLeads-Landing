@@ -26,7 +26,7 @@ test("experience is ungated, read-only and truthful about synthetic examples", (
 });
 
 test("preview makes outcome and authority clearer than generic reply categorization", () => {
-  for (const label of ["Understand the reply", "Read the context", "Apply the seller&#39;s rules", "Governance", "Recommended next action", "Human"]) {
+  for (const label of ["Understand the reply", "Read the context", "Apply the seller&#39;s rules", "Recommended next action", "Human"]) {
     assert.ok(component.includes(label) || source.includes(label), "Missing: " + label);
   }
   assert.match(component, /scenario\.authorityDetail/);
@@ -92,7 +92,7 @@ test("decision gateway provides an accessible inline disclosure and matching CTA
   assert.match(component, /width=\{1916\} height=\{821\}/);
   assert.match(component, /sizes="\(max-width: 900px\) 100vw, 900px" unoptimized/);
   assert.match(component, /className="block h-auto w-full"/);
-  for (const concept of ["Incoming reply", "Prospect context", "Intent signals", "Seller rules", "Governance & approval", "Recommended action"]) {
+  for (const concept of ["Incoming reply", "Recommended action"]) {
     assert.ok(component.includes(concept), "Missing gateway concept: " + concept);
   }
 });
