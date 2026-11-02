@@ -138,6 +138,7 @@ function DecisionDetails({ scenario, stage, reducedMotion, onSkip }: { scenario:
             <p className="text-sm font-semibold text-white">{scenario.result}</p>
             <p className="mt-1 text-xs leading-relaxed text-[#9B9B9F]">{scenario.safeguard}</p>
           </div>
+        </div>
         </motion.div>}
       </AnimatePresence>
     </div>
