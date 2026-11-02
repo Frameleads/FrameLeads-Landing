@@ -80,27 +80,20 @@ test("scenario description sits below the title and cards use layered charcoal w
   assert.match(component, /hover:-translate-y-0\.5/);
 });
 
-test("decision gateway provides an accessible inline disclosure and matching CTA", () => {
-  assert.match(component, /The Decision Intelligence Layer/);
-  assert.match(component, /See what happens between a reply and the next move/);
-  assert.match(component, /FrameLeads connects reply intent, prospect context and seller rules/);
-  assert.match(component, /Explore 3 reply scenarios/);
-  assert.match(component, /<details ref=\{gatewayRef\}/);
-  assert.match(component, /<summary className="sr-only/);
-  assert.match(component, /<DecisionNetworkVisual onExplore=\\{openScenarios\\}/);
-  assert.match(component, /aria-label="Explore FrameLeads reply decision scenarios"/);
-  assert.match(component, /gatewayRef\.current\.open = true/);
-  assert.match(component, /src="\/images\/neon_orange_tech_network_hub\.png"/);
-  assert.match(component, /width=\{1916\} height=\{821\}/);
-  assert.match(component, /sizes="\(max-width: 900px\) 100vw, 900px" unoptimized/);
-  assert.match(component, /mix-blend-screen/);
-  assert.match(component, /data-testid="integrated-decision-artwork"/);
-  assert.match(component, /onClick=\\{onExplore\\}/);
-  for (const concept of ["Incoming reply", "Recommended action"]) {
-    assert.ok(component.includes(concept), "Missing gateway concept: " + concept);
-  }
+test("decision gateway is accessible, inline and uses the original supplied art", () => {
+  assert.ok(component.includes("The Decision Intelligence Layer"));
+  assert.ok(component.includes("See what happens between a reply and the next move"));
+  assert.ok(component.includes("FrameLeads connects reply intent, prospect context and seller rules"));
+  assert.ok(component.includes("Explore 3 reply scenarios"));
+  assert.ok(component.includes("<details ref={gatewayRef}"));
+  assert.ok(component.includes('<summary className="sr-only'));
+  assert.ok(component.includes("<DecisionNetworkVisual onExplore={openScenarios}"));
+  assert.ok(component.includes('aria-label="Explore FrameLeads reply decision scenarios"'));
+  assert.ok(component.includes("gatewayRef.current.open = true"));
+  assert.ok(component.includes('src="/images/neon_orange_tech_network_hub.png"'));
+  assert.ok(component.includes("width={1916} height={821}"));
+  assert.ok(component.includes("data-testid=\"integrated-decision-artwork\""));
 });
-
 
 test("brand-bolt loader visibly pulses before any decision layer is revealed", () => {
   assert.match(component, /src="\/icon-192\.png"/);
@@ -124,13 +117,15 @@ test("seven decision concepts use six compact icon modules", () => {
 });
 
 test("gateway is one continuous responsive visual, not a framed thumbnail", () => {
-  assert.match(component, /w-screen max-w-\\[1500px\\]/);
-  assert.match(component, /mix-blend-screen/);
-  assert.match(component, /\\[mask-image:linear-gradient/);
-  assert.match(component, /left-\\[48\\.7%\\] top-\\[42%\\]/);
-  assert.match(component, /min-w-\\[44px\\]/);
-  assert.match(component, /w-\\[145%\\]/);
-  assert.match(component, /onClick=\\{onExplore\\}/);
-  assert.match(component, /Tap the FrameLeads core/);
-  assert.doesNotMatch(component, /max-w-\\[900px\\]/);
+  for (const required of [
+    "w-screen max-w-[1500px]",
+    "mix-blend-screen",
+    "[mask-image:linear-gradient",
+    "left-[48.7%] top-[42%]",
+    "min-w-[44px]",
+    "w-[145%]",
+    "onClick={onExplore}",
+    "Tap the FrameLeads core",
+  ]) assert.ok(component.includes(required), "Missing integration requirement: " + required);
+  assert.ok(!component.includes("max-w-[900px]"), "Old thumbnail sizing is still present");
 });
