@@ -66,7 +66,7 @@ test("sample decision reveal animates after 2.6 seconds, supports replay and red
   assert.match(component, /\[650, 1300, 1950, 2600\]/);
   assert.match(component, /useReducedMotion/);
   assert.match(component, /setRevealCount\(revealIndex \+ 1\)/);
-  assert.match(component, /revealCount > 6/);
+  assert.match(component, /revealCount > 5/);
   assert.match(component, /revealCount > 0/);
   assert.match(component, /Skip animation/);
   assert.match(component, /setSequence\(\(current\) => current \+ 1\)/);
@@ -80,6 +80,21 @@ test("scenario description sits below the title and cards use layered charcoal w
   assert.match(component, /hover:-translate-y-0\.5/);
 });
 
+test("decision gateway provides an accessible inline disclosure and matching CTA", () => {
+  assert.match(component, /The Decision Intelligence Layer/);
+  assert.match(component, /See what happens between a reply and the next move/);
+  assert.match(component, /FrameLeads connects reply intent, prospect context and seller rules/);
+  assert.match(component, /Explore 3 reply scenarios/);
+  assert.match(component, /<details ref=\{gatewayRef\}/);
+  assert.match(component, /<summary onClick=\{\(event\) => \{ event\.preventDefault\(\); openScenarios\(\); \}\} aria-label="Explore FrameLeads reply decision scenarios"/);
+  assert.match(component, /gatewayRef\.current\.open = true/);
+  assert.match(component, /src="\/logo\.png"/);
+  for (const concept of ["Incoming reply", "Prospect context", "Intent signals", "Seller rules", "Governance & approval", "Recommended action"]) {
+    assert.ok(component.includes(concept), "Missing gateway concept: " + concept);
+  }
+  assert.match(component, /prefers-reduced-motion|reducedMotion \? "/);
+});
+
 
 test("brand-bolt loader visibly pulses before any decision layer is revealed", () => {
   assert.match(component, /src="\/icon-192\.png"/);
@@ -91,11 +106,11 @@ test("brand-bolt loader visibly pulses before any decision layer is revealed", (
   assert.match(component, /scrollIntoView/);
 });
 
-test("seven decision layers use icon headers and a compact two-column grid", () => {
+test("seven decision concepts use six compact icon modules", () => {
   assert.match(component, /data-testid="compact-decision-grid"/);
   assert.match(component, /lg:grid-cols-2/);
   assert.match(component, /decisionIconPaths/);
-  for (const title of ["AI interpretation", "Relevant context", "Why human review \/ seller rule", "Intent", "Governance", "Recommended next action", "Final safeguard"]) {
+  for (const title of ["AI interpretation", "Relevant context", "Why human review \/ seller rule", "Intent and governance", "Recommended next action", "Final safeguard"]) {
     assert.ok(component.includes(title), "Missing layer: " + title);
   }
   assert.match(component, /REVEAL_INTERVAL_MS = 640/);
