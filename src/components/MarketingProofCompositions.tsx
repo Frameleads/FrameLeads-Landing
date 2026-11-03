@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Image from "next/image";
 
 /**
  * Marketing compositions assembled from isolated modules in actual FrameLeads UI.
@@ -37,33 +38,44 @@ function EvidenceNote() {
   return <p className="mt-6 text-center text-[11px] leading-relaxed text-white/35">FrameLeads product UI composition · Illustrative scenario data · No customer-performance claim</p>;
 }
 
-function ValueNote({ icon, text }: { icon: string; text: string }) {
-  return <div className="flex items-center gap-2 text-left text-xs font-medium text-white/80 sm:text-sm">
+function ValueNote({ icon, text, className = "" }: { icon: string; text: string; className?: string }) {
+  return <div className={"flex items-center gap-2 text-left text-xs font-medium text-white/80 sm:text-sm " + className}>
     <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-[#FF5A1F]/20 bg-[#FF5A1F]/[0.075] text-base text-[#FF8A5A]" aria-hidden="true">{icon}</span>
     <span>{text}</span>
   </div>;
 }
 
-function LeadCard({ initials, name, mood, message, date, primary = false, urgency = false }: {
-  initials: string; name: string; mood: "WARM" | "COLD"; message: string; date: string; primary?: boolean; urgency?: boolean;
+function CardActions({ primary = false }: { primary?: boolean }) {
+  const iconClass = "size-4";
+  return <div className="flex items-center gap-2.5" aria-hidden="true">
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className={iconClass + (primary ? " text-amber-300" : " text-white/45")}><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9L12 3Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" /></svg>
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className={iconClass + " text-white/40"}><path d="M4 8h16v12H4V8Zm-1-4h18v4H3V4Zm5 8v4m4-4v4m4-4v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className={iconClass + " text-white/40"}><path d="M4 7h16m-10 4v7m4-7v7M6 7l1 14h10l1-14M9 7V4h6v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+  </div>;
+}
+
+function LeadCard({ avatar, name, mood, message, date, primary = false, urgency = false }: {
+  avatar: string; name: string; mood: "WARM" | "COLD"; message: string; date: string; primary?: boolean; urgency?: boolean;
 }) {
   return <Surface className={"flex h-full flex-col p-4 text-left sm:p-5 " + (primary ? "border-[#FF5A1F]/65 bg-[linear-gradient(145deg,rgba(255,90,31,0.12),rgba(30,23,22,0.86)_52%)] shadow-[0_0_38px_-18px_rgba(255,90,31,0.38)]" : "")}>
-    <div className="flex min-w-0 flex-wrap items-center gap-2.5">
-      <span className="grid size-9 shrink-0 place-items-center rounded-full border border-[#FF5A1F]/25 bg-[#FF5A1F]/[0.11] text-xs font-semibold text-[#FF9364]">{initials}</span>
+    <div className="flex min-w-0 flex-wrap items-center gap-2.5 md:grid md:grid-cols-[2.25rem_minmax(0,1fr)] md:items-center md:gap-x-2.5 md:gap-y-2 lg:flex lg:flex-wrap">
+      <span className="relative size-9 shrink-0 overflow-hidden rounded-full border border-white/[0.18] bg-[#292424]">
+        <Image src={avatar} alt="" fill sizes="36px" className="object-cover" />
+      </span>
       <span className="min-w-0 flex-1 text-sm font-bold text-white sm:text-base">{name}</span>
-      <Chip tone={mood === "WARM" ? "warm" : "cold"}>{mood === "WARM" ? "● WARM" : "○ COLD"}</Chip>
+      <span className="md:col-start-2 md:row-start-2 md:justify-self-start lg:contents"><Chip tone={mood === "WARM" ? "warm" : "cold"}>{mood === "WARM" ? "● WARM" : "○ COLD"}</Chip></span>
     </div>
     {urgency && <div className="mt-3"><Chip tone="red"><span aria-hidden="true">◷</span> Response SLA breached</Chip></div>}
     <p className="mt-4 flex-1 text-sm leading-relaxed text-white/70">{message}</p>
     <div className="mt-5 flex items-center justify-between border-t border-white/[0.1] pt-3">
       <span className="text-[11px] text-white/40">{date}</span>
-      <span aria-hidden="true" className={primary ? "text-amber-300" : "text-white/30"}>{primary ? "★" : "☆"}</span>
+      <CardActions primary={primary} />
     </div>
   </Surface>;
 }
 
 export function GapProof() {
-  return <Frame>
+  return <Frame className="py-5 sm:py-8 lg:py-8">
     <div className="mx-auto mb-5 flex flex-wrap items-center justify-center gap-2.5 rounded-2xl border border-white/[0.11] bg-[#1C1919] px-3 py-3 sm:gap-4 sm:px-5">
       <SmallLabel>INBOX TRIAGE</SmallLabel>
       <span className="hidden h-5 w-px bg-white/[0.13] sm:block" />
@@ -74,13 +86,13 @@ export function GapProof() {
     </div>
 
     <div className="grid items-stretch gap-3 md:grid-cols-[1.55fr_1fr_1fr]">
-      <LeadCard primary initials="EV" name="Elise Varner" mood="WARM" urgency
+      <LeadCard primary avatar="/images/proof-avatars/elise.webp" name="Elise Varner" mood="WARM" urgency
         message="We've discussed this internally, and the team is interested. We'd be prepared to move forward this month if you could waive the onboarding fee…"
         date="Oct 28, 2026 · 8:11 PM" />
-      <LeadCard initials="MS" name="Mira Solen" mood="COLD"
+      <LeadCard avatar="/images/proof-avatars/mira.webp" name="Mira Solen" mood="COLD"
         message="Thanks for reaching out. This looks relevant to our agency. We're an 11-person team…"
         date="Oct 20, 2026 · 1:25 AM" />
-      <LeadCard initials="RH" name="Riya Halden" mood="WARM"
+      <LeadCard avatar="/images/proof-avatars/riya.webp" name="Riya Halden" mood="WARM"
         message="Thanks for the message. I'm not the person responsible for evaluating outbound…"
         date="Oct 28, 2026 · 8:11 PM" />
     </div>
@@ -96,12 +108,11 @@ export function GapProof() {
       <div><Chip tone="warm">Needs review</Chip></div>
     </Surface>
 
-    <div className="mt-6 grid gap-3 border-t border-white/[0.08] pt-5 sm:grid-cols-3 sm:gap-5">
+    <div className="mt-5 grid gap-3 border-t border-white/[0.08] pt-4 lg:grid-cols-[1fr_1fr_auto] lg:items-center lg:gap-5">
       <ValueNote icon="♨" text="Not every reply means the same thing." />
       <ValueNote icon="◷" text="Arrival time is not revenue priority." />
-      <ValueNote icon="◆" text="High-priority exceptions stay visible." />
+      <ValueNote icon="◆" text="High-priority exceptions stay visible." className="lg:justify-self-end" />
     </div>
-    <EvidenceNote />
   </Frame>;
 }
 
