@@ -19,14 +19,6 @@
   --color-foreground: #ffffff;
 }
 
-/* Subtle CSS Grid Overlay */
-.bg-grid-overlay {
-  background-size: 40px 40px;
-  background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-}
-
 /* Premium frosted-glass pipeline metric */
 .metric-card-shell {
   position: relative;
@@ -180,5 +172,119 @@
 @media (prefers-reduced-motion: reduce) {
   .step-visual-enter {
     animation: none;
+  }
+}
+
+
+/*
+ * Home-only atmospheric edge lighting, inspired by black, burgundy and ember orange.
+ * The top glow mirrors the bottom's full length, intensity, colors and motion, vertically flipped.
+ * Bottom lighting runs continuously behind the CTA and footer with no boxed-off bar.
+ * Central page sections retain their existing charcoal background.
+ */
+.premium-edge-glow {
+  position: absolute;
+  inset-inline: 0;
+  z-index: 0;
+  overflow: hidden;
+  isolation: isolate;
+  pointer-events: none;
+}
+
+.premium-edge-glow--top {
+  top: 0;
+  transform: scaleY(-1);
+  height: clamp(28rem, 68svh, 44rem);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(16, 8, 8, 0) 0%,
+      rgba(36, 8, 8, 0.09) 22%,
+      rgba(62, 11, 8, 0.23) 48%,
+      rgba(82, 19, 13, 0.39) 76%,
+      rgba(102, 26, 16, 0.56) 100%
+    );
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 32%, #000 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 32%, #000 100%);
+}
+
+.premium-edge-glow--bottom {
+  bottom: 0;
+  height: clamp(28rem, 68svh, 44rem);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(16, 8, 8, 0) 0%,
+      rgba(36, 8, 8, 0.09) 22%,
+      rgba(62, 11, 8, 0.23) 48%,
+      rgba(82, 19, 13, 0.39) 76%,
+      rgba(102, 26, 16, 0.56) 100%
+    );
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 32%, #000 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 32%, #000 100%);
+}
+
+.premium-edge-glow::before,
+.premium-edge-glow::after {
+  content: "";
+  position: absolute;
+  inset: -10% -12%;
+  pointer-events: none;
+  transform-origin: center;
+  will-change: transform, opacity;
+}
+
+.premium-edge-glow--top::before {
+  background:
+    radial-gradient(ellipse 46% 54% at 10% 100%, rgba(231, 89, 29, 0.36), rgba(149, 39, 26, 0.12) 58%, transparent 84%),
+    radial-gradient(ellipse 46% 54% at 90% 100%, rgba(231, 89, 29, 0.36), rgba(149, 39, 26, 0.12) 58%, transparent 84%),
+    radial-gradient(ellipse 64% 42% at 50% 100%, rgba(145, 27, 18, 0.15), transparent 82%);
+  filter: blur(38px);
+  animation: premium-bottom-breathe 32s ease-in-out infinite alternate;
+}
+
+.premium-edge-glow--top::after {
+  background:
+    radial-gradient(ellipse 60% 36% at 50% 100%, rgba(227, 111, 55, 0.09), transparent 78%);
+  filter: blur(44px);
+  animation: premium-bottom-breathe 36s ease-in-out infinite alternate-reverse;
+}
+
+.premium-edge-glow--bottom::before {
+  background:
+    radial-gradient(ellipse 46% 54% at 10% 100%, rgba(231, 89, 29, 0.36), rgba(149, 39, 26, 0.12) 58%, transparent 84%),
+    radial-gradient(ellipse 46% 54% at 90% 100%, rgba(231, 89, 29, 0.36), rgba(149, 39, 26, 0.12) 58%, transparent 84%),
+    radial-gradient(ellipse 64% 42% at 50% 100%, rgba(145, 27, 18, 0.15), transparent 82%);
+  filter: blur(38px);
+  animation: premium-bottom-breathe 32s ease-in-out infinite alternate;
+}
+
+.premium-edge-glow--bottom::after {
+  background:
+    radial-gradient(ellipse 60% 36% at 50% 100%, rgba(227, 111, 55, 0.09), transparent 78%);
+  filter: blur(44px);
+  animation: premium-bottom-breathe 36s ease-in-out infinite alternate-reverse;
+}
+
+
+
+
+
+@keyframes premium-bottom-breathe {
+  from {
+    transform: translate3d(0, 0.5%, 0) scale(1);
+    opacity: 0.9;
+  }
+  to {
+    transform: translate3d(0, -1%, 0) scale(1.02);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .premium-edge-glow::before,
+  .premium-edge-glow::after {
+    animation: none;
+    will-change: auto;
   }
 }
