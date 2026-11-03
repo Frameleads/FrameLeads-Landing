@@ -16,3 +16,14 @@ test("Whop Pixel remains advertising-consent gated and resumes after explicit re
   assert.match(source, /script\.id = "whop-pixel"/);
   assert.match(source, /script\.src = "https:\/\/t\.whop\.tw\/s\.js"/);
 });
+
+
+test("Privacy Choices popup and actions align left without changing consent controls", () => {
+  assert.match(source, /sm:left-5 sm:w-\[min\(92vw,38rem\)\]/);
+  assert.doesNotMatch(source, /sm:right-5 sm:w-\[min\(92vw,38rem\)\]/);
+  assert.match(source, /mt-5 flex flex-wrap items-center justify-start gap-2/);
+  for (const label of ["Reject optional", "Accept optional", "Manage choices", "Save preferences"]) {
+    assert.ok(source.includes(label));
+  }
+  assert.ok(source.includes("savePrivacyConsent(next)"));
+});

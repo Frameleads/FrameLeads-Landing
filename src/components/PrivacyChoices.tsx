@@ -48,7 +48,7 @@ export default function PrivacyChoices() {
 
   return <>
     <WhopAnalytics enabled={consent?.advertising === true} />
-    {visible ? <section aria-labelledby="privacy-choices-title" aria-describedby="privacy-choices-description" className="fixed inset-x-3 bottom-3 z-[120] mx-auto max-w-3xl rounded-2xl border border-white/15 bg-[#111111]/[0.97] p-5 shadow-[0_20px_70px_rgba(0,0,0,.75)] backdrop-blur-xl sm:inset-x-auto sm:bottom-5 sm:right-5 sm:w-[min(92vw,38rem)] sm:p-6">
+    {visible ? <section aria-labelledby="privacy-choices-title" aria-describedby="privacy-choices-description" className="fixed inset-x-3 bottom-3 z-[120] max-w-3xl rounded-2xl border border-white/15 bg-[#111111]/[0.97] p-5 shadow-[0_20px_70px_rgba(0,0,0,.75)] backdrop-blur-xl sm:inset-x-auto sm:bottom-5 sm:left-5 sm:w-[min(92vw,38rem)] sm:p-6">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-[#FF5A1F]">Privacy choices</p>
@@ -68,7 +68,7 @@ export default function PrivacyChoices() {
         </label>
         <p className="text-xs leading-relaxed text-white/45">You can change these choices later with the Privacy settings control. Necessary site storage is limited to remembering your choice.</p>
       </div>}
-      <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
+      <div className="mt-5 flex flex-wrap items-center justify-start gap-2">
         {!managing ? <>
           <button type="button" onClick={() => save({ analytics: false, advertising: false })} className="rounded-lg border border-white/15 px-4 py-2.5 text-sm font-medium text-white/80 transition-colors hover:border-white/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F]">Reject optional</button>
           <button type="button" onClick={() => save({ analytics: true, advertising: true })} className="rounded-lg bg-[#FF5A1F] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#ff6b35] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Accept optional</button>
