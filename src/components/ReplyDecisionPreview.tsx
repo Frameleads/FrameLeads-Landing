@@ -2,362 +2,212 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 import { replyScenarios, type ReplyScenario } from "../reply-decision-preview";
 
-const mono = "font-mono text-[10px] font-semibold uppercase tracking-[.15em]";
-const card = "min-w-0 rounded-2xl border border-white/[.09] bg-[#191919] shadow-[inset_0_1px_0_rgba(255,255,255,.025)]";
-const titleClass = "text-xl font-semibold leading-snug tracking-[-.025em] sm:text-[23px]";
-const progressSteps = ["Read the incoming reply", "Check conversation context", "Match the seller's rules", "Choose a controlled next step"] as const;
-const revealSections = ["AI interpretation", "Relevant context", "Seller rule", "Intent and governance", "Recommended action", "Final safeguard"] as const;
-const REVEAL_INTERVAL_MS = 640;
+type SignalIcon = "intent" | "context" | "rules" | "approval" | "bolt";
 
-function DecisionNetworkVisual({ onExplore, reducedMotion }: { onExplore: () => void; reducedMotion: boolean }) {
-  // Use the exact approved PNG as an edge-blended layer, not a boxed image.
-  // The artwork pixels remain unchanged; only the presentation blends with the page.
-  return <div className="relative left-1/2 mt-0 w-screen max-w-[1500px] -translate-x-1/2 overflow-hidden bg-[#131313]" data-testid="integrated-decision-artwork">
-    <div className="relative left-1/2 w-[145%] -translate-x-1/2 sm:w-[110%] lg:w-full">
-      <div className="relative aspect-[1916/650] w-full">
-        <Image src="/images/neon_orange_tech_network_hub.png" alt="FrameLeads decision intelligence network with connected reply, context, intent, governance, rules and action icons"
-          width={1916} height={821} sizes="(max-width: 639px) 145vw, (max-width: 1023px) 110vw, 1500px"
-          unoptimized priority className="pointer-events-none absolute inset-0 h-auto w-full max-w-none mix-blend-screen [mask-image:linear-gradient(to_bottom,transparent_0%,black_8%,black_79%,transparent_100%)]" />
-        <button type="button" onClick={onExplore} aria-label="Explore FrameLeads reply decision scenarios"
-          data-reduced-motion={reducedMotion}
-          className="absolute left-[48.7%] top-[42%] z-10 aspect-square w-[9%] min-w-[44px] -translate-x-1/2 -translate-y-1/2 cursor-pointer rounded-[24%] bg-transparent outline-none transition-[box-shadow,transform] duration-300 hover:scale-[.97] hover:shadow-[0_0_24px_7px_rgba(255,90,31,.23),inset_0_5px_14px_rgba(0,0,0,.32)] active:scale-[.93] focus-visible:ring-2 focus-visible:ring-[#FF8756] focus-visible:ring-offset-2 focus-visible:ring-offset-[#131313] motion-reduce:transition-none"
-          title="Explore 3 reply scenarios"><span className="sr-only">Explore 3 reply scenarios</span></button>
-      </div>
-    </div>
-  </div>;
+function SignalIconMark({ kind, size = 18 }: { kind: SignalIcon; size?: number }) {
+  const paths: Record<SignalIcon, string[]> = {
+    intent: ["M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z", "M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z", "M12 12h.01"],
+    context: ["M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z", "M7 8h10", "M7 12h10", "M7 16h6"],
+    rules: ["M12 2 20 6v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6l8-4Z", "m8.5 12 2.3 2.3 4.7-4.7"],
+    approval: ["M8 12a4 4 0 1 0 8 0 4 4 0 0 0-8 0Z", "M3 21a9 9 0 0 1 15-6.6", "m17 18 2 2 3-4"],
+    bolt: ["m13 2-9 12h7l-1 8 10-13h-7l0-7Z"],
+  };
+  return <svg aria-hidden="true" viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round">
+    {paths[kind].map((path) => <path key={path} d={path} />)}
+  </svg>;
 }
 
-function ProspectPortrait({ scenario, size = "md" }: { scenario: ReplyScenario; size?: "sm" | "md" }) {
-  const portrait = "/images/reply-preview-prospects.jpg";
-  const [failed, setFailed] = useState(false);
-  const dimension = size === "sm" ? 40 : 56;
-  if (failed) return <span aria-label={`Portrait unavailable for fictional prospect ${scenario.prospectName}`} className={`grid shrink-0 place-items-center rounded-full border border-[#FF5A1F]/30 bg-[#272321] font-semibold text-[#FFB28C] ${size === "sm" ? "h-10 w-10 text-xs" : "h-14 w-14 text-sm"}`}>{scenario.prospectName.split(" ").map((part) => part[0]).join("")}</span>;
-  return <Image src={portrait} alt={`Fictional portrait of ${scenario.prospectName}`} width={dimension} height={dimension} sizes={`${dimension}px`} loading="lazy" decoding="async"
-    onError={() => setFailed(true)} className={`inline-block shrink-0 rounded-full border border-[#FF5A1F]/30 bg-[#272321] object-cover object-center shadow-[0_0_0_3px_rgba(255,90,31,.035)] ${size === "sm" ? "h-10 w-10" : "h-14 w-14"}`} />;
+const decisionSignals: { label: string; icon: SignalIcon }[] = [
+  { label: "Intent", icon: "intent" },
+  { label: "Context", icon: "context" },
+  { label: "Rules", icon: "rules" },
+  { label: "Approval", icon: "approval" },
+];
+
+function ProspectAvatar({ scenario }: { scenario: ReplyScenario }) {
+  // The prior generated portrait file was corrupt; use an honest, styled identity
+  // fallback rather than showing a broken image or a fabricated real customer.
+  const initials = scenario.prospectName.split(" ").map((part) => part[0]).join("");
+  return <span role="img" aria-label={"Fictional prospect " + scenario.prospectName}
+    className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#FF5A1F]/25 bg-[#392820] text-xs font-bold tracking-wide text-[#FFA27B]">{initials}</span>;
 }
 
-function DecisionProcessing({ stage, onSkip, reducedMotion }: { stage: number; onSkip: () => void; reducedMotion: boolean }) {
-  return <div className="flex min-h-[360px] flex-col justify-center px-4 py-6 sm:px-6 lg:min-h-[400px]" role="status" aria-label="Illustrative decision sequence">
-    <div className="flex flex-wrap items-center justify-between gap-2">
-      <p className={mono + " text-[#FF956A]"}>Building your sample decision packet</p>
-      <button type="button" onClick={onSkip} className="rounded-md border border-white/[.14] px-3 py-2 text-xs text-[#CBCBCD] hover:border-[#FF5A1F]/50 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F]">Skip animation</button>
-    </div>
-    <div className="mt-6 flex flex-col items-center gap-4 text-center">
-      <motion.div className="relative grid h-24 w-24 place-items-center rounded-2xl border border-[#FF5A1F]/30 bg-[#171718]"
-        animate={reducedMotion ? {} : { boxShadow: ["0 0 0px rgba(255,90,31,0)", "0 0 36px rgba(255,90,31,.52)", "0 0 0px rgba(255,90,31,0)"], borderColor: ["rgba(255,90,31,.24)", "rgba(255,90,31,.76)", "rgba(255,90,31,.24)"] }}
-        transition={{ duration: 1.15, repeat: reducedMotion ? 0 : Infinity, ease: "easeInOut" }}>
-        <motion.div animate={reducedMotion ? {} : { opacity: [.55, 1, .55], scale: [.96, 1.06, .96], filter: ["drop-shadow(0 0 0px rgba(255,90,31,0))", "drop-shadow(0 0 17px rgba(255,90,31,.95))", "drop-shadow(0 0 0px rgba(255,90,31,0))"] }}
-          transition={{ duration: 1.15, repeat: reducedMotion ? 0 : Infinity, ease: "easeInOut" }}>
-          <Image src="/icon-192.png" alt="" aria-hidden="true" width={60} height={60} className="h-[60px] w-[60px] object-contain" priority />
-        </motion.div>
-        <span className="absolute -bottom-2 left-1/2 h-1.5 w-9 -translate-x-1/2 rounded-full bg-[#FF5A1F]/70 blur-[5px]" aria-hidden="true" />
+function ProcessingBolt({ onSkip, reducedMotion }: { onSkip: () => void; reducedMotion: boolean }) {
+  return <div role="status" aria-label="Illustrative reply processing" className="flex min-h-[235px] flex-col items-center justify-center gap-3 rounded-xl border border-white/[.055] bg-[#222223] px-4 py-5 text-center">
+    <motion.div
+      animate={reducedMotion ? {} : { boxShadow: ["0 0 0px rgba(255,90,31,0)", "0 0 32px rgba(255,90,31,.48)", "0 0 0px rgba(255,90,31,0)"] }}
+      transition={{ duration: 1.1, ease: "easeInOut", repeat: reducedMotion ? 0 : Infinity }}
+      className="grid h-16 w-16 place-items-center rounded-2xl border border-[#FF5A1F]/40 bg-[#211B19]">
+      <motion.div
+        animate={reducedMotion ? {} : { opacity: [.5, 1, .5], filter: ["drop-shadow(0 0 0px rgba(255,90,31,0))", "drop-shadow(0 0 14px rgba(255,90,31,.95))", "drop-shadow(0 0 0px rgba(255,90,31,0))"] }}
+        transition={{ duration: 1.1, ease: "easeInOut", repeat: reducedMotion ? 0 : Infinity }}>
+        <Image src="/icon-192.png" alt="" aria-hidden="true" width={43} height={43} className="h-[43px] w-[43px] object-contain" />
       </motion.div>
-      <p className="text-[17px] font-semibold text-white">Processing reply<span className="text-[#FF8655]">…</span></p>
-      <p className="text-xs text-[#ADADB0]">A staged illustration, not a live AI analysis or sent message.</p>
-    </div>
-    <div className="mt-6 h-1.5 overflow-hidden rounded-full bg-white/[.08]">
-      <motion.div className="h-full rounded-full bg-[#FF5A1F] shadow-[0_0_15px_rgba(255,90,31,.55)]"
-        animate={{ width: `${(stage + 1) * 25}%` }} transition={{ duration: .43, ease: "easeOut" }} />
-    </div>
-    <div className="mt-4 grid grid-cols-2 gap-2">
-      {progressSteps.map((step, index) => <div key={step} className={`flex min-w-0 items-center gap-2 rounded-lg border px-2.5 py-2.5 transition-colors duration-300 ${index <= stage ? "border-[#FF5A1F]/25 bg-[#FF5A1F]/[.055] text-white" : "border-white/[.06] bg-white/[.015] text-[#76767A]"}`}>
-        <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border font-mono text-[10px] ${index <= stage ? "border-[#FF5A1F]/60 bg-[#FF5A1F]/15 text-[#FFAB85]" : "border-white/[.12]"}`}>{index < stage ? "✓" : String(index + 1).padStart(2, "0")}</span>
-        <span className="min-w-0 text-[11px] leading-snug">{step}</span>
-      </div>)}
-    </div>
+    </motion.div>
+    <p className="text-sm font-semibold text-white">Processing the sample reply…</p>
+    <p className="max-w-[260px] text-[11px] leading-relaxed text-[#A8A8AD]">Reading context and checking illustrative seller rules.</p>
+    <span className="mt-1 h-1 w-40 overflow-hidden rounded-full bg-white/10" aria-hidden="true">
+      <motion.span className="block h-full w-1/3 rounded-full bg-[#FF5A1F]" animate={reducedMotion ? {} : { x: [0, 115, 0] }} transition={{ duration: 1.2, repeat: reducedMotion ? 0 : Infinity, ease: "easeInOut" }} />
+    </span>
+    <button type="button" onClick={onSkip} className="mt-2 rounded-md px-3 py-2 text-xs text-[#A7A7AB] underline-offset-4 hover:text-white hover:underline focus-visible:outline-2 focus-visible:outline-[#FF5A1F]">Skip animation</button>
+    <p className="text-[10px] text-[#85858A]">Illustration only. Not a live AI analysis or message send.</p>
   </div>;
 }
 
-type DecisionIconName = "interpretation" | "context" | "rule" | "intent" | "governance" | "action" | "safeguard";
-const decisionIconPaths: Record<DecisionIconName, string[]> = {
-  interpretation: ["M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z", "M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"],
-  context: ["M3 5.5h18", "M3 12h15", "M3 18.5h11", "M18 16l3 2.5-3 2.5"],
-  rule: ["M12 2.5 20 6v5.5c0 5.2-3.5 8.1-8 10-4.5-1.9-8-4.8-8-10V6l8-3.5Z", "m9 12 2 2 4-4"],
-  intent: ["M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z", "M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z", "M12 12h.01"],
-  governance: ["M8 7a4 4 0 1 0 8 0 4 4 0 0 0-8 0Z", "M4 21v-2a8 8 0 0 1 14.5-4.7", "m17 18 2 2 3-4"],
-  action: ["M4 12h16", "m13 5 7 7-7 7"],
-  safeguard: ["M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z", "m8 12 2.5 2.5L16 9"]
-};
-function DecisionIcon({ name }: { name: DecisionIconName }) {
-  return <span aria-hidden="true" className="grid h-6 w-6 shrink-0 place-items-center rounded-md border border-[#FF5A1F]/25 bg-[#FF5A1F]/[.075] text-[#FF986B]">
-    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-      {decisionIconPaths[name].map((path) => <path key={path} d={path} />)}
-    </svg>
-  </span>;
-}
+function DecisionPacket({ scenario, phase, reducedMotion, onSkip }: { scenario: ReplyScenario; phase: number; reducedMotion: boolean; onSkip: () => void }) {
+  const ready = phase > 0;
+  return <article className="mt-6 min-w-0 overflow-hidden rounded-2xl border border-white/[.095] bg-[#191919] shadow-[0_20px_48px_-32px_rgba(0,0,0,.85)]" aria-label="FrameLeads reply decision packet" data-testid="compact-decision-packet">
+    <header className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[.075] px-4 py-3 sm:px-5">
+      <div className="flex items-center gap-2">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[.08em] text-[#FF8657]">FRAMELEADS / REPLY INTELLIGENCE</span>
+      </div>
+      <span className="rounded-full border border-[#FF5A1F]/20 bg-[#FF5A1F]/[.085] px-2.5 py-1 text-[10px] font-semibold text-[#FFA37D]">{ready ? scenario.authority : "Illustrative processing"}</span>
+    </header>
 
-function NumberedSection({ index, label, icon, children, prominent = false, wide = false, reducedMotion = false }: {
-  index: string; label: string; icon: DecisionIconName; children: React.ReactNode; prominent?: boolean; wide?: boolean; reducedMotion?: boolean
-}) {
-  return <motion.section initial={reducedMotion ? false : { opacity: 0, y: 16, scale: .985 }} animate={{ opacity: 1, y: 0, scale: 1 }}
-    transition={reducedMotion ? { duration: 0 } : { duration: .46, ease: [0.22, 1, 0.36, 1] }}
-    className={`min-w-0 rounded-xl border px-3.5 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,.03)] sm:px-4 ${wide ? "lg:col-span-2" : ""} ${prominent ? "border-[#FF5A1F]/40 bg-[radial-gradient(ellipse_at_100%_0%,rgba(152,70,29,.24),transparent_64%),linear-gradient(145deg,#30221c,#211c19)]" : "border-white/[.085] bg-[#1E1E20]"}`}>
-    <h4 className="mb-2 flex min-w-0 items-center gap-2.5">
-      <span className={mono + " text-[#FF8556]"}>{index}</span>
-      <DecisionIcon name={icon} />
-      <span className="min-w-0 text-[10px] font-bold uppercase leading-[1.35] tracking-[.1em] text-[#D0C6C1]">{label}</span>
-    </h4>
-    {children}
-  </motion.section>;
-}
+    <div className="grid min-w-0 gap-2 p-3 md:grid-cols-2 md:p-4">
+      <section className="flex min-w-0 flex-col rounded-xl bg-[#242424] p-4" aria-label="Incoming reply">
+        <div className="flex min-w-0 items-center gap-3 border-b border-white/[.07] pb-3">
+          <ProspectAvatar scenario={scenario} />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-white">{scenario.prospectName}</p>
+            <p className="truncate text-[11px] text-[#B6B5B8]">{scenario.role} · {scenario.company}</p>
+          </div>
+        </div>
+        <p className="mt-4 break-words text-[14px] font-medium leading-[1.55] text-white sm:text-[15px]">“{scenario.reply}”</p>
+        <div className="mt-auto pt-4">
+          <p className="font-mono text-[9px] font-medium uppercase tracking-[.11em] text-[#98989C]">Incoming reply · fictional example</p>
+        </div>
+      </section>
 
-function DecisionDetails({ scenario, stage, revealCount, onSkip, reducedMotion }: { scenario: ReplyScenario; stage: number; revealCount: number; onSkip: () => void; reducedMotion: boolean }) {
-  return <div className="mt-7 grid min-w-0 gap-4 lg:grid-cols-[minmax(0,.78fr)_minmax(0,1.22fr)]" data-testid="decision-details">
-    <aside className="min-w-0 space-y-4">
-      <div className={card + " overflow-hidden"}>
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[.08] bg-[#212123] px-5 py-4">
-          <span className={mono + " text-[#A9A9AB]"}>Incoming reply</span>
-          <span className="rounded-full border border-white/[.12] px-2.5 py-1 font-mono text-[10px] text-[#A1A1A4]">Fictional prospect</span>
-        </div>
-        <div className="space-y-5 p-5 sm:p-6">
-          <div className="flex min-w-0 items-center gap-3">
-            <ProspectPortrait scenario={scenario} />
-            <div className="min-w-0">
-              <p className="break-words text-base font-semibold text-white">{scenario.prospectName}</p>
-              <p className="break-words text-xs text-[#ABABAF]">{scenario.role} · {scenario.company}</p>
-            </div>
-          </div>
-          <div className="min-w-0 overflow-hidden rounded-xl border border-white/[.1] bg-[#202023]">
-            <div className="space-y-1 border-b border-white/[.07] px-4 py-3 text-[11px] leading-relaxed text-[#A2A2A6]">
-              <p><span className="text-[#77777D]">From:</span> <span className="break-all text-[#C8C8CC]">{scenario.prospectEmail}</span></p>
-              <p><span className="text-[#77777D]">Subject:</span> <span className="text-[#C8C8CC]">{scenario.subject}</span></p>
-            </div>
-            <p className="break-words px-4 py-5 text-[16px] font-medium leading-relaxed text-white sm:px-5 sm:text-[18px]">{scenario.reply}</p>
-            <p className="border-t border-white/[.07] px-4 py-2 font-mono text-[9px] uppercase tracking-wider text-[#828287]">Illustrative inbound email · no live conversation</p>
-          </div>
-          <div className="border-l-2 border-[#FF5A1F] pl-4">
-            <p className={mono + " text-[#FC9065]"}>The real challenge</p>
-            <p className="mt-2 text-sm leading-relaxed text-[#D2D0D0]">{scenario.pain}</p>
-          </div>
-        </div>
-      </div>
-      <div className={card + " p-5 sm:p-6"}>
-        <p className={mono + " text-[#8D8D92]"}>Without a clear decision process</p>
-        <p className="mt-3 text-sm leading-relaxed text-[#CBCBCC]">{scenario.currentWorkaround}</p>
-        <p className="mt-4 text-xs leading-relaxed text-[#8E8E91]">An illustrative workflow, not a measured claim about other software or teams.</p>
-      </div>
-    </aside>
-    <div className={card + " min-w-0 overflow-hidden"}>
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[.08] bg-gradient-to-r from-[#281e18] to-[#191919] px-4 py-3 sm:px-5">
-        <div className="min-w-0">
-          <p className={mono + " text-[#FF9061]"}>FrameLeads decision layer</p>
-          <h3 className="mt-0.5 text-[17px] font-semibold">From reply to next action</h3>
-        </div>
-        <span className="rounded-full border border-[#FF5A1F]/30 bg-[#FF5A1F]/10 px-2.5 py-1.5 font-mono text-[9px] text-[#FFAC87]">Illustrative preview</span>
-      </div>
-      {stage < 4 ? <DecisionProcessing stage={stage} onSkip={onSkip} reducedMotion={reducedMotion} /> : <div className="px-3 py-3 sm:px-4 sm:py-4" data-reveal-count={revealCount} aria-live="off">
-        <div className="grid min-w-0 grid-cols-1 gap-2.5 lg:grid-cols-2" data-testid="compact-decision-grid">
-          {revealCount > 0 && <NumberedSection index="01" icon="interpretation" label="AI interpretation" wide reducedMotion={reducedMotion}>
-            <p className="text-[13px] font-medium leading-snug text-white"><span className="sr-only">Understand the reply: </span>{scenario.confidence}</p>
-            <p className="mt-1 text-[11px] leading-snug text-[#AAA9AB]">{scenario.pain}</p>
-          </NumberedSection>}
-          {revealCount > 1 && <NumberedSection index="02" icon="context" label="Relevant context" reducedMotion={reducedMotion}>
-            <span className="sr-only">Read the context</span>
-            <ul className="space-y-1.5">{scenario.context.map((item) => <li key={item} className="flex min-w-0 items-start gap-2 text-[11px] leading-[1.38] text-[#CAC9CB]"><span aria-hidden="true" className="mt-[3px] text-[8px] text-[#FF7640]">◆</span><span className="min-w-0 break-words">{item}</span></li>)}</ul>
-          </NumberedSection>}
-          {revealCount > 2 && <NumberedSection index="03" icon="rule" label="Why human review / seller rule" reducedMotion={reducedMotion}>
-            <span className="sr-only">Apply the seller&#39;s rules</span>
-            <p className="text-[12px] font-semibold leading-snug text-[#F5D1C1]">{scenario.rule}</p>
-            <p className="mt-2 text-[11px] leading-snug text-[#AAA4A1]">{scenario.ruleSource}</p>
-          </NumberedSection>}
-          {revealCount > 3 && <NumberedSection index="04" icon="governance" label="Intent and governance" reducedMotion={reducedMotion}>
-            <p className="text-[13px] font-semibold leading-snug text-white">{scenario.intent}</p>
-            <p className="mt-1 text-[12px] font-semibold leading-snug text-[#F1D0C1]">{scenario.authority}</p>
-            <p className="mt-1 text-[11px] leading-snug text-[#ADADB1]">{scenario.authorityDetail}</p>
-          </NumberedSection>}
-          {revealCount > 4 && <NumberedSection index="05" icon="action" label="Recommended next action" prominent wide reducedMotion={reducedMotion}>
-            <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
-              <p className="min-w-0 flex-1 text-[14px] font-bold leading-snug text-white">{scenario.nextAction}</p>
-              <span className="shrink-0 rounded-full border border-[#FF5A1F]/30 px-2 py-1 font-mono text-[9px] text-[#FFB28C]">Human-controlled</span>
-            </div>
-            <p className="mt-1.5 text-[11px] leading-snug text-[#D5C5BC]">{scenario.why}</p>
-          </NumberedSection>}
-          {revealCount > 5 && <NumberedSection index="06" icon="safeguard" label="Final safeguard" wide reducedMotion={reducedMotion}>
-            <p className="text-[12px] font-medium leading-snug text-white">{scenario.result}</p>
-            <p className="mt-1 text-[11px] leading-snug text-[#AAA9AB]">{scenario.safeguard}</p>
-          </NumberedSection>}
-        </div>
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-[10px] leading-snug text-[#919195]">Illustrative decision preview · no live AI inference or action executed.</p>
-          {revealCount < revealSections.length && <button type="button" onClick={onSkip} className="rounded-md border border-white/[.14] px-2.5 py-1.5 text-[11px] text-[#CBCBCD] hover:border-[#FF5A1F]/50 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F]">Skip animation</button>}
-        </div>
-      </div>}
+      <section className="flex min-w-0 flex-col" aria-label="Recommended decision" aria-live="polite">
+        {!ready ? <ProcessingBolt onSkip={onSkip} reducedMotion={reducedMotion} /> : <motion.div
+          key={scenario.id + "-ready"}
+          initial={reducedMotion ? false : { opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }} transition={{ duration: reducedMotion ? 0 : .5 }}
+          className="flex h-full min-h-[235px] flex-col rounded-xl bg-[#242424] p-4">
+          <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[.08em] text-[#FF8757]"><SignalIconMark kind="bolt" size={15} /> Decision ready</p>
+          <h2 className="mt-2 text-[17px] font-bold leading-snug text-white sm:text-[19px]">{scenario.nextAction}</h2>
+          <p className="mt-2 text-[12px] leading-relaxed text-[#C1C1C4]">{scenario.why}</p>
+          {phase >= 2 && <motion.div initial={reducedMotion ? false : { opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}
+            className="mt-auto rounded-lg bg-[#43281E] px-3 py-2.5 text-[12px] font-medium leading-snug text-[#FFC09F]">
+            {scenario.authority} · {scenario.rule}
+          </motion.div>}
+          {phase < 2 && <span className="mt-auto h-9" aria-hidden="true" />}
+        </motion.div>}
+      </section>
     </div>
-  </div>;
+
+    {ready && <motion.details initial={reducedMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: .4 }}
+      className="group mx-3 mb-3 rounded-xl bg-[#242424] p-3 sm:mx-4 sm:mb-4 sm:p-4" data-testid="decision-explanation">
+      <summary className="cursor-pointer list-none outline-none focus-visible:rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F] [&::-webkit-details-marker]:hidden">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-[11px] font-bold uppercase tracking-[.055em] text-white">How the decision was reached</p>
+          <span className="text-sm text-[#AEACAE] transition-transform group-open:rotate-180" aria-hidden="true">⌄</span>
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+          {decisionSignals.map((signal, index) => <div key={signal.label} className="flex min-h-[62px] flex-col items-center justify-center gap-1.5 rounded-lg bg-[#303030] px-2 py-2">
+            <motion.span initial={reducedMotion ? false : { opacity: .35 }} animate={{ opacity: 1 }} transition={{ delay: reducedMotion ? 0 : .18 * index + .12 }} className="text-[#FF8A5D]"><SignalIconMark kind={signal.icon} size={17} /></motion.span>
+            <span className="text-[11px] text-[#DEDCDF]">{signal.label}</span>
+          </div>)}
+        </div>
+      </summary>
+      <div className="mt-4 grid gap-4 border-t border-white/[.075] pt-4 text-xs leading-relaxed text-[#C7C6C8] sm:grid-cols-2">
+        <div>
+          <p className="mb-1 font-semibold text-[#FFAA84]">Intent</p>
+          <p>{scenario.intent}</p>
+          <p className="mt-1 text-[#9D9DA1]">{scenario.confidence}</p>
+        </div>
+        <div>
+          <p className="mb-1 font-semibold text-[#FFAA84]">Prospect context</p>
+          <ul className="space-y-1.5">{scenario.context.map((point) => <li key={point}>• {point}</li>)}</ul>
+        </div>
+        <div>
+          <p className="mb-1 font-semibold text-[#FFAA84]">Seller rule</p>
+          <p>{scenario.rule}</p>
+          <p className="mt-1 text-[#9D9DA1]">{scenario.ruleSource}</p>
+        </div>
+        <div>
+          <p className="mb-1 font-semibold text-[#FFAA84]">Approval and safeguards</p>
+          <p>{scenario.authorityDetail}</p>
+          <p className="mt-2 text-[#B5B3B5]">{scenario.safeguard}</p>
+        </div>
+      </div>
+    </motion.details>}
+    <p className="px-4 pb-3 text-[10px] leading-relaxed text-[#8C8C90] sm:px-5">
+      Fictional prospects and illustrative seller rules. No live inference, customer proof, approval, or outbound message.
+    </p>
+  </article>;
 }
 
 export default function ReplyDecisionPreview() {
-  const [selectedId, setSelectedId] = useState<ReplyScenario["id"] | null>(null);
-  const [stage, setStage] = useState(0);
-  const [revealCount, setRevealCount] = useState(0);
-  const [sequence, setSequence] = useState(0);
+  const [selectedId, setSelectedId] = useState<ReplyScenario["id"]>("pricing");
+  const [phase, setPhase] = useState(4);
+  const [cycle, setCycle] = useState(0);
   const reducedMotion = useReducedMotion();
-  const detailsRef = useRef<HTMLDivElement>(null);
-  const gatewayRef = useRef<HTMLDetailsElement>(null);
-  const scenarioRef = useRef<HTMLElement>(null);
-  const timersRef = useRef<number[]>([]);
-  const active = replyScenarios.find((scenario) => scenario.id === selectedId) ?? null;
+  const decisionRef = useRef<HTMLDivElement>(null);
+  const active = replyScenarios.find((scenario) => scenario.id === selectedId) ?? replyScenarios[1];
 
   useEffect(() => {
-    timersRef.current.forEach(window.clearTimeout);
-    timersRef.current = [];
-    if (!selectedId || reducedMotion) return;
-    const timers = [650, 1300, 1950, 2600].map((ms, index) => window.setTimeout(() => {
-      setStage(index + 1);
-      if (index === 3) {
-        revealSections.forEach((_, revealIndex) => {
-          const timer = window.setTimeout(() => setRevealCount(revealIndex + 1), 360 + revealIndex * REVEAL_INTERVAL_MS);
-          timersRef.current = [...timersRef.current, timer];
-        });
-      }
-    }, ms));
-    timersRef.current = timers;
-    return () => {
-      timersRef.current.forEach(window.clearTimeout);
-      timersRef.current = [];
-    };
-  }, [selectedId, sequence, reducedMotion]);
+    if (cycle === 0) return; // Preselected example is readable immediately.
+    const delays = [2600, 3240, 3880, 4520];
+    const timers = delays.map((ms, index) => window.setTimeout(() => setPhase(index + 1), reducedMotion ? 0 : ms));
+    return () => timers.forEach(window.clearTimeout);
+  }, [cycle, reducedMotion]);
 
-  useEffect(() => () => timersRef.current.forEach(window.clearTimeout), []);
-
-  const selectScenario = (id: ReplyScenario["id"]) => {
-    timersRef.current.forEach(window.clearTimeout);
-    timersRef.current = [];
-    setStage(reducedMotion ? 4 : 0);
-    setRevealCount(reducedMotion ? revealSections.length : 0);
+  function selectScenario(id: ReplyScenario["id"]) {
     setSelectedId(id);
-    setSequence((current) => current + 1);
-    // Keep the bolt loader visible immediately after selection, including desktop.
-    if (typeof window !== "undefined") {
-      window.requestAnimationFrame(() => detailsRef.current?.scrollIntoView({ behavior: reducedMotion ? "instant" : "smooth", block: "start" }));
-    }
-  };
+    setPhase(reducedMotion ? 4 : 0);
+    setCycle((value) => value + 1);
+    window.requestAnimationFrame(() => decisionRef.current?.scrollIntoView({ behavior: reducedMotion ? "instant" : "smooth", block: "start" }));
+  }
 
-  const openScenarios = () => {
-    if (!gatewayRef.current) return;
-    gatewayRef.current.open = true;
-    window.requestAnimationFrame(() => scenarioRef.current?.scrollIntoView({ behavior: reducedMotion ? "instant" : "smooth", block: "start" }));
-  };
+  function skipAnimation() { setPhase(4); setCycle(0); }
 
   return <main id="main-content" className="min-h-screen min-w-0 overflow-x-clip bg-[#131313] text-white">
-    <div className="h-[3px] w-full bg-gradient-to-r from-[#FF5A1F] via-[#FF8A58] to-transparent" aria-hidden="true" />
-    <div className="mx-auto w-full max-w-[1220px] min-w-0 px-4 pb-20 pt-6 sm:px-7 lg:px-10">
-      <header className="flex min-w-0 flex-wrap items-center justify-between gap-4 border-b border-white/[.09] pb-6">
-        <Link href="/" className="inline-flex items-center gap-2.5 rounded-lg outline-offset-4 focus-visible:outline-2 focus-visible:outline-[#FF6E36]" aria-label="FrameLeads homepage">
-          <span className="flex h-9 w-9 items-center justify-center rounded-[10px] border border-[#FF5A1F]/35 bg-[#242424] font-heading text-2xl text-[#FF5A1F]" aria-hidden="true">ϟ</span>
-          <span className="font-heading text-[19px] font-bold tracking-tight">FrameLeads</span>
+    <div className="h-[3px] bg-gradient-to-r from-[#FF5A1F] via-[#FF8A58] to-transparent" />
+    <div className="mx-auto w-full max-w-[1120px] px-4 pb-16 pt-6 sm:px-7 lg:px-9">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[.08] pb-5">
+        <Link href="/" className="inline-flex items-center gap-2.5 rounded-md focus-visible:outline-2 focus-visible:outline-[#FF5A1F]" aria-label="FrameLeads homepage">
+          <Image src="/logo.png" alt="" width={32} height={32} className="rounded-lg object-contain" />
+          <span className="font-heading text-lg font-bold">FrameLeads</span>
         </Link>
-        <Link href="/" className="rounded-md text-xs font-medium text-[#BDBDBF] underline-offset-4 hover:text-white hover:underline focus-visible:outline-2 focus-visible:outline-[#FF6E36]">Return to website ↗</Link>
+        <Link href="/" className="text-xs font-medium text-[#B3B3B8] underline-offset-4 hover:text-white hover:underline">Back to website ↗</Link>
       </header>
 
-      <div className="mx-auto max-w-[890px] pb-10 pt-14 text-center sm:pt-20">
-        <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-[#FF5A1F]/25 bg-[#FF5A1F]/[.075] px-4 py-2 text-[10px] font-semibold uppercase tracking-[.15em] text-[#FFA581]">
-          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FF5A1F]" aria-hidden="true" /> For founder-led B2B agencies already running outbound
-        </div>
-        <h1 className="mx-auto mt-6 max-w-[800px] font-heading text-[36px] font-bold leading-[1.13] tracking-[-.035em] text-white sm:text-[50px] lg:text-[61px]">
-          A prospect replied.<br /><span className="text-[#FF5A1F]">What happens next?</span>
-        </h1>
-        <p className="mx-auto mt-5 max-w-[635px] text-base leading-[1.75] text-[#B8B8BC] sm:text-lg">
-          See how reply intent, prospect context and your own sales rules shape the next action, while consequential decisions stay in human hands.
-        </p>
-        <p className="mx-auto mt-5 text-xs leading-relaxed text-[#85858B]">
-          Explore three illustrated decisions. No signup, no form, no live email sent.
-        </p>
-      </div>
-
-      <section className="relative mt-0" aria-labelledby="gateway-heading">
-        <div className="relative z-10 mx-auto max-w-3xl text-center">
-          <p className={mono + " text-[#FF9167]"}>The Decision Intelligence Layer</p>
-          <h2 id="gateway-heading" className="mt-3 font-heading text-[25px] font-semibold leading-tight sm:text-[32px]">See what happens between a reply and the next move.</h2>
-          <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-[#B5B2B2] sm:text-base">FrameLeads connects reply intent, prospect context and seller rules to recommend the next action, with human control where it matters.</p>
-        </div>
-        <DecisionNetworkVisual onExplore={openScenarios} reducedMotion={Boolean(reducedMotion)} />
-        <div className="relative z-10 -mt-3 flex flex-col items-center justify-center gap-3 px-3 sm:-mt-8">
-          <p className="text-center text-xs leading-relaxed text-[#9E9793]">Tap the FrameLeads core to explore three sample reply scenarios.</p>
-          <button type="button" onClick={openScenarios} className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#FF5A1F]/40 bg-[#FF5A1F]/[.09] px-5 py-2.5 text-sm font-semibold text-[#FFD0BC] shadow-[0_0_22px_rgba(255,90,31,.08)] transition-colors hover:border-[#FF5A1F]/70 hover:bg-[#FF5A1F]/[.14] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F]">Explore 3 reply scenarios <span aria-hidden="true" className="ml-2">↓</span></button>
-        </div>
-        <details ref={gatewayRef} className="group/gateway min-w-0" data-testid="decision-gateway">
-          <summary className="sr-only focus:not-sr-only focus:relative focus:z-20 focus:mx-auto focus:w-fit focus:rounded-lg focus:border focus:border-[#FF5A1F] focus:bg-[#232020] focus:px-4 focus:py-2 focus:text-sm focus:text-white">Explore FrameLeads reply decision scenarios</summary>
-          <div className="pt-7">
-      <section ref={scenarioRef} className="scroll-mt-5" aria-labelledby="choose-scenario">
-        <div className="mb-5 flex flex-col items-start gap-2">
-          <div>
-            <p className={mono + " text-[#FF9167]"}>Step 01 / Pick a reply</p>
-            <h2 id="choose-scenario" className="mt-2 font-heading text-[24px] font-semibold leading-tight sm:text-[30px]">Three replies. Three different decisions.</h2>
-          </div>
-          <p className="max-w-xl text-sm leading-relaxed text-[#AFAFB2]">Choose the situation you recognize. Watch its decision unfold below.</p>
-        </div>
-        <div className="grid min-w-0 gap-4 md:grid-cols-3" aria-label="Choose a reply scenario">
-          {replyScenarios.map((s) => {
-            const selected = s.id === selectedId;
-            return <button key={s.id} type="button" aria-pressed={selected} onClick={() => selectScenario(s.id)}
-              className={"group relative flex min-w-0 flex-col items-start overflow-hidden rounded-2xl border p-5 text-left transition-[border-color,background-color,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F] sm:p-6 " +
-                (selected ? "border-[#FF5A1F]/65 bg-[radial-gradient(ellipse_at_95%_0%,rgba(120,55,27,.22),transparent_55%),linear-gradient(145deg,#251e1a,#1b1a19_60%,#191919)] shadow-[0_0_34px_rgba(255,90,31,.09),inset_0_1px_0_rgba(255,255,255,.04)]" : "border-white/[.12] bg-[radial-gradient(ellipse_at_100%_0%,rgba(103,54,32,.12),transparent_50%),linear-gradient(145deg,#202020,#191919_72%)] shadow-[inset_0_1px_0_rgba(255,255,255,.035)] hover:-translate-y-0.5 hover:border-[#FF5A1F]/45 hover:bg-[#222022] hover:shadow-[0_0_24px_rgba(255,90,31,.055),inset_0_1px_0_rgba(255,255,255,.045)]")}>
-              <div className="flex w-full items-center justify-between gap-2">
-                <span className={mono + (selected ? " text-[#FFA27C]" : " text-[#88888B]")}>SCENARIO {s.number}</span>
-                <span className="text-lg text-[#FF8756]" aria-hidden="true">{selected ? "●" : "↗"}</span>
-              </div>
-              <div className="mt-4 flex min-w-0 items-center gap-3">
-                <ProspectPortrait scenario={s} size="sm" />
-                <div className="min-w-0">
-                  <p className="break-words text-sm font-semibold text-white">{s.prospectName}</p>
-                  <p className="break-words text-[11px] text-[#97979B]">{s.company}</p>
-                </div>
-              </div>
-              <p className="mt-4 text-[18px] font-semibold leading-tight text-white sm:text-[20px]">{s.title}</p>
-              <p className="mt-2 text-sm leading-relaxed text-[#ABAAAD]">{s.teaser}</p>
-              <p className="mt-5 break-words rounded-lg border border-white/[.07] bg-[#111113] px-4 py-3 text-[13px] leading-[1.6] text-[#D7D6D7]">“{s.reply}”</p>
-              <span className="mt-auto pt-5 text-xs font-semibold text-[#FFA07A]">{selected ? "Viewing decision ↓" : "Explore this decision →"}</span>
+      <section id="scenarios" className="scroll-mt-5 pb-1 pt-10 sm:pt-14" aria-labelledby="scenario-title">
+        <p className="font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#FF8C5F]">Illustrative product preview · no signup required</p>
+        <h1 id="scenario-title" className="mt-3 max-w-3xl font-heading text-3xl font-bold tracking-tight sm:text-4xl">Three replies. Three different decisions.</h1>
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#B1B1B5] sm:text-base">Choose a reply to see how FrameLeads would recommend the next action. Human approval remains in control where needed.</p>
+        <div className="mt-6 grid gap-2.5 sm:grid-cols-3" aria-label="Choose an illustrative reply scenario">
+          {replyScenarios.map((scenario) => {
+            const selected = selectedId === scenario.id;
+            return <button key={scenario.id} type="button" aria-pressed={selected} onClick={() => selectScenario(scenario.id)}
+              className={"min-w-0 rounded-xl border px-4 py-3 text-left transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F] " +
+                (selected ? "border-[#FF5A1F]/60 bg-[#32231D] shadow-[inset_0_1px_0_rgba(255,127,75,.08)]" : "border-white/[.1] bg-[#1E1E1F] hover:border-[#FF5A1F]/30 hover:bg-[#252121]")}>
+              <span className="font-mono text-[9px] uppercase tracking-[.11em] text-[#FF9A70]">Scenario {scenario.number}</span>
+              <span className="mt-1 block text-[14px] font-semibold text-white">{scenario.title}</span>
+              <span className="mt-1 block text-[11px] leading-snug text-[#ABAAAE]">{scenario.teaser}</span>
             </button>;
           })}
         </div>
       </section>
 
-      <div className="scroll-mt-6" ref={detailsRef} aria-live="polite">
-        {active ? <>
-          <div className="mt-12 flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <p className={mono + " text-[#FF9167]"}>Step 02 / Reveal the decision</p>
-              <h2 className={titleClass + " mt-2"}>What changes when a reply has a decision layer?</h2>
-            </div>
-            <span className="text-xs text-[#98989C]">Sample scenario {active.number} of 03</span>
-          </div>
-          <DecisionDetails key={`${active.id}-${sequence}`} scenario={active} stage={reducedMotion ? 4 : stage} revealCount={revealCount} reducedMotion={Boolean(reducedMotion)} onSkip={() => { timersRef.current.forEach(window.clearTimeout); timersRef.current = []; setStage(4); setRevealCount(revealSections.length); }} />
-        </> : <section className="mt-8 flex min-h-[186px] flex-col items-center justify-center rounded-2xl border border-dashed border-[#49413C] bg-gradient-to-br from-[#211B18] via-[#1B1A19] to-[#171717] p-7 text-center">
-          <span aria-hidden="true" className="mb-3 text-3xl text-[#FF8558]">◇</span>
-          <h2 className="text-lg font-semibold">The interesting part comes after the reply.</h2>
-          <p className="mt-2 max-w-md text-sm leading-relaxed text-[#A5A2A1]">Choose a scenario above to see the context, rules, recommended action and human control behind the decision.</p>
-        </section>}
+      <div ref={decisionRef} className="scroll-mt-4">
+        <DecisionPacket scenario={active} phase={phase} reducedMotion={Boolean(reducedMotion)} onSkip={skipAnimation} />
       </div>
-          </div>
-        </details>
-      </section>
-
-      <section className="mt-14 min-w-0 overflow-hidden rounded-2xl border border-[#FF5A1F]/20 bg-gradient-to-br from-[#30231D] via-[#201B19] to-[#171717] px-5 py-9 sm:px-9 sm:py-11" aria-labelledby="pilot-heading">
-        <div className="grid min-w-0 items-center gap-7 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,.7fr)]">
-          <div className="min-w-0">
-            <p className={mono + " text-[#FF9872]"}>From example to your own workflow</p>
-            <h2 id="pilot-heading" className="mt-3 font-heading text-[26px] font-bold leading-tight sm:text-[32px]">Want to see what happens with your own prospect replies?</h2>
-            <p className="mt-3 max-w-[630px] text-sm leading-relaxed text-[#C0B6B0]">Use the $10 Micro-Pilot with up to 25 total prospects, including up to three reply decision analyses. Or take the optional five-question Audit first.</p>
-          </div>
-          <div className="flex min-w-0 flex-col gap-3">
-            <Link href="/checkout/micro-pilot" className="inline-flex min-h-[52px] min-w-0 items-center justify-center rounded-xl bg-[#FF5A1F] px-5 py-3 text-center text-sm font-bold leading-snug text-white transition-colors hover:bg-[#FF713C] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
-              Try the $10 Micro-Pilot <span aria-hidden="true" className="ml-2">↗</span>
-            </Link>
-            <Link href="/?audit=open" className="inline-flex min-h-[47px] items-center justify-center rounded-xl border border-white/[.2] px-4 py-3 text-center text-sm font-medium text-[#D0C5BF] hover:border-white/40 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
-              Prefer a personalized Audit? →
-            </Link>
-          </div>
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/[.07] bg-[#1B1B1C] px-4 py-4">
+        <p className="max-w-xl text-[12px] leading-relaxed text-[#BCB9B9]"><span className="font-semibold text-white">Want to try FrameLeads with your own replies?</span> The $10 Micro-Pilot covers 25 prospects and up to three reply decision analyses.</p>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/checkout/micro-pilot" className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#FF5A1F] px-4 py-2 text-sm font-semibold text-white hover:bg-[#FF7342]">Try the $10 Micro-Pilot</Link>
+          <Link href="/?audit=open" className="inline-flex min-h-11 items-center justify-center rounded-lg border border-white/20 px-4 py-2 text-sm text-[#D7D7D9] hover:border-white/40 hover:text-white">Optional Audit</Link>
         </div>
-      </section>
-
-      <footer className="mt-8 flex min-w-0 flex-wrap items-start justify-between gap-3 border-t border-white/[.08] pt-6 text-xs leading-relaxed text-[#87878A]">
-        <p className="max-w-[780px]">Examples use fictional companies, illustrative seller rules and source-informed workflow logic. They are not live AI evaluations, customer conversations, measured revenue outcomes or records of actual sends. Real results depend on your configured context, permissions and integrations.</p>
-        <Link href="/" className="shrink-0 underline-offset-4 hover:text-white hover:underline">FrameLeads.io ↗</Link>
+      </div>
+      <footer className="mt-6 border-t border-white/[.06] pt-5 text-[11px] leading-relaxed text-[#8E8E93]">
+        These examples are fictional, read-only illustrations rather than live evaluations, customer conversations, measured outcomes, or actual message sends.
       </footer>
     </div>
   </main>;

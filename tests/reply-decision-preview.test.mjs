@@ -4,128 +4,102 @@ import { readFileSync } from "node:fs";
 
 const source = readFileSync("src/reply-decision-preview.ts", "utf8");
 const component = readFileSync("src/components/ReplyDecisionPreview.tsx", "utf8");
+const hero = readFileSync("src/components/HeroIntro.tsx", "utf8");
 const route = readFileSync("src/app/reply-decision-preview/page.tsx", "utf8");
 const homepage = readFileSync("src/app/page.tsx", "utf8");
 
-test("three buyer-problem scenarios cover ambiguous, pricing and security handoff", () => {
+test("all three source-grounded illustrative buyer situations remain intact", () => {
   for (const id of ['id: "ambiguous"', 'id: "pricing"', 'id: "handoff"']) assert.ok(source.includes(id));
-  for (const phrase of ["possible interest", "Commercial exceptions", "Security or compliance", "human", "illustrative"]) {
-    assert.match(source.toLowerCase(), new RegExp(phrase.toLowerCase()));
+  for (const phrase of ["No invented lead score", "No discount is granted", "No security assurance is fabricated"]) assert.ok(source.includes(phrase));
+});
+
+test("network gateway is completely absent from the scenario preview", () => {
+  for (const removed of ["DecisionNetworkVisual", "gatewayRef", "neon_orange_tech_network_hub.png", "decision-gateway", "Click the FrameLeads core", "DecisionNetworkVisual"]) {
+    assert.ok(!component.includes(removed), "Obsolete network gateway remains: " + removed);
   }
-  assert.match(source, /No invented lead score/);
-  assert.match(source, /No discount is granted/);
-  assert.match(source, /No security assurance is fabricated/);
 });
 
-test("experience is ungated, read-only and truthful about synthetic examples", () => {
-  assert.match(component, /No signup, no form, no live email sent/);
-  assert.match(component, /fictional companies, illustrative seller rules/);
-  assert.match(component, /not live AI evaluations/i);
-  assert.doesNotMatch(component, /<form\b|fetch\(|navigator\.sendBeacon|dangerouslySetInnerHTML|localStorage/);
-  assert.match(route, /robots: \{ index: false, follow: false \}/);
+test("homepage has a clear dedicated scenario CTA without replacing the Audit", () => {
+  assert.ok(homepage.includes("HeroIntro"));
+  assert.ok(hero.includes('href="/reply-decision-preview#scenarios"'));
+  assert.ok(hero.includes("Explore 3 reply scenarios"));
+  assert.ok(hero.includes("Find My Reply Bottleneck"));
+  assert.ok(hero.includes("onAudit"));
+  assert.ok(homepage.includes("AuditModal"));
 });
 
-test("preview makes outcome and authority clearer than generic reply categorization", () => {
-  for (const label of ["Understand the reply", "Read the context", "Apply the seller&#39;s rules", "Recommended next action", "Human"]) {
-    assert.ok(component.includes(label) || source.includes(label), "Missing: " + label);
+test("scenario route opens the choices directly with pricing example visible", () => {
+  assert.ok(component.includes('id="scenarios"'));
+  assert.ok(component.includes('useState<ReplyScenario["id"]>("pricing")'));
+  assert.ok(component.includes("Preselected example is readable immediately"));
+  assert.ok(component.includes('aria-pressed={selected}'));
+  assert.ok(component.includes("onClick={() => selectScenario(scenario.id)}"));
+});
+
+test("compact result follows the approved outcome-first wireframe", () => {
+  assert.ok(component.includes("FRAMELEADS / REPLY INTELLIGENCE"));
+  assert.ok(component.includes('data-testid="compact-decision-packet"'));
+  assert.ok(component.includes("md:grid-cols-2"));
+  assert.ok(component.includes("Incoming reply"));
+  assert.ok(component.includes("Decision ready"));
+  assert.ok(component.includes("scenario.nextAction"));
+  assert.ok(component.includes("scenario.why"));
+  assert.ok(component.includes("scenario.authority"));
+});
+
+test("explanation remains accessible and compact rather than seven stacked cards", () => {
+  assert.ok(component.includes('data-testid="decision-explanation"'));
+  assert.ok(component.includes("How the decision was reached"));
+  for (const word of ["Intent", "Context", "Rules", "Approval"]) assert.ok(component.includes(word));
+  for (const field of ["scenario.intent", "scenario.confidence", "scenario.context", "scenario.rule", "scenario.ruleSource", "scenario.authorityDetail", "scenario.safeguard"]) assert.ok(component.includes(field));
+  assert.ok(!component.includes("NumberedSection"));
+});
+
+test("2.6 second illustrative processing is preserved with cancellation", () => {
+  assert.ok(component.includes("[2600, 3240, 3880, 4520]"));
+  assert.ok(component.includes("window.setTimeout"));
+  assert.ok(component.includes("timers.forEach(window.clearTimeout)"));
+  assert.ok(component.includes("Processing the sample reply"));
+  assert.ok(component.includes("Skip animation"));
+  assert.ok(component.includes("setCycle((value) => value + 1)"));
+});
+
+test("motion is optional and accessible", () => {
+  assert.ok(component.includes("useReducedMotion"));
+  assert.ok(component.includes("reducedMotion ? 0 : ms"));
+  assert.ok(component.includes("aria-label"));
+  assert.ok(component.includes("focus-visible:outline"));
+  assert.ok(component.includes('role="status"'));
+});
+
+test("the preview contains no live writes or misleading customer proof", () => {
+  for (const banned of ["fetch(", "navigator.sendBeacon", "dangerouslySetInnerHTML", "<form", "localStorage", "window.location.href"]) {
+    assert.ok(!component.includes(banned), "Unexpected live behavior: " + banned);
   }
-  assert.match(component, /scenario\.authorityDetail/);
-  assert.match(component, /scenario\.safeguard/);
-  assert.match(component, /scenario\.currentWorkaround/);
+  assert.ok(component.includes("Fictional prospects and illustrative seller rules"));
+  assert.ok(component.includes("No live inference"));
+  assert.ok(route.includes("robots: { index: false, follow: false }"));
 });
 
-test("one-click scenario selection and responsive no-squeeze layout", () => {
-  assert.match(component, /onClick=\{\(\) => selectScenario\(s\.id\)\}/);
-  assert.match(component, /aria-pressed=\{selected\}/);
-  assert.match(component, /md:grid-cols-3/);
-  assert.match(component, /lg:grid-cols-\[minmax\(0,\.78fr\)_minmax\(0,1\.22fr\)\]/);
-  assert.match(component, /max-w-\[1220px\]/);
-  assert.match(component, /min-w-0/);
-  assert.match(component, /break-words/);
-  assert.match(component, /scrollIntoView/);
+test("pricing and optional audit destinations are preserved", () => {
+  assert.ok(component.includes('href="/checkout/micro-pilot"'));
+  assert.ok(component.includes('href="/?audit=open"'));
+  assert.ok(component.includes("$10 Micro-Pilot"));
+  assert.ok(component.includes("25 prospects"));
+  assert.ok(component.includes("up to three reply decision analyses"));
 });
 
-test("conversion path uses existing pilot and optional audit without altering homepage", () => {
-  assert.match(component, /href="\/checkout\/micro-pilot"/);
-  assert.match(component, /href="\/\?audit=open"/);
-  assert.match(component, /\$10 Micro-Pilot/);
-  assert.match(homepage, /AuditModal/);
-  assert.doesNotMatch(homepage, /ReplyDecisionPreview/);
+test("the chosen example has readable mobile layout", () => {
+  assert.ok(component.includes("grid-cols-2"));
+  assert.ok(component.includes("sm:grid-cols-4"));
+  assert.ok(component.includes("md:grid-cols-2"));
+  assert.ok(component.includes("min-w-0"));
+  assert.ok(component.includes("break-words"));
+  assert.ok(component.includes("overflow-x-clip"));
 });
 
-test("fictional inbox personas use locally hosted AI-generated portraits and explicit disclosure", () => {
-  assert.match(component, /reply-preview-prospects\.jpg/);
-  assert.match(component, /<Image/);
-  assert.match(component, /onError=\{\(\) => setFailed\(true\)\}/);
-  assert.match(component, /Fictional prospect/);
-  for (const name of ["Maya Chen", "Daniel Brooks", "Nadia Hassan"]) assert.ok(source.includes(name));
-  assert.match(component, /Illustrative inbound email/);
-});
-
-test("sample decision reveal animates after 2.6 seconds, supports replay and reduced motion", () => {
-  assert.match(component, /\[650, 1300, 1950, 2600\]/);
-  assert.match(component, /useReducedMotion/);
-  assert.match(component, /setRevealCount\(revealIndex \+ 1\)/);
-  assert.match(component, /revealCount > 5/);
-  assert.match(component, /revealCount > 0/);
-  assert.match(component, /Skip animation/);
-  assert.match(component, /setSequence\(\(current\) => current \+ 1\)/);
-  assert.match(component, /timersRef\.current\.forEach\(window\.clearTimeout\)/);
-  assert.match(component, /not a live AI analysis/);
-});
-
-test("scenario description sits below the title and cards use layered charcoal warmth", () => {
-  assert.match(component, /flex flex-col items-start gap-2/);
-  assert.match(component, /radial-gradient\(ellipse_at_100%_0%/);
-  assert.match(component, /hover:-translate-y-0\.5/);
-});
-
-test("decision gateway is accessible, inline and uses the original supplied art", () => {
-  assert.ok(component.includes("The Decision Intelligence Layer"));
-  assert.ok(component.includes("See what happens between a reply and the next move"));
-  assert.ok(component.includes("FrameLeads connects reply intent, prospect context and seller rules"));
-  assert.ok(component.includes("Explore 3 reply scenarios"));
-  assert.ok(component.includes("<details ref={gatewayRef}"));
-  assert.ok(component.includes('<summary className="sr-only'));
-  assert.ok(component.includes("<DecisionNetworkVisual onExplore={openScenarios}"));
-  assert.ok(component.includes('aria-label="Explore FrameLeads reply decision scenarios"'));
-  assert.ok(component.includes("gatewayRef.current.open = true"));
-  assert.ok(component.includes('src="/images/neon_orange_tech_network_hub.png"'));
-  assert.ok(component.includes("width={1916} height={821}"));
-  assert.ok(component.includes("data-testid=\"integrated-decision-artwork\""));
-});
-
-test("brand-bolt loader visibly pulses before any decision layer is revealed", () => {
-  assert.match(component, /src="\/icon-192\.png"/);
-  assert.match(component, /Processing reply/);
-  assert.match(component, /boxShadow: \[/);
-  assert.match(component, /drop-shadow\(/);
-  assert.match(component, /stage < 4 \? <DecisionProcessing/);
-  assert.match(component, /\[650, 1300, 1950, 2600\]/);
-  assert.match(component, /scrollIntoView/);
-});
-
-test("seven decision concepts use six compact icon modules", () => {
-  assert.match(component, /data-testid="compact-decision-grid"/);
-  assert.match(component, /lg:grid-cols-2/);
-  assert.match(component, /decisionIconPaths/);
-  for (const title of ["AI interpretation", "Relevant context", "Why human review \/ seller rule", "Intent and governance", "Recommended next action", "Final safeguard"]) {
-    assert.ok(component.includes(title), "Missing layer: " + title);
-  }
-  assert.match(component, /REVEAL_INTERVAL_MS = 640/);
-  assert.match(component, /revealIndex \* REVEAL_INTERVAL_MS/);
-});
-
-test("gateway is one continuous responsive visual, not a framed thumbnail", () => {
-  for (const required of [
-    "w-screen max-w-[1500px]",
-    "mix-blend-screen",
-    "[mask-image:linear-gradient",
-    "left-[48.7%] top-[42%]",
-    "min-w-[44px]",
-    "w-[145%]",
-    "onClick={onExplore}",
-    "Tap the FrameLeads core",
-  ]) assert.ok(component.includes(required), "Missing integration requirement: " + required);
-  assert.ok(!component.includes("max-w-[900px]"), "Old thumbnail sizing is still present");
+test("broken prospect image is not used as misleading proof", () => {
+  assert.ok(component.includes("Fictional prospect"));
+  assert.ok(component.includes("scenario.prospectName"));
+  assert.ok(!component.includes("reply-preview-prospects.jpg"));
 });
