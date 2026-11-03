@@ -172,7 +172,7 @@ function DecisionPacket({ scenario, phase, reducedMotion }: { scenario: ReplySce
   </article>;
 }
 
-export default function ReplyDecisionPreview() {
+export default function ReplyDecisionPreview({ embedded = false }: { embedded?: boolean }) {
   const [selectedId, setSelectedId] = useState<ReplyScenario["id"]>("pricing");
   const [phase, setPhase] = useState(4);
   const [cycle, setCycle] = useState(0);
@@ -194,17 +194,7 @@ export default function ReplyDecisionPreview() {
     window.requestAnimationFrame(() => decisionRef.current?.scrollIntoView({ behavior: reducedMotion ? "instant" : "smooth", block: "start" }));
   }
 
-  return <main id="main-content" className="min-h-screen min-w-0 overflow-x-clip bg-[#1A1A1A] text-white">
-    <div className="h-[3px] bg-gradient-to-r from-[#FF5A1F] via-[#FF5A1F]/60 to-transparent" />
-    <div className="mx-auto w-full max-w-[1120px] px-4 pb-16 pt-6 sm:px-7 lg:px-9">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[.08] pb-5">
-        <Link href="/" className="inline-flex items-center gap-2.5 rounded-md focus-visible:outline-2 focus-visible:outline-[#FF5A1F]" aria-label="FrameLeads homepage">
-          <Image src="/logo.png" alt="" width={32} height={32} className="rounded-lg object-contain" />
-          <span className="font-heading text-lg font-bold">FrameLeads</span>
-        </Link>
-        <Link href="/" className="text-xs font-medium text-[#888888] underline-offset-4 hover:text-white hover:underline">Back to website ↗</Link>
-      </header>
-
+  const content = <>
       <section id="scenarios" className="scroll-mt-5 pb-1 pt-10 sm:pt-14" aria-labelledby="scenario-title">
         <p className="text-center font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#FF5A1F]">Illustrative product preview · no signup required</p>
         <h1 id="scenario-title" className="mx-auto mt-3 max-w-3xl text-center font-heading text-3xl font-bold tracking-tight sm:text-4xl">Three replies. Three different decisions.</h1>
@@ -233,6 +223,22 @@ export default function ReplyDecisionPreview() {
           <Link href="/?audit=open" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/20 px-4 py-2 text-sm text-white/85 hover:border-white/40 hover:text-white">Find My Reply Bottleneck</Link>
         </div>
       </div>
+  </>;
+
+  if (embedded) return <div data-testid="inline-reply-scenarios" className="min-w-0 text-left text-white">{content}</div>;
+
+  return <main id="main-content" className="min-h-screen min-w-0 overflow-x-clip bg-[#1A1A1A] text-white">
+    <div className="h-[3px] bg-gradient-to-r from-[#FF5A1F] via-[#FF5A1F]/60 to-transparent" />
+    <div className="mx-auto w-full max-w-[1120px] px-4 pb-16 pt-6 sm:px-7 lg:px-9">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[.08] pb-5">
+        <Link href="/" className="inline-flex items-center gap-2.5 rounded-md focus-visible:outline-2 focus-visible:outline-[#FF5A1F]" aria-label="FrameLeads homepage">
+          <Image src="/logo.png" alt="" width={32} height={32} className="rounded-lg object-contain" />
+          <span className="font-heading text-lg font-bold">FrameLeads</span>
+        </Link>
+        <Link href="/" className="text-xs font-medium text-[#888888] underline-offset-4 hover:text-white hover:underline">Back to website ↗</Link>
+      </header>
+
+      {content}
 
     </div>
   </main>;

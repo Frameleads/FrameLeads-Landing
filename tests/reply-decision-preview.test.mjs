@@ -21,14 +21,19 @@ test("network gateway is completely absent from the scenario preview", () => {
 
 test("homepage has a clear dedicated scenario CTA without replacing the Audit", () => {
   assert.ok(homepage.includes("HeroIntro"));
-  assert.ok(hero.includes('href="/reply-decision-preview#scenarios"'));
+  assert.ok(hero.includes('aria-controls="reply-scenarios"'));
+  assert.ok(hero.includes("onClick={onExplore}"));
+  assert.ok(hero.includes("aria-expanded={scenariosExpanded}"));
+  assert.ok(!hero.includes('href="/reply-decision-preview#scenarios"'));
+  assert.ok(homepage.includes("<ReplyDecisionPreview embedded />"));
   assert.ok(hero.includes("Explore 3 reply scenarios"));
   assert.ok(hero.includes("Find My Reply Bottleneck"));
   assert.ok(hero.includes("onAudit"));
   assert.ok(homepage.includes("AuditModal"));
 });
 
-test("scenario route opens the choices directly with pricing example visible", () => {
+test("legacy scenario route points at homepage inline reveal, pricing remains initially visible", () => {
+  assert.ok(route.includes('redirect("/#reply-scenarios")'));
   assert.ok(component.includes('id="scenarios"'));
   assert.ok(component.includes('useState<ReplyScenario["id"]>("pricing")'));
   assert.ok(component.includes("Preselected example is readable immediately"));
@@ -171,4 +176,49 @@ test("single short disclosure replaces redundant defensive footers", () => {
   assert.ok(component.includes("Sample incoming reply"));
   assert.ok(!component.includes("customer proof, approval, or outbound message"));
   assert.ok(!component.includes("actual message sends"));
+});
+
+test("homepage reveal is initially hidden and mounts only after the CTA click", () => {
+  assert.ok(homepage.includes("const [isScenarioPreviewOpen, setIsScenarioPreviewOpen] = useState(false)"));
+  assert.ok(homepage.includes("isScenarioPreviewOpen && ("));
+  assert.ok(homepage.includes('data-testid="homepage-inline-scenarios"'));
+  assert.ok(homepage.includes('id="reply-scenarios"'));
+  assert.ok(homepage.includes("<ReplyDecisionPreview embedded />"));
+  assert.ok(homepage.includes("setIsScenarioPreviewOpen(true)"));
+});
+
+test("homepage reveal keeps the navigation and page around it", () => {
+  assert.ok(homepage.includes("<Navbar onAuditClick={launchAudit} onMicroPilotClick={openMicroPilot} />"));
+  assert.ok(homepage.includes("<VideoSection />"));
+  assert.ok(homepage.includes("<ProductProofHowItWorks onMicroPilot={openMicroPilot} />"));
+  assert.ok(homepage.includes("<AuditModal"));
+  assert.ok(homepage.includes("<ExitIntentPopup"));
+  assert.ok(hero.includes("Find My Reply Bottleneck"));
+  assert.ok(hero.includes("Explore 3 reply scenarios"));
+  assert.ok(!hero.includes("<Link"));
+});
+
+test("close button returns focus and removes legacy anchor without disrupting the page", () => {
+  assert.ok(homepage.includes('aria-label="Close reply scenarios"'));
+  assert.ok(homepage.includes("onClick={closeScenarios}"));
+  assert.ok(homepage.includes('document.getElementById("explore-scenarios-button")'));
+  assert.ok(homepage.includes("trigger?.focus({ preventScroll: true })"));
+  assert.ok(homepage.includes('window.location.hash === "#reply-scenarios"'));
+  assert.ok(homepage.includes("window.history.replaceState("));
+});
+
+test("inline experience retains approved visuals, content, and conversion destinations", () => {
+  assert.ok(component.includes('if (embedded) return <div data-testid="inline-reply-scenarios"'));
+  for (const txt of ["Decision ready", "How the decision was reached", "Interactive preview using sample replies and rules. No messages are sent."]) assert.ok(component.includes(txt));
+  for (const asset of ["maya-chen.jpg", "daniel-brooks.jpg", "nadia-hassan.jpg"]) assert.ok(component.includes(asset));
+  assert.ok(component.includes('href="/checkout/micro-pilot"'));
+  assert.ok(component.includes('href="/?audit=open"'));
+});
+
+test("reveal is reduced-motion aware and supports deep links to homepage", () => {
+  assert.ok(homepage.includes("const reducedMotionForScenarios = useReducedMotion()"));
+  assert.ok(homepage.includes('window.addEventListener("hashchange", openFromDeepLink)'));
+  assert.ok(homepage.includes("scenarioSectionRef.current?.scrollIntoView"));
+  assert.ok(homepage.includes('reducedMotionForScenarios ? "auto" : "smooth"'));
+  assert.ok(route.includes('redirect("/#reply-scenarios")'));
 });

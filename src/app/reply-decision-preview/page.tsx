@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import ReplyDecisionPreview from "../../components/ReplyDecisionPreview";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Reply Decision Preview | FrameLeads",
@@ -8,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function ReplyDecisionPreviewPage() {
-  return <ReplyDecisionPreview />;
+  redirect("/#reply-scenarios");
 }
