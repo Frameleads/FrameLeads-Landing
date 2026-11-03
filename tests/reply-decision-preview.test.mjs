@@ -144,3 +144,19 @@ test("homepage hero CTAs are paired centrally with no arrow icon", () => {
 test("final pilot and audit CTAs stay grouped centrally", () => {
   assert.ok(component.includes('className="flex flex-wrap items-center justify-center gap-3"'));
 });
+
+test("decision explanation has comfortable separation from the human checkpoint", () => {
+  assert.ok(component.includes('className="mb-5 mt-2 text-[12px] leading-[1.45] text-[#C1C1C4]"'));
+  assert.ok(component.includes("Human checkpoint"));
+});
+
+test("all three named prospects use their dedicated fictional JPEG files", () => {
+  for (const asset of ["maya-chen.jpg", "daniel-brooks.jpg", "nadia-hassan.jpg"]) {
+    const jpeg = readFileSync("public/images/reply-preview-prospects/" + asset);
+    assert.ok(jpeg.length > 1500, "Incomplete portrait file: " + asset);
+    assert.equal(jpeg[0], 0xFF);
+    assert.equal(jpeg[1], 0xD8);
+    assert.equal(jpeg[jpeg.length-2], 0xFF);
+    assert.equal(jpeg[jpeg.length-1], 0xD9);
+  }
+});

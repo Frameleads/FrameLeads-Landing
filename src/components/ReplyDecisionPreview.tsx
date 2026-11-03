@@ -125,7 +125,7 @@ function DecisionPacket({ scenario, phase, reducedMotion }: { scenario: ReplySce
           className="relative flex h-full min-h-[235px] flex-col overflow-hidden rounded-2xl border border-[#FF7B45]/25 bg-[radial-gradient(ellipse_at_92%_0%,rgba(255,90,31,.18),transparent_54%),linear-gradient(145deg,#2B2422,#222122_76%)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.065),0_14px_32px_rgba(0,0,0,.24)] sm:p-5">
           <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[.08em] text-[#FF8757]"><SignalIconMark kind="bolt" size={15} /> Decision ready</p>
           <h2 className="mt-2 text-[17px] font-bold leading-snug text-white sm:text-[19px]">{scenario.nextAction}</h2>
-          <p className="mt-2 text-[12px] leading-relaxed text-[#C1C1C4]">{scenario.why}</p>
+          <p className="mb-5 mt-2 text-[12px] leading-[1.45] text-[#C1C1C4]">{scenario.why}</p>
           {phase >= 2 && <motion.div initial={reducedMotion ? false : { opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}
             className="mt-auto flex items-start gap-2.5 rounded-xl border border-[#FF955E]/25 bg-[linear-gradient(110deg,rgba(255,105,48,.18),rgba(82,43,29,.72))] px-3.5 py-3 text-[12px] font-medium leading-snug text-[#FFD0B4] shadow-[inset_0_1px_0_rgba(255,220,194,.08),0_8px_20px_rgba(0,0,0,.16)]">
             <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#FF7C43]/20 text-[#FFAB7D]"><SignalIconMark kind="approval" size={14} /></span><span><strong className="block text-[10px] uppercase tracking-[.08em] text-[#FFAA7E]">Human checkpoint</strong><span className="mt-1 block">{scenario.authority} · {scenario.rule}</span></span>
