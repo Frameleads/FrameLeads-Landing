@@ -452,7 +452,9 @@ export default function Home() {
     synchronizeAudit(false);
   }, [synchronizeAudit]);
 
-  return <div id="top" className="relative min-h-screen max-w-[100vw] overflow-x-hidden bg-[#111111] font-sans text-white selection:bg-[#FF5A1F] selection:text-white"><div aria-hidden="true" className="premium-edge-glow premium-edge-glow--top" /><div aria-hidden="true" className="premium-edge-glow premium-edge-glow--bottom" /><Suspense fallback={null}><AuditDeepLink onChange={synchronizeAudit} /></Suspense><Navbar onAuditClick={launchAudit} onMicroPilotClick={openMicroPilot} />
+  return (
+    <>
+      <div id="top" className="relative min-h-screen max-w-[100vw] overflow-x-hidden bg-[#111111] font-sans text-white selection:bg-[#FF5A1F] selection:text-white"><div aria-hidden="true" className="premium-edge-glow premium-edge-glow--top" /><div aria-hidden="true" className="premium-edge-glow premium-edge-glow--bottom" /><Suspense fallback={null}><AuditDeepLink onChange={synchronizeAudit} /></Suspense><Navbar onAuditClick={launchAudit} onMicroPilotClick={openMicroPilot} />
     <main className="relative z-10 mx-auto max-w-7xl px-4 pb-16 pt-16 sm:px-6 sm:pt-20 lg:pt-32">
       <section className="mx-auto max-w-5xl text-center"><HeroIntro onAudit={launchAudit} /><motion.div initial={{ opacity: 0, y: 20, scale: .985 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: .72, ease: "easeOut", delay: .46 }} className="mt-10"><VideoSection /></motion.div></section>
 
@@ -476,8 +478,67 @@ export default function Home() {
 
       <section id="commercial-close" className="mx-auto max-w-4xl border-t border-white/[0.06] py-16 text-center md:py-24"><SectionIntro eyebrow="Next step" heading="See where your reply workflow becomes manual." description="Run the 5-question Reply Workflow Audit and identify where FrameLeads would sit in your operation." /><motion.button initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: .3 }} transition={{ duration: .5, delay: .34, ease: "easeOut" }} type="button" data-tripwire-guard="true" onClick={launchAudit} className="mt-8 rounded-xl bg-[#FF5A1F] px-7 py-4 text-base font-bold text-white transition-colors hover:bg-[#ff6b35]">Diagnose My Reply Workflow</motion.button></section>
     </main>
-    <footer className="relative z-10 bg-transparent px-4 py-10 sm:px-6"><div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-5 md:flex-row"><p className="font-mono text-[10px] uppercase tracking-widest text-white">© 2026 FrameLeads. A BrandFlow Studio Company.</p><a href="mailto:akram@frameleads.io" aria-label="Email FrameLeads support at akram@frameleads.io" className="font-mono text-[10px] uppercase tracking-widest text-white transition-colors hover:text-[#FFB08D]">Support &amp; inquiries · akram@frameleads.io</a><div className="flex gap-6 font-mono text-[10px] uppercase tracking-widest text-white"><Link href="/terms" className="transition-colors hover:text-[#FFB08D]">Terms</Link><Link href="/privacy" className="transition-colors hover:text-[#FFB08D]">Privacy</Link></div></div></footer><AuditModal returnFocusRef={auditTrigger} open={isAuditModalOpen} onClose={closeAudit} onComplete={setAuditResult} />{!isAuditModalOpen && <ExitIntentPopup openRequest={isMicroPilotRequested} onOpenRequestChange={setIsMicroPilotRequested} />}
-  </div>;
+      </div>
+
+      <footer aria-labelledby="footer-heading" className="relative z-10 border-t border-white/[0.08] bg-[#1A1A1A] px-4 py-12 pb-16 sm:px-6 md:py-16">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid grid-cols-2 gap-x-8 gap-y-10 md:gap-x-12 lg:grid-cols-4">
+            <div className="col-span-2 lg:col-span-1">
+              <h2 id="footer-heading" className="sr-only">FrameLeads footer navigation</h2>
+              <Link href="#top" className="inline-flex items-center gap-3" aria-label="FrameLeads home">
+                <Image src="/logo.png" alt="" width={32} height={32} className="rounded-lg object-contain" />
+                <span className="font-heading text-lg font-bold tracking-wide text-white">FrameLeads</span>
+              </Link>
+              <p className="mt-4 max-w-xs text-sm leading-relaxed text-[#888888]">Decision intelligence for founder-led outbound teams.</p>
+            </div>
+
+            <nav aria-label="Product links">
+              <h2 className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[#888888]">Product</h2>
+              <ul className="mt-4 space-y-3 text-sm text-white/75">
+                <li><button type="button" data-tripwire-guard="true" onClick={launchAudit} className="transition-colors hover:text-white">Audit</button></li>
+                <li><Link href="#how-it-works" className="transition-colors hover:text-white">How It Works</Link></li>
+                <li><Link href="#simulation" className="transition-colors hover:text-white">Product</Link></li>
+                <li><Link href="#pricing" className="transition-colors hover:text-white">Pricing</Link></li>
+                <li><Link href="#faq" className="transition-colors hover:text-white">FAQ</Link></li>
+              </ul>
+            </nav>
+
+            <nav aria-label="Workflow links">
+              <h2 className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[#888888]">Workflow</h2>
+              <ul className="mt-4 space-y-3 text-sm text-white/75">
+                <li><Link href="#solution" className="transition-colors hover:text-white">Reply Intelligence</Link></li>
+                <li><Link href="#how-it-works" className="transition-colors hover:text-white">Inbox Triage</Link></li>
+                <li><Link href="#capabilities" className="transition-colors hover:text-white">Decision Engine</Link></li>
+                <li><Link href="#how-it-works" className="transition-colors hover:text-white">Scout</Link></li>
+                <li><Link href="#simulation" className="transition-colors hover:text-white">Sandbox / Deploy</Link></li>
+              </ul>
+            </nav>
+
+            <nav aria-label="Company links">
+              <h2 className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[#888888]">Company</h2>
+              <ul className="mt-4 space-y-3 text-sm text-white/75">
+                <li><Link href="https://app.frameleads.io/login" className="transition-colors hover:text-white">Log In</Link></li>
+                <li><Link href="/privacy" className="transition-colors hover:text-white">Privacy</Link></li>
+                <li><Link href="/terms" className="transition-colors hover:text-white">Terms</Link></li>
+                <li><a href="mailto:akram@frameleads.io" className="transition-colors hover:text-white">Contact / Support</a></li>
+              </ul>
+            </nav>
+          </div>
+
+          <div className="mt-12 flex flex-col gap-4 border-t border-white/[0.08] pt-6 text-xs text-[#888888] sm:flex-row sm:items-center sm:justify-between">
+            <p>© 2026 FrameLeads. All rights reserved.</p>
+            <div className="flex gap-6">
+              <Link href="/privacy" className="transition-colors hover:text-white">Privacy</Link>
+              <Link href="/terms" className="transition-colors hover:text-white">Terms</Link>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      <AuditModal returnFocusRef={auditTrigger} open={isAuditModalOpen} onClose={closeAudit} onComplete={setAuditResult} />
+      {!isAuditModalOpen && <ExitIntentPopup openRequest={isMicroPilotRequested} onOpenRequestChange={setIsMicroPilotRequested} />}
+    </>
+  );
 }
 
 export function LegacyHome() {
