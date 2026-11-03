@@ -60,7 +60,7 @@ test("2.6 second illustrative processing is preserved with cancellation", () => 
   assert.ok(component.includes("window.setTimeout"));
   assert.ok(component.includes("timers.forEach(window.clearTimeout)"));
   assert.ok(component.includes("Processing the sample reply"));
-  assert.ok(component.includes("Skip animation"));
+  assert.ok(!component.includes("Skip animation"));
   assert.ok(component.includes("setCycle((value) => value + 1)"));
 });
 
@@ -85,8 +85,8 @@ test("pricing and optional audit destinations are preserved", () => {
   assert.ok(component.includes('href="/checkout/micro-pilot"'));
   assert.ok(component.includes('href="/?audit=open"'));
   assert.ok(component.includes("$10 Micro-Pilot"));
-  assert.ok(component.includes("25 prospects"));
-  assert.ok(component.includes("up to three reply decision analyses"));
+  assert.ok(component.includes("Want to stop being the bottleneck every time someone replies?"));
+  assert.ok(component.includes("Find My Reply Bottleneck"));
 });
 
 test("the chosen example has readable mobile layout", () => {
