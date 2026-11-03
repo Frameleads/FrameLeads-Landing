@@ -13,6 +13,7 @@ import { referralCheckoutDecision } from "../checkout-embed-policy";
 /** Whop renders and processes payment fields; a return is never entitlement proof. */
 export default function EmbeddedWhopCheckout({
   planId,
+  checkoutConfigurationId,
   returnUrl,
   hostedFallback,
   environment,
@@ -20,6 +21,7 @@ export default function EmbeddedWhopCheckout({
   embedEnabled,
 }: {
   planId: string;
+  checkoutConfigurationId: string;
   returnUrl: string;
   hostedFallback: string;
   environment: "production" | "sandbox";
@@ -105,6 +107,11 @@ export default function EmbeddedWhopCheckout({
     return <div role="status" className="p-8 text-sm text-[#666666]">Loading secure Whop payment options…</div>;
   }
 
+  const paymentElement = <CheckoutElement
+    onError={() => setElementsUnavailable(true)}
+    fallback={<div role="status" className="p-8 text-sm text-[#666666]">Loading secure Whop payment options…</div>}
+  />;
+
   return <div className="min-w-0">
     <WhopElements
       elements={whopElements}
@@ -124,21 +131,35 @@ export default function EmbeddedWhopCheckout({
       }}
       onLoadError={() => setElementsUnavailable(true)}
     >
-      <Checkout
-        plan={planId}
-        returnUrl={returnUrl}
-        onComplete={(completion) => {
-          if (completion.result === "payment" && returnUrl) {
-            // Do not grant access or create Purchase events from this callback.
-            setCheckoutFinished(true);
-          }
-        }}
-      >
-        <CheckoutElement
-          onError={() => setElementsUnavailable(true)}
-          fallback={<div role="status" className="p-8 text-sm text-[#666666]">Loading secure Whop payment options…</div>}
-        />
-      </Checkout>
+      {checkoutConfigurationId ? (
+        <Checkout
+          checkoutConfiguration={checkoutConfigurationId}
+          returnUrl={returnUrl}
+          onComplete={(completion) => {
+            if (completion.result === "payment" && returnUrl) {
+              // SDK completion is presentation only, never proof of entitlement.
+              setCheckoutFinished(true);
+            }
+          }}
+        >
+          {paymentElement}
+        </Checkout>
+      ) : (
+        // Existing, validated Sandbox plan flow remains unchanged. In
+        // production the policy requires a merchant-reviewed configuration.
+        <Checkout
+          plan={planId}
+          returnUrl={returnUrl}
+          onComplete={(completion) => {
+            if (completion.result === "payment" && returnUrl) {
+              // Do not grant access or create Purchase events from this callback.
+              setCheckoutFinished(true);
+            }
+          }}
+        >
+          {paymentElement}
+        </Checkout>
+      )}
     </WhopElements>
   </div>;
 }
