@@ -494,7 +494,7 @@ export function LegacyHome() {
   const formatCurrency = (value: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
 
   return (
-    <div id="top" className="relative min-h-screen max-w-[100vw] overflow-x-hidden bg-[#111111] bg-grid-overlay font-sans selection:bg-[#FF5A1F] selection:text-white">
+    <div id="top" className="relative min-h-screen max-w-[100vw] overflow-x-hidden bg-[#111111] font-sans selection:bg-[#FF5A1F] selection:text-white">
       
       <Navbar onAuditClick={launchAudit} />
 
