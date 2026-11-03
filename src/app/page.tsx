@@ -6,12 +6,11 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import ExitIntentPopup from "../components/ExitIntentPopup";
 import EmbeddedSandbox from "../components/EmbeddedSandbox";
+import { GapProof, DecisionLayerProof, SandboxProof } from "../components/MarketingProofCompositions";
 import DecisionIntelligenceWalkthrough from "../components/DecisionIntelligenceWalkthrough";
-import ResponsiveDecisionConvergence from "../components/ResponsiveDecisionConvergence";
 import AuditModal from "../components/AuditModal";
 import AuditDeepLink from "../components/AuditDeepLink";
 import { auditLocation, auditRequested } from "../audit-entry";
-import CleanBottleneckVisual from "../components/CleanBottleneckVisual";
 import SectionIntro from "../components/SectionIntro";
 import HeroIntro from "../components/HeroIntro";
 import ReplyDecisionPreview from "../components/ReplyDecisionPreview";
@@ -401,14 +400,6 @@ function ProblemPath({ items, accent = false }: { items: string[]; accent?: bool
   return <div className="rounded-2xl border border-white/[0.09] bg-[#1A1A1A] p-5 text-left shadow-[0_18px_40px_-24px_rgba(0,0,0,0.9)] sm:p-6"><div className="flex items-center justify-between"><p className={`font-mono text-[9px] uppercase tracking-[0.18em] ${accent ? "text-[#FF5A1F]" : "text-[#888888]"}`}>{accent ? "With FrameLeads" : "Without FrameLeads"}</p><span className={`h-2 w-2 rounded-full ${accent ? "bg-[#FF5A1F] shadow-[0_0_10px_rgba(255,90,31,0.85)]" : "bg-[#888888]"}`} /></div><div className="mt-5 flex flex-col gap-2">{items.map((item, index) => <div key={item}><motion.div animate={accent && !reduceMotion ? { borderColor: index === 1 ? "rgba(255,90,31,.48)" : "rgba(255,255,255,.1)" } : {}} transition={{ delay: index * .16, duration: .35 }} className={`rounded-lg border px-4 py-3 text-sm ${accent && index === 1 ? "border-[#FF5A1F]/35 bg-[#FF5A1F]/[0.06] font-semibold text-white" : "border-white/[0.08] bg-black/10 text-white/75"}`}>{item}</motion.div>{index < items.length - 1 && <div className="relative mx-auto h-5 w-px overflow-hidden"><div className={`h-full w-px ${accent ? "bg-[#FF5A1F]/55" : "bg-white/15"}`} />{!reduceMotion && <motion.div animate={{ y: [0, 20] }} transition={{ delay: index * .22, duration: accent ? .65 : 1.35, repeat: Infinity, repeatDelay: accent ? 2.5 : 3 }} className={`absolute left-0 top-0 h-2 w-px ${accent ? "bg-[#FF5A1F]" : "bg-white/45"}`} />}</div>}</div>)}</div>{accent && <div className="mt-4 grid grid-cols-3 gap-2 text-center font-mono text-[8px] uppercase tracking-wider"><span className="rounded-md border border-green-400/20 bg-green-400/[0.04] px-2 py-2 text-green-300">Automate</span><span className="rounded-md border border-[#FF5A1F]/25 bg-[#FF5A1F]/[0.04] px-2 py-2 text-[#FF5A1F]">Approve</span><span className="rounded-md border border-white/[0.1] px-2 py-2 text-white/75">Escalate</span></div>}</div>;
 }
 
-function ProblemFlow() {
-  return <CleanBottleneckVisual />;
-}
-
-function SolutionBridge() {
-  return <ResponsiveDecisionConvergence />;
-}
-
 const compactFaqs = [
   ["Does FrameLeads replace my SDR?", "No. FrameLeads reduces repetitive decision work and keeps consequential judgment with your SDR, founder, or sales team."],
   ["Do I need Smartlead or Instantly to use FrameLeads?", "No. FrameLeads can run outbound natively. If you already use supported sending infrastructure, you can keep it and connect FrameLeads around the reply workflow."],
@@ -517,15 +508,15 @@ export default function Home() {
       </AnimatePresence>
       <section className="mx-auto max-w-5xl text-center"><motion.div initial={{ opacity: 0, y: 20, scale: .985 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: .72, ease: "easeOut", delay: .46 }} className="mt-10"><VideoSection /></motion.div></section>
 
-      <section id="problem" className="mx-auto mt-16 max-w-6xl scroll-mt-32 border-t border-white/[0.06] py-16 text-center md:mt-24 md:py-24"><SectionIntro eyebrow="The gap" heading="Sending is automated. The decision after the reply is not." description="Most outbound stacks stop at the inbox, where someone still has to interpret the reply, apply context, and decide what happens next." /><ProblemFlow /></section>
+      <section id="problem" className="mx-auto mt-16 max-w-6xl scroll-mt-32 border-t border-white/[0.06] py-16 text-center md:mt-24 md:py-24"><SectionIntro eyebrow="The gap" heading={<>The inbox tells you who replied. <span className="text-[#FF5A1F]">Not what to do next.</span></>} description="Warm and cold signals can land in the same queue. The next move depends on urgency, context, and judgment." /><GapProof /></section>
 
       <section ref={auditRef} id="audit" className="scroll-mt-32"><AnimatePresence initial={false}>{isAuditExpanded && <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.45, ease: "easeOut" }} className="overflow-hidden"><div className="mx-auto mb-16 max-w-4xl overflow-hidden rounded-2xl border border-white/[0.12] bg-[#1A1A1A] p-6 shadow-2xl sm:p-10"><PipelineAudit onAuditComplete={setAuditResult} onClose={() => setIsAuditExpanded(false)} />{auditResult && <p className="mt-6 text-center font-mono text-[9px] uppercase tracking-[0.14em] text-[#888888]">Diagnosis saved for this session</p>}</div></motion.div>}</AnimatePresence></section>
 
-      <section id="solution" className="mx-auto max-w-6xl scroll-mt-32 border-t border-white/[0.06] py-16 text-center md:py-24"><SectionIntro eyebrow="The decision layer" heading="FrameLeads sits between the reply and the next action." description="It combines reply intent, prospect and account context, and your operating rules to determine what should happen next and whether automation is allowed to continue." /><SolutionBridge /></section>
+      <section id="solution" className="mx-auto max-w-6xl scroll-mt-32 border-t border-white/[0.06] py-16 text-center md:py-24"><SectionIntro eyebrow="The decision layer" heading={<>Interest is not permission to <span className="text-[#FF5A1F]">promise new terms.</span></>} description="FrameLeads reads the buying signal, explains the commercial risk, and shows the next action before anyone agrees to terms without authority." /><DecisionLayerProof /></section>
 
       <section id="capabilities" className="mx-auto max-w-6xl scroll-mt-32 border-t border-white/[0.06] py-16 text-center md:py-24"><SectionIntro eyebrow="How FrameLeads works" heading="Understand. Remember. Decide. Control." className="max-w-2xl" /><DecisionIntelligenceWalkthrough /></section>
 
-      <EmbeddedSandbox />
+      <section id="simulation" className="mx-auto max-w-6xl scroll-mt-28 border-t border-white/[0.06] px-4 py-16 text-center sm:px-6 md:py-24"><SectionIntro eyebrow="Control before execution" heading={<>Test the difficult reply <span className="text-[#FF5A1F]">before anything gets sent.</span></>} description="Preview how FrameLeads would govern a risky reply before it becomes a real operational decision." /><SandboxProof /></section>
 
       <ProductProofHowItWorks onMicroPilot={openMicroPilot} />
 
