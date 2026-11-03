@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { replyScenarios, type ReplyScenario } from "../reply-decision-preview";
@@ -173,15 +173,15 @@ function DecisionPacket({ scenario, phase, reducedMotion }: { scenario: ReplySce
 }
 
 export default function ReplyDecisionPreview({ embedded = false }: { embedded?: boolean }) {
-  const [selectedId, setSelectedId] = useState<ReplyScenario["id"]>("pricing");
-  const [phase, setPhase] = useState(4);
+  const [selectedId, setSelectedId] = useState<ReplyScenario["id"] | null>(null);
+  const [phase, setPhase] = useState(0);
   const [cycle, setCycle] = useState(0);
   const reducedMotion = useReducedMotion();
   const decisionRef = useRef<HTMLDivElement>(null);
-  const active = replyScenarios.find((scenario) => scenario.id === selectedId) ?? replyScenarios[1];
+  const active = selectedId ? replyScenarios.find((scenario) => scenario.id === selectedId) ?? null : null;
 
   useEffect(() => {
-    if (cycle === 0) return; // Preselected example is readable immediately.
+    if (cycle === 0) return; // No packet until a visitor selects a scenario.
     const delays = [2600, 3240, 3880, 4520];
     const timers = delays.map((ms, index) => window.setTimeout(() => setPhase(index + 1), reducedMotion ? 0 : ms));
     return () => timers.forEach(window.clearTimeout);
@@ -213,16 +213,24 @@ export default function ReplyDecisionPreview({ embedded = false }: { embedded?: 
         </div>
       </section>
 
-      <div ref={decisionRef} className="scroll-mt-4">
+      <AnimatePresence mode="wait">
+        {active && <motion.div key={active.id} ref={decisionRef}
+          initial={reducedMotion ? false : { opacity: 0, y: 22, height: 0 }}
+          animate={{ opacity: 1, y: 0, height: "auto" }}
+          exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -8, height: 0 }}
+          transition={{ duration: reducedMotion ? 0 : 0.48, ease: [0.22, 1, 0.36, 1] }}
+          className="min-w-0 scroll-mt-24 overflow-hidden"
+          data-testid="selected-scenario-results">
         <DecisionPacket scenario={active} phase={phase} reducedMotion={Boolean(reducedMotion)} />
-      </div>
       <div className="relative mt-6 flex flex-col items-center justify-center gap-4 overflow-hidden rounded-2xl border border-[#FF5A1F]/25 bg-[radial-gradient(ellipse_at_50%_0%,rgba(255,90,31,.1),transparent_60%),linear-gradient(135deg,#242424,#1A1A1A_72%)] px-5 py-6 text-center shadow-[inset_0_1px_0_rgba(255,255,255,.065),0_16px_34px_rgba(26,26,26,.22)] sm:px-8 sm:py-7">
         <p className="max-w-2xl text-[13px] leading-relaxed text-white/75 sm:text-sm"><span className="mb-1.5 block text-base font-bold text-white sm:text-lg">Want to stop being the bottleneck every time someone replies?</span>Try the $10 Micro-Pilot to see what clearer next moves and faster follow-up decisions could look like in your own outbound workflow—with fewer replies waiting on you and less second-guessing for your team.</p>
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <Link href="/checkout/micro-pilot" className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#FF5A1F] px-4 py-2 text-sm font-semibold text-white hover:bg-[#FF5A1F]/90">Try the $10 Micro-Pilot</Link>
+          <Link href="/checkout/micro-pilot" className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#FF5A1F] px-4 py-2 text-sm font-semibold text-white hover:bg-[#FF5A1F]/90">Try it Risk-Free</Link>
           <Link href="/?audit=open" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/20 px-4 py-2 text-sm text-white/85 hover:border-white/40 hover:text-white">Find My Reply Bottleneck</Link>
         </div>
       </div>
+        </motion.div>}
+      </AnimatePresence>
   </>;
 
   if (embedded) return <div data-testid="inline-reply-scenarios" className="min-w-0 text-left text-white">{content}</div>;
