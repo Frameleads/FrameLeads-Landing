@@ -452,7 +452,7 @@ export default function Home() {
     synchronizeAudit(false);
   }, [synchronizeAudit]);
 
-  return <div id="top" className="relative min-h-screen max-w-[100vw] overflow-x-hidden bg-[#111111] bg-grid-overlay font-sans text-white selection:bg-[#FF5A1F] selection:text-white"><div aria-hidden="true" className="premium-edge-glow premium-edge-glow--top" /><div aria-hidden="true" className="premium-edge-glow premium-edge-glow--bottom" /><Suspense fallback={null}><AuditDeepLink onChange={synchronizeAudit} /></Suspense><Navbar onAuditClick={launchAudit} onMicroPilotClick={openMicroPilot} />
+  return <div id="top" className="relative min-h-screen max-w-[100vw] overflow-x-hidden bg-[#111111] font-sans text-white selection:bg-[#FF5A1F] selection:text-white"><div aria-hidden="true" className="premium-edge-glow premium-edge-glow--top" /><div aria-hidden="true" className="premium-edge-glow premium-edge-glow--bottom" /><Suspense fallback={null}><AuditDeepLink onChange={synchronizeAudit} /></Suspense><Navbar onAuditClick={launchAudit} onMicroPilotClick={openMicroPilot} />
     <main className="relative z-10 mx-auto max-w-7xl px-4 pb-16 pt-16 sm:px-6 sm:pt-20 lg:pt-32">
       <section className="mx-auto max-w-5xl text-center"><HeroIntro onAudit={launchAudit} /><motion.div initial={{ opacity: 0, y: 20, scale: .985 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: .72, ease: "easeOut", delay: .46 }} className="mt-10"><VideoSection /></motion.div></section>
 
