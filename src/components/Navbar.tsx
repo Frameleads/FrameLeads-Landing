@@ -39,10 +39,10 @@ export default function Navbar({ onAuditClick, onMicroPilotClick }: NavbarProps)
       </Link>
 
       <nav aria-label="Primary navigation" className="ml-auto hidden items-center gap-6 lg:flex">
-        <button type="button" data-tripwire-guard="true" onClick={openAudit} className="text-sm text-gray-400 transition-colors hover:text-white">Audit</button>
-        {sectionLinks.map((item) => <Link key={item.href} href={item.href} className="text-sm text-gray-400 transition-colors hover:text-white">{item.label}</Link>)}
+        <button type="button" data-tripwire-guard="true" onClick={openAudit} className="text-sm text-white transition-colors hover:text-[#FFB08D]">Audit</button>
+        {sectionLinks.map((item) => <Link key={item.href} href={item.href} className="text-sm text-white transition-colors hover:text-[#FFB08D]">{item.label}</Link>)}
         {onMicroPilotClick && <button type="button" onClick={openMicroPilot} className="inline-flex h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-lg bg-[#FF5A1F] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#e8511b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F]">Try it Risk-Free</button>}
-        <Link href={loginHref} className="ml-1 inline-flex h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-lg border border-white/15 px-4 text-sm font-semibold text-white transition-colors hover:border-white/30 hover:bg-white/[0.05] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F]">Log In</Link>
+        <Link href={loginHref} className="ml-1 inline-flex h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-lg border border-white px-4 text-sm font-semibold text-white transition-colors hover:border-white hover:bg-white/[0.08] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F]">Log In</Link>
       </nav>
 
       <Link href={loginHref} className="ml-auto inline-flex h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-lg bg-[#FF5A1F] px-3 text-xs font-semibold text-white transition-colors hover:bg-[#e8511b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F] sm:px-4 sm:text-sm lg:hidden">Log In</Link>
@@ -54,8 +54,8 @@ export default function Navbar({ onAuditClick, onMicroPilotClick }: NavbarProps)
       {isMenuOpen && (
         <nav id="mobile-navigation" aria-label="Mobile navigation" className="absolute left-0 top-[calc(100%+0.75rem)] z-50 w-full rounded-2xl border border-white/10 border-b bg-[#0a0a0a] px-4 py-5 shadow-2xl lg:hidden">
           <div className="mx-auto flex max-w-7xl flex-col gap-1">
-            <button type="button" data-tripwire-guard="true" onClick={openAudit} className="rounded-lg px-3 py-3 text-left text-sm text-gray-300 transition-colors hover:bg-white/[0.05] hover:text-white">Audit</button>
-            {sectionLinks.map((item) => <Link key={item.href} href={item.href} onClick={() => setIsMenuOpen(false)} className="rounded-lg px-3 py-3 text-sm text-gray-300 transition-colors hover:bg-white/[0.05] hover:text-white">{item.label}</Link>)}
+            <button type="button" data-tripwire-guard="true" onClick={openAudit} className="rounded-lg px-3 py-3 text-left text-sm text-white transition-colors hover:bg-white/[0.05] hover:text-[#FFB08D]">Audit</button>
+            {sectionLinks.map((item) => <Link key={item.href} href={item.href} onClick={() => setIsMenuOpen(false)} className="rounded-lg px-3 py-3 text-sm text-white transition-colors hover:bg-white/[0.05] hover:text-[#FFB08D]">{item.label}</Link>)}
             {onMicroPilotClick && <button type="button" onClick={openMicroPilot} className="mt-2 rounded-lg bg-[#FF5A1F] px-4 py-3 text-left text-sm font-semibold text-white transition-colors hover:bg-[#e8511b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F]">Try it Risk-Free</button>}
           </div>
         </nav>
