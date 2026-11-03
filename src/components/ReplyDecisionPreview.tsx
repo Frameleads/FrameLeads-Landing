@@ -113,7 +113,7 @@ function DecisionPacket({ scenario, phase, reducedMotion }: { scenario: ReplySce
         </div>
         <p className="mt-4 break-words rounded-xl border border-white/[.055] bg-[#1A1A1A]/[.65] px-3.5 py-3 text-[14px] font-medium leading-[1.6] text-white/95 shadow-[inset_0_1px_0_rgba(255,255,255,.025)] sm:mt-5 sm:px-4 sm:py-3.5 sm:text-[15px]">“{scenario.reply}”</p>
         <div className="mt-auto pt-4">
-          <p className="font-mono text-[9px] font-medium uppercase tracking-[.11em] text-[#888888]">Incoming reply · fictional example</p>
+          <p className="font-mono text-[9px] font-medium uppercase tracking-[.11em] text-[#888888]">Sample incoming reply</p>
         </div>
       </section>
 
@@ -167,7 +167,7 @@ function DecisionPacket({ scenario, phase, reducedMotion }: { scenario: ReplySce
       </div>
     </motion.details>}
     <p className="px-4 pb-3 text-[10px] leading-relaxed text-[#888888] sm:px-5">
-      Fictional prospects and illustrative seller rules. No live inference, customer proof, approval, or outbound message.
+      Interactive preview using sample replies and rules. No messages are sent.
     </p>
   </article>;
 }
@@ -233,9 +233,7 @@ export default function ReplyDecisionPreview() {
           <Link href="/?audit=open" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/20 px-4 py-2 text-sm text-white/85 hover:border-white/40 hover:text-white">Find My Reply Bottleneck</Link>
         </div>
       </div>
-      <footer className="mt-6 border-t border-white/[.06] pt-5 text-[11px] leading-relaxed text-[#888888]">
-        These examples are fictional, read-only illustrations rather than live evaluations, customer conversations, measured outcomes, or actual message sends.
-      </footer>
+
     </div>
   </main>;
 }

@@ -76,8 +76,11 @@ test("the preview contains no live writes or misleading customer proof", () => {
   for (const banned of ["fetch(", "navigator.sendBeacon", "dangerouslySetInnerHTML", "<form", "localStorage", "window.location.href"]) {
     assert.ok(!component.includes(banned), "Unexpected live behavior: " + banned);
   }
-  assert.ok(component.includes("Fictional prospects and illustrative seller rules"));
-  assert.ok(component.includes("No live inference"));
+  assert.ok(component.includes("Interactive preview using sample replies and rules. No messages are sent."));
+  assert.ok(component.includes("Sample incoming reply"));
+  assert.ok(component.includes("Illustrative product preview"));
+  assert.ok(!component.includes("Fictional prospects and illustrative seller rules."));
+  assert.ok(!component.includes("These examples are fictional, read-only illustrations"));
   assert.ok(route.includes("robots: { index: false, follow: false }"));
 });
 
@@ -146,7 +149,7 @@ test("final pilot and audit CTAs stay grouped centrally", () => {
 });
 
 test("decision explanation has comfortable separation from the human checkpoint", () => {
-  assert.ok(component.includes('className="mb-5 mt-2 text-[12px] leading-[1.45] text-[#C1C1C4]"'));
+  assert.ok(component.includes('className="mb-5 mt-2 text-[12px] leading-[1.45] text-white/75"'));
   assert.ok(component.includes("Human checkpoint"));
 });
 
@@ -159,4 +162,13 @@ test("all three named prospects use their dedicated fictional JPEG files", () =>
     assert.equal(jpeg[jpeg.length-2], 0xFF);
     assert.equal(jpeg[jpeg.length-1], 0xD9);
   }
+});
+
+
+test("single short disclosure replaces redundant defensive footers", () => {
+  const notice = "Interactive preview using sample replies and rules. No messages are sent.";
+  assert.equal(component.split(notice).length - 1, 1);
+  assert.ok(component.includes("Sample incoming reply"));
+  assert.ok(!component.includes("customer proof, approval, or outbound message"));
+  assert.ok(!component.includes("actual message sends"));
 });
