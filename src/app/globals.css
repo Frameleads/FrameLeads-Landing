@@ -288,3 +288,68 @@
     will-change: auto;
   }
 }
+
+
+/*
+ * Pricing cards: the approved FrameLeads palette, borrowing only the two-stage
+ * light treatment demonstrated in the supplied Sandcastle reference.
+ * The base glow is almost imperceptible; hover/focus lifts a soft orange pool
+ * from the lower edge behind the package CTA without tinting the typography.
+ */
+.pricing-ambient-card {
+  isolation: isolate;
+  transition: border-color 420ms ease, box-shadow 500ms ease;
+}
+
+.pricing-ambient-card::before,
+.pricing-ambient-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.pricing-ambient-card::before {
+  background:
+    radial-gradient(ellipse 105% 68% at 50% 112%, rgba(255,90,31,.055), transparent 77%),
+    radial-gradient(ellipse 42% 92% at 0% 50%, rgba(255,90,31,.025), transparent 78%),
+    radial-gradient(ellipse 42% 92% at 100% 50%, rgba(255,90,31,.025), transparent 78%);
+  box-shadow: inset 0 0 30px rgba(255,90,31,.025);
+}
+
+.pricing-ambient-card::after {
+  background:
+    radial-gradient(ellipse 94% 61% at 50% 109%, rgba(255,90,31,.16), transparent 75%),
+    linear-gradient(to top, rgba(255,90,31,.055), transparent 48%);
+  opacity: 0;
+  transform: translateY(15%);
+  transition: opacity 680ms cubic-bezier(.22,1,.36,1),
+              transform 680ms cubic-bezier(.22,1,.36,1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pricing-ambient-card:hover {
+    border-color: rgba(255,90,31,.46);
+    box-shadow: 0 24px 48px -18px rgba(26,26,26,.65),
+                0 0 26px rgba(255,90,31,.055);
+  }
+
+  .pricing-ambient-card:hover::after {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pricing-ambient-card:focus-within::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pricing-ambient-card,
+  .pricing-ambient-card::after {
+    transition: none;
+  }
+}
