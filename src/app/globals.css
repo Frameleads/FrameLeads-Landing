@@ -186,7 +186,7 @@
 
 /*
  * Home-only atmospheric edge lighting, inspired by black, burgundy and ember orange.
- * Top lighting begins at the literal top edge and its soft light fields move DOWN.
+ * The top glow runs only from the page edge through the navigation/eyebrow, fading before the H1.
  * Bottom lighting runs continuously behind the CTA and footer with no boxed-off bar.
  * Central page sections retain their existing charcoal background.
  */
@@ -201,21 +201,20 @@
 
 .premium-edge-glow--top {
   top: 0;
-  height: clamp(42rem, 100svh, 62rem);
+  /* Stop before the H1: ~184px on desktop, shorter on small viewports. */
+  height: clamp(8.75rem, 23svh, 11.5rem);
   background:
-    radial-gradient(ellipse 95% 55% at 50% -4%, rgba(62, 8, 10, 0.23), transparent 90%),
+    radial-gradient(ellipse 90% 85% at 50% 0%, rgba(99, 11, 16, 0.3), transparent 90%),
     linear-gradient(
       180deg,
-      #100608 0%,
-      #170709 11%,
-      #270809 27%,
-      #3b0a09 43%,
-      #4d100a 61%,
-      rgba(93, 22, 11, 0.77) 81%,
-      rgba(93, 22, 11, 0) 100%
+      #170608 0%,
+      #270709 22%,
+      rgba(73, 10, 10, 0.79) 43%,
+      rgba(80, 14, 10, 0.39) 66%,
+      transparent 100%
     );
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 75%, transparent 100%);
-  mask-image: linear-gradient(to bottom, #000 0%, #000 75%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 52%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 52%, transparent 100%);
 }
 
 .premium-edge-glow--bottom {
@@ -246,19 +245,18 @@
 
 .premium-edge-glow--top::before {
   background:
-    /* Upper color veil is visible from the very top before drifting downward. */
-    radial-gradient(ellipse 69% 49% at 48% 0%, rgba(103, 15, 13, 0.43), transparent 85%),
-    radial-gradient(ellipse 43% 60% at 8% 76%, rgba(255, 85, 16, 0.55), rgba(178, 34, 13, 0.17) 53%, transparent 82%),
-    radial-gradient(ellipse 43% 60% at 92% 76%, rgba(240, 73, 16, 0.52), rgba(164, 25, 12, 0.19) 53%, transparent 83%);
-  filter: blur(29px);
+    radial-gradient(ellipse 65% 63% at 47% 0%, rgba(113, 13, 15, 0.47), transparent 85%),
+    radial-gradient(ellipse 48% 83% at 8% 66%, rgba(219, 48, 15, 0.43), rgba(145, 24, 13, 0.14) 52%, transparent 82%),
+    radial-gradient(ellipse 48% 83% at 92% 66%, rgba(211, 42, 12, 0.39), rgba(145, 24, 13, 0.14) 52%, transparent 83%);
+  filter: blur(22px);
   animation: premium-top-slide-down 20s ease-in-out infinite alternate;
 }
 
 .premium-edge-glow--top::after {
   background:
-    radial-gradient(ellipse 52% 45% at 52% 14%, rgba(127, 20, 16, 0.19), transparent 79%),
-    radial-gradient(ellipse 54% 37% at 49% 62%, rgba(160, 22, 13, 0.24), transparent 80%);
-  filter: blur(36px);
+    radial-gradient(ellipse 56% 76% at 52% 10%, rgba(141, 20, 16, 0.23), transparent 80%),
+    radial-gradient(ellipse 56% 62% at 50% 58%, rgba(159, 29, 14, 0.19), transparent 82%);
+  filter: blur(26px);
   animation: premium-top-breathe 26s ease-in-out infinite alternate;
 }
 
