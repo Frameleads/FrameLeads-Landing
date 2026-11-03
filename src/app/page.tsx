@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Suspense, useCallback, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import ExitIntentPopup from "../components/ExitIntentPopup";
 import EmbeddedSandbox from "../components/EmbeddedSandbox";
@@ -14,6 +14,7 @@ import { auditLocation, auditRequested } from "../audit-entry";
 import CleanBottleneckVisual from "../components/CleanBottleneckVisual";
 import SectionIntro from "../components/SectionIntro";
 import HeroIntro from "../components/HeroIntro";
+import ReplyDecisionPreview from "../components/ReplyDecisionPreview";
 import ProductProofHowItWorks from "../components/ProductProofHowItWorks";
 import Navbar from "../components/Navbar";
 import PipelineAudit, { type AuditResult } from "../components/PipelineAudit";
@@ -433,6 +434,9 @@ export default function Home() {
   const [isAuditExpanded, setIsAuditExpanded] = useState(false);
   const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
   const [isMicroPilotRequested, setIsMicroPilotRequested] = useState(false);
+  const [isScenarioPreviewOpen, setIsScenarioPreviewOpen] = useState(false);
+  const scenarioSectionRef = useRef<HTMLElement>(null);
+  const reducedMotionForScenarios = useReducedMotion();
   const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
   const auditRef = useRef<HTMLElement>(null);
   const auditTrigger = useRef<HTMLElement | null>(null);
@@ -451,10 +455,67 @@ export default function Home() {
     if (auditRequested(window.location.search)) window.history.replaceState(null, "", auditLocation(window.location.href, false));
     synchronizeAudit(false);
   }, [synchronizeAudit]);
+  const revealScenarios = useCallback(() => {
+    setIsScenarioPreviewOpen(true);
+  }, []);
+  const closeScenarios = useCallback(() => {
+    setIsScenarioPreviewOpen(false);
+    if (window.location.hash === "#reply-scenarios") {
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
+  }, []);
+  useEffect(() => {
+    const openFromDeepLink = () => {
+      if (window.location.hash === "#reply-scenarios") setIsScenarioPreviewOpen(true);
+    };
+    openFromDeepLink();
+    window.addEventListener("hashchange", openFromDeepLink);
+    return () => window.removeEventListener("hashchange", openFromDeepLink);
+  }, []);
+  useEffect(() => {
+    if (!isScenarioPreviewOpen) return;
+    const frame = window.requestAnimationFrame(() => {
+      scenarioSectionRef.current?.scrollIntoView({
+        behavior: reducedMotionForScenarios ? "auto" : "smooth",
+        block: "start",
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [isScenarioPreviewOpen, reducedMotionForScenarios]);
+
 
   return <div id="top" className="relative min-h-screen max-w-[100vw] overflow-x-hidden bg-[#111111] bg-grid-overlay font-sans text-white selection:bg-[#FF5A1F] selection:text-white"><Suspense fallback={null}><AuditDeepLink onChange={synchronizeAudit} /></Suspense><Navbar onAuditClick={launchAudit} onMicroPilotClick={openMicroPilot} />
     <main className="relative z-10 mx-auto max-w-7xl px-4 pb-16 pt-16 sm:px-6 sm:pt-20 lg:pt-32">
-      <section className="mx-auto max-w-5xl text-center"><HeroIntro onAudit={launchAudit} /><motion.div initial={{ opacity: 0, y: 20, scale: .985 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: .72, ease: "easeOut", delay: .46 }} className="mt-10"><VideoSection /></motion.div></section>
+      <section className="mx-auto max-w-5xl text-center"><HeroIntro onAudit={launchAudit} onExplore={revealScenarios} scenariosExpanded={isScenarioPreviewOpen} /></section>
+      <AnimatePresence initial={false} onExitComplete={() => {
+        const trigger = document.getElementById("explore-scenarios-button");
+        trigger?.focus({ preventScroll: true });
+        trigger?.scrollIntoView({ behavior: reducedMotionForScenarios ? "auto" : "smooth", block: "center" });
+      }}>
+        {isScenarioPreviewOpen && (
+          <motion.section
+            key="inline-reply-scenarios"
+            id="reply-scenarios"
+            ref={scenarioSectionRef}
+            aria-label="Interactive reply decision scenarios"
+            data-testid="homepage-inline-scenarios"
+            initial={reducedMotionForScenarios ? { opacity: 0 } : { opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={reducedMotionForScenarios ? { opacity: 0 } : { opacity: 0, height: 0 }}
+            transition={{ duration: reducedMotionForScenarios ? 0 : 0.42, ease: "easeOut" }}
+            className="mx-auto mt-6 w-full max-w-[1120px] scroll-mt-24 overflow-hidden text-left sm:mt-8">
+            <div className="flex justify-end px-2 pt-4">
+              <button type="button" onClick={closeScenarios} aria-label="Close reply scenarios"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/20 bg-[#1A1A1A] px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:border-[#FF5A1F]/50 hover:bg-[#242424] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F]">
+                <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+                Close preview
+              </button>
+            </div>
+            <ReplyDecisionPreview embedded />
+          </motion.section>
+        )}
+      </AnimatePresence>
+      <section className="mx-auto max-w-5xl text-center"><motion.div initial={{ opacity: 0, y: 20, scale: .985 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: .72, ease: "easeOut", delay: .46 }} className="mt-10"><VideoSection /></motion.div></section>
 
       <section id="problem" className="mx-auto mt-16 max-w-6xl scroll-mt-32 border-t border-white/[0.06] py-16 text-center md:mt-24 md:py-24"><SectionIntro eyebrow="The gap" heading="Sending is automated. The decision after the reply is not." description="Most outbound stacks stop at the inbox, where someone still has to interpret the reply, apply context, and decide what happens next." /><ProblemFlow /></section>
 
