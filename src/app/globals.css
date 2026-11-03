@@ -182,3 +182,92 @@
     animation: none;
   }
 }
+
+
+/*
+ * Homepage edge lighting. Reference: black → burgundy → ember orange.
+ * Only the very top and bottom of the homepage receive this treatment.
+ * The central sections retain the existing charcoal/grid background.
+ * Decorative layers never intercept clicks or change document flow.
+ */
+.premium-edge-glow {
+  position: absolute;
+  inset-inline: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  isolation: isolate;
+}
+
+.premium-edge-glow--top {
+  top: 0;
+  height: clamp(40rem, 92svh, 58rem);
+  background:
+    radial-gradient(ellipse 70% 58% at 50% 62%, rgba(62, 9, 12, 0.58), transparent 78%),
+    linear-gradient(180deg, #080607 0%, #120708 22%, #280a09 51%, rgba(51, 11, 8, 0.56) 75%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 66%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 66%, transparent 100%);
+}
+
+.premium-edge-glow--bottom {
+  bottom: 0;
+  height: clamp(30rem, 74svh, 48rem);
+  background:
+    radial-gradient(ellipse 75% 54% at 50% 91%, rgba(95, 18, 9, 0.45), transparent 80%),
+    linear-gradient(180deg, transparent 0%, rgba(37, 7, 9, 0.2) 34%, rgba(73, 13, 9, 0.51) 68%, rgba(103, 21, 8, 0.55) 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 37%, #000 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 37%, #000 100%);
+}
+
+.premium-edge-glow::before,
+.premium-edge-glow::after {
+  content: "";
+  position: absolute;
+  inset: -12% -14%;
+  pointer-events: none;
+  transform-origin: center;
+}
+
+.premium-edge-glow::before {
+  background:
+    radial-gradient(ellipse 38% 53% at 13% 80%, rgba(255, 87, 17, 0.63), rgba(166, 30, 13, 0.22) 51%, transparent 80%),
+    radial-gradient(ellipse 42% 54% at 91% 78%, rgba(225, 47, 11, 0.49), rgba(116, 20, 12, 0.22) 51%, transparent 82%);
+  filter: blur(24px);
+  animation: premium-ember-drift 22s ease-in-out infinite alternate;
+}
+
+.premium-edge-glow::after {
+  background:
+    radial-gradient(ellipse 48% 36% at 43% 84%, rgba(158, 22, 13, 0.34), transparent 78%),
+    radial-gradient(ellipse 30% 35% at 73% 91%, rgba(255, 90, 31, 0.27), transparent 77%);
+  filter: blur(38px);
+  animation: premium-ember-breathe 27s ease-in-out infinite alternate;
+}
+
+.premium-edge-glow--bottom::before {
+  background:
+    radial-gradient(ellipse 47% 50% at 11% 90%, rgba(255, 93, 18, 0.68), rgba(177, 34, 12, 0.25) 56%, transparent 82%),
+    radial-gradient(ellipse 41% 49% at 91% 88%, rgba(236, 57, 10, 0.59), rgba(126, 20, 11, 0.24) 57%, transparent 82%);
+}
+
+.premium-edge-glow--bottom::after {
+  background: radial-gradient(ellipse 56% 46% at 54% 100%, rgba(212, 46, 10, 0.35), transparent 81%);
+}
+
+@keyframes premium-ember-drift {
+  0% { transform: translate3d(-2%, 0, 0) scale(1); opacity: 0.8; }
+  50% { transform: translate3d(2%, -1.5%, 0) scale(1.04); opacity: 0.98; }
+  100% { transform: translate3d(-1%, 2%, 0) scale(1.02); opacity: 0.86; }
+}
+
+@keyframes premium-ember-breathe {
+  0% { transform: translate3d(1%, 0, 0) scale(1); opacity: 0.68; }
+  100% { transform: translate3d(-2%, -2%, 0) scale(1.075); opacity: 0.94; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .premium-edge-glow::before,
+  .premium-edge-glow::after {
+    animation: none;
+  }
+}
