@@ -37,7 +37,7 @@ const journeyDescriptions = [
 ] as const;
 
 function DecisionJourney({ reducedMotion }: { reducedMotion: boolean }) {
-  return <div className="relative mt-4 overflow-hidden rounded-2xl border border-[#FF5A1F]/20 bg-[radial-gradient(ellipse_at_50%_55%,rgba(255,90,31,.08),transparent_65%),linear-gradient(145deg,#242424,#1A1A1A_75%)] px-3.5 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,.06),0_12px_30px_rgba(26,26,26,.18)] sm:px-5" data-testid="connected-decision-journey" aria-label="Illustrative connected decision path: Intent, Context, Rules, Approval, then recommended action">
+  return <div className="relative mt-4 overflow-hidden rounded-2xl border border-[#FF5A1F]/20 bg-[radial-gradient(ellipse_at_50%_55%,rgba(255,90,31,.075),transparent_65%),linear-gradient(135deg,#242424,#1A1A1A_72%)] px-3.5 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,.06),0_16px_30px_rgba(26,26,26,.18)] sm:px-5" data-testid="connected-decision-journey" aria-label="Illustrative connected decision path: Intent, Context, Rules, Approval, then recommended action">
     <div aria-hidden="true" className="pointer-events-none absolute left-[13%] right-[13%] top-[39px] h-[2px] bg-gradient-to-r from-[#FF5A1F]/20 via-[#FF5A1F]/55 to-[#FF5A1F]/20" />
     {!reducedMotion && <motion.span aria-hidden="true" className="pointer-events-none absolute top-[35px] z-10 h-[10px] w-[10px] rounded-full bg-[#FF5A1F] shadow-[0_0_13px_5px_rgba(255,90,31,.45)]"
       animate={{ left: ["12%", "87%"], opacity: [0, 1, 1, 0] }} transition={{ duration: 4.8, ease: "linear", repeat: Infinity, repeatDelay: .7 }} />}
@@ -72,7 +72,7 @@ function ProspectAvatar({ scenario }: { scenario: ReplyScenario }) {
     handoff: "/images/reply-preview-prospects/nadia-hassan.jpg",
   };
   return <Image src={portraits[scenario.id]} alt={"Fictional prospect " + scenario.prospectName} width={48} height={48}
-    className="h-12 w-12 shrink-0 rounded-full border border-[#FF5A1F]/50 object-cover shadow-[0_0_0_3px_rgba(255,90,31,.08),0_5px_15px_rgba(26,26,26,.35)]" />;
+    className="h-12 w-12 shrink-0 rounded-full border border-[#FF5A1F]/50 object-cover object-center shadow-[0_0_0_3px_rgba(255,90,31,.08),0_5px_15px_rgba(26,26,26,.35)]" />;
 }
 
 function ProcessingBolt({ reducedMotion }: { reducedMotion: boolean }) {
@@ -103,7 +103,7 @@ function DecisionPacket({ scenario, phase, reducedMotion }: { scenario: ReplySce
     </header>
 
     <div className="mb-4 grid min-w-0 gap-3 p-3 sm:p-4 md:grid-cols-2">
-      <section className="relative flex min-w-0 flex-col overflow-hidden rounded-2xl border border-white/[.12] bg-[radial-gradient(ellipse_at_5%_0%,rgba(255,90,31,.08),transparent_56%),linear-gradient(145deg,#242424,#1A1A1A_74%)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.07),0_12px_26px_rgba(26,26,26,.18)] sm:p-5" aria-label="Incoming reply">
+      <section className="relative flex min-w-0 flex-col overflow-hidden rounded-2xl border border-[#FF5A1F]/20 bg-[radial-gradient(ellipse_at_5%_0%,rgba(255,90,31,.1),transparent_60%),linear-gradient(135deg,#242424,#1A1A1A_72%)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.065),0_16px_34px_rgba(26,26,26,.22)] sm:p-5" aria-label="Incoming reply">
         <div className="flex min-w-0 items-center gap-3 border-b border-white/[.09] pb-4">
           <ProspectAvatar scenario={scenario} />
           <div className="min-w-0">
@@ -122,7 +122,7 @@ function DecisionPacket({ scenario, phase, reducedMotion }: { scenario: ReplySce
           key={scenario.id + "-ready"}
           initial={reducedMotion ? false : { opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }} transition={{ duration: reducedMotion ? 0 : .5 }}
-          className="relative flex h-full min-h-[235px] flex-col overflow-hidden rounded-2xl border border-[#FF5A1F]/25 bg-[radial-gradient(ellipse_at_92%_0%,rgba(255,90,31,.12),transparent_54%),linear-gradient(145deg,#242424,#1A1A1A_76%)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.065),0_14px_32px_rgba(26,26,26,.24)] sm:p-5">
+          className="relative flex h-full min-h-[235px] flex-col overflow-hidden rounded-2xl border border-[#FF5A1F]/25 bg-[radial-gradient(ellipse_at_92%_0%,rgba(255,90,31,.12),transparent_60%),linear-gradient(135deg,#242424,#1A1A1A_72%)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.065),0_16px_34px_rgba(26,26,26,.22)] sm:p-5">
           <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[.08em] text-[#FF5A1F]"><SignalIconMark kind="bolt" size={15} /> Decision ready</p>
           <h2 className="mt-2 text-[17px] font-bold leading-snug text-white sm:text-[19px]">{scenario.nextAction}</h2>
           <p className="mb-5 mt-2 text-[12px] leading-[1.45] text-white/75">{scenario.why}</p>
@@ -136,7 +136,7 @@ function DecisionPacket({ scenario, phase, reducedMotion }: { scenario: ReplySce
     </div>
 
     {ready && <motion.details initial={reducedMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: .4 }}
-      className="group mx-3 mb-3 rounded-2xl border border-white/[.085] bg-[radial-gradient(ellipse_at_50%_0%,rgba(255,90,31,.06),transparent_62%),linear-gradient(145deg,#242424,#1A1A1A)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.045),0_12px_32px_rgba(26,26,26,.2)] sm:mx-4 sm:mb-4 sm:p-5" data-testid="decision-explanation">
+      className="group mx-3 mb-3 rounded-2xl border border-[#FF5A1F]/20 bg-[radial-gradient(ellipse_at_50%_0%,rgba(255,90,31,.075),transparent_60%),linear-gradient(135deg,#242424,#1A1A1A_72%)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.06),0_16px_34px_rgba(26,26,26,.2)] sm:mx-4 sm:mb-4 sm:p-5" data-testid="decision-explanation">
       <summary className="cursor-pointer list-none outline-none focus-visible:rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F] [&::-webkit-details-marker]:hidden">
         <div className="flex items-center justify-between gap-3">
           <p className="text-[11px] font-bold uppercase tracking-[.055em] text-white">How the decision was reached</p>
