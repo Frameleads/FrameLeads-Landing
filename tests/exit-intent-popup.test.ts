@@ -80,7 +80,24 @@ test("Micro-Pilot layout is viewport bounded and uses approved surfaces on mobil
   assert.ok(popupSource.includes("overflow-x-hidden overflow-y-auto overscroll-contain"));
   assert.ok(popupSource.includes("min-w-0 pr-10"));
   assert.ok(popupSource.includes("grid-cols-1 gap-3 md:grid-cols-2"));
-  assert.ok(popupSource.includes("bg-[#1A1A1A]"));
-  assert.equal(popupSource.split("bg-[#242424]").length - 1, 2);
+  assert.ok(popupSource.includes("linear-gradient(135deg,#242424,#1A1A1A_72%)"));
+  assert.ok(popupSource.includes("rounded-2xl border border-[#FF5A1F]/20"));
+  assert.equal(popupSource.split("linear-gradient(135deg,#242424,#1A1A1A_72%)").length - 1, 3);
   assert.doesNotMatch(popupSource, /sm:max-h-none|sm:overflow-hidden|max-w-2xl|bg-\[#0a0a0a\]/);
+});
+
+
+test("Micro-Pilot shares approved scenario gradient treatment and preserves checkout/close", () => {
+  for (const value of [
+    "radial-gradient(ellipse_at_88%_0%,rgba(255,90,31,.09)",
+    "radial-gradient(ellipse_at_10%_0%,rgba(255,90,31,.11)",
+    "radial-gradient(ellipse_at_90%_0%,rgba(255,90,31,.07)",
+    "shadow-[inset_0_1px_0_rgba(255,255,255,.065)",
+    "border-[#FF5A1F]/25",
+    "linear-gradient(135deg,#242424,#1A1A1A_72%)"
+  ]) assert.ok(popupSource.includes(value), "Missing brand-gradient treatment: " + value);
+  assert.ok(popupSource.includes('href={MICRO_PILOT_URL}'));
+  assert.ok(popupSource.includes('onClick={closeOffer}'));
+  assert.ok(popupSource.includes('aria-modal="true"'));
+  assert.ok(popupSource.includes('max-h-[calc(100dvh-2rem)]'));
 });

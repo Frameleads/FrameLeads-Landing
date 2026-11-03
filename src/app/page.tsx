@@ -427,7 +427,7 @@ function PricingCard({ tier }: { tier: "core" | "enterprise" }) {
   const rows = pricingRows[tier];
   const extras = enterprise ? ["Everything in FrameLeads Core", "Custom Market Profiles", "Governance Overview", "Sales Constitution", "Governed Automation / Autopilot", "Revenue-at-Risk", "Response SLA", "Decision Sandbox", "Outcome Learning"] : ["Onboarding + campaign setup", "Lead ingestion", "Native Sandbox + AI generation", "Deploy / native outbound", "Built-in Market-Aware Messaging", "Scout", "ICP Profile + qualification", "Deep prospect research", "Prospect Memory", "FrameLeads Brain", "Revenue Playbook", "Inbox Triage", "Decision Engine / reply intelligence", "Decision Replay"];
   const href = enterprise ? "/checkout/enterprise" : "/checkout/core";
-  return <article id={enterprise ? undefined : "core"} className={`relative overflow-hidden rounded-2xl border bg-[#1A1A1A] p-6 shadow-[0_24px_48px_-18px_rgba(0,0,0,0.8)] sm:p-8 ${enterprise ? "border-[#FF5A1F]/40" : "border-white/[0.1]"}`}><div className="relative z-10"><p className="font-mono text-[9px] uppercase tracking-[0.18em] text-[#FF5A1F]">{enterprise ? "Higher-volume architecture" : "Core operation"}</p><h3 className="mt-4 text-2xl font-bold text-white">FrameLeads {enterprise ? "Enterprise" : "Core"}</h3><p className="mt-2 text-sm leading-relaxed text-[#888888]">{enterprise ? "For higher-volume or more complex outbound operations." : "For founder-led and smaller outbound teams."}</p><p className={`mt-6 text-4xl font-bold ${enterprise ? "text-[#FF5A1F]" : "text-white"}`}>${enterprise ? "499" : "149"}<span className="ml-1 font-mono text-sm font-normal text-[#888888]">/ month</span></p><dl className="mt-7 border-t border-white/[0.07]">{rows.map(([label, value]) => <div key={label} className="grid gap-1 border-b border-white/[0.06] py-3 sm:grid-cols-[8rem_1fr]"><dt className="font-mono text-[8px] uppercase tracking-wider text-[#888888]">{label}</dt><dd className="text-sm text-white/85">{value}</dd></div>)}</dl><details className="group mt-5"><summary className="cursor-pointer font-mono text-[9px] uppercase tracking-[0.14em] text-[#FF5A1F] focus-visible:outline-none">See everything included</summary><ul className="mt-4 space-y-2 border-l border-white/[0.1] pl-4 text-sm text-white/65">{extras.map((extra) => <li key={extra}>{extra}</li>)}</ul></details><Link href={href} target="_blank" rel="noopener noreferrer" data-tripwire-guard="true" className={`mt-8 block w-full rounded-xl px-5 py-4 text-center text-sm font-bold transition-colors ${enterprise ? "bg-[#FF5A1F] text-white hover:bg-[#ff6b35]" : "border border-white/20 text-white hover:bg-white hover:text-black"}`}>Deploy FrameLeads {enterprise ? "Enterprise" : "Core"}</Link></div></article>;
+  return <article id={enterprise ? undefined : "core"} className={`pricing-ambient-card relative isolate overflow-hidden rounded-2xl border bg-[#1A1A1A] p-6 shadow-[0_24px_48px_-18px_rgba(0,0,0,0.8)] sm:p-8 ${enterprise ? "border-[#FF5A1F]/40" : "border-[#FF5A1F]/[.14]"}`}><div className="relative z-10"><p className="font-mono text-[9px] uppercase tracking-[0.18em] text-[#FF5A1F]">{enterprise ? "Higher-volume architecture" : "Core operation"}</p><h3 className="mt-4 text-2xl font-bold text-white">FrameLeads {enterprise ? "Enterprise" : "Core"}</h3><p className="mt-2 text-sm leading-relaxed text-[#888888]">{enterprise ? "For higher-volume or more complex outbound operations." : "For founder-led and smaller outbound teams."}</p><p className={`mt-6 text-4xl font-bold ${enterprise ? "text-[#FF5A1F]" : "text-white"}`}>${enterprise ? "499" : "149"}<span className="ml-1 font-mono text-sm font-normal text-[#888888]">/ month</span></p><dl className="mt-7 border-t border-white/[0.07]">{rows.map(([label, value]) => <div key={label} className="grid gap-1 border-b border-white/[0.06] py-3 sm:grid-cols-[8rem_1fr]"><dt className="font-mono text-[8px] uppercase tracking-wider text-[#888888]">{label}</dt><dd className="text-sm text-white/85">{value}</dd></div>)}</dl><details className="group mt-5"><summary className="cursor-pointer font-mono text-[9px] uppercase tracking-[0.14em] text-[#FF5A1F] focus-visible:outline-none">See everything included</summary><ul className="mt-4 space-y-2 border-l border-white/[0.1] pl-4 text-sm text-white/65">{extras.map((extra) => <li key={extra}>{extra}</li>)}</ul></details><Link href={href} target="_blank" rel="noopener noreferrer" data-tripwire-guard="true" className={`mt-8 block w-full rounded-xl px-5 py-4 text-center text-sm font-bold transition-colors ${enterprise ? "bg-[#FF5A1F] text-white hover:bg-[#ff6b35]" : "border border-white/20 text-white hover:bg-white hover:text-black"}`}>Deploy FrameLeads {enterprise ? "Enterprise" : "Core"}</Link></div></article>;
 }
 
 export default function Home() {
@@ -484,7 +484,8 @@ export default function Home() {
   }, [isScenarioPreviewOpen, reducedMotionForScenarios]);
 
 
-  return <div id="top" className="relative min-h-screen max-w-[100vw] overflow-x-hidden bg-[#111111] font-sans text-white selection:bg-[#FF5A1F] selection:text-white"><div aria-hidden="true" className="premium-edge-glow premium-edge-glow--top" /><div aria-hidden="true" className="premium-edge-glow premium-edge-glow--bottom" /><Suspense fallback={null}><AuditDeepLink onChange={synchronizeAudit} /></Suspense><Navbar onAuditClick={launchAudit} onMicroPilotClick={openMicroPilot} />
+  return <>
+  <div id="top" className="relative min-h-screen max-w-[100vw] overflow-x-hidden bg-[#111111] font-sans text-white selection:bg-[#FF5A1F] selection:text-white"><div aria-hidden="true" className="premium-edge-glow premium-edge-glow--top" /><div aria-hidden="true" className="premium-edge-glow premium-edge-glow--bottom" /><Suspense fallback={null}><AuditDeepLink onChange={synchronizeAudit} /></Suspense><Navbar onAuditClick={launchAudit} onMicroPilotClick={openMicroPilot} />
     <main className="relative z-10 mx-auto max-w-7xl px-4 pb-16 pt-16 sm:px-6 sm:pt-20 lg:pt-32">
       <section className="mx-auto max-w-5xl text-center"><HeroIntro onAudit={launchAudit} onExplore={revealScenarios} scenariosExpanded={isScenarioPreviewOpen} /></section>
       <AnimatePresence initial={false} onExitComplete={() => {
@@ -537,8 +538,41 @@ export default function Home() {
 
       <section id="commercial-close" className="mx-auto max-w-4xl border-t border-white/[0.06] py-16 text-center md:py-24"><SectionIntro eyebrow="Next step" heading="See where your reply workflow becomes manual." description="Run the 5-question Reply Workflow Audit and identify where FrameLeads would sit in your operation." /><motion.button initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: .3 }} transition={{ duration: .5, delay: .34, ease: "easeOut" }} type="button" data-tripwire-guard="true" onClick={launchAudit} className="mt-8 rounded-xl bg-[#FF5A1F] px-7 py-4 text-base font-bold text-white transition-colors hover:bg-[#ff6b35]">Diagnose My Reply Workflow</motion.button></section>
     </main>
-    <footer className="relative z-10 bg-transparent px-4 py-10 sm:px-6"><div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-5 md:flex-row"><p className="font-mono text-[10px] uppercase tracking-widest text-white">© 2026 FrameLeads. A BrandFlow Studio Company.</p><a href="mailto:akram@frameleads.io" aria-label="Email FrameLeads support at akram@frameleads.io" className="font-mono text-[10px] uppercase tracking-widest text-white transition-colors hover:text-[#FFB08D]">Support &amp; inquiries · akram@frameleads.io</a><div className="flex gap-6 font-mono text-[10px] uppercase tracking-widest text-white"><Link href="/terms" className="transition-colors hover:text-[#FFB08D]">Terms</Link><Link href="/privacy" className="transition-colors hover:text-[#FFB08D]">Privacy</Link></div></div></footer><AuditModal returnFocusRef={auditTrigger} open={isAuditModalOpen} onClose={closeAudit} onComplete={setAuditResult} />{!isAuditModalOpen && <ExitIntentPopup openRequest={isMicroPilotRequested} onOpenRequestChange={setIsMicroPilotRequested} />}
-  </div>;
+    <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-48 bg-gradient-to-b from-transparent to-[#1A1A1A]" />
+  </div>
+  <footer className="relative z-10 w-full border-t border-white/[.08] bg-[#1A1A1A] px-5 pb-8 pt-14 text-white sm:px-8 sm:pt-16" aria-label="Footer navigation">
+    <div className="mx-auto grid w-full max-w-6xl gap-10 sm:grid-cols-2 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)] lg:gap-14">
+      <div className="max-w-sm">
+        <Link href="#top" aria-label="FrameLeads home" className="inline-flex items-center gap-3">
+          <Image src="/logo.png" alt="" width={42} height={42} className="rounded-lg object-contain" />
+          <span className="font-heading text-xl font-bold tracking-wide text-white">FrameLeads</span>
+        </Link>
+        <p className="mt-4 max-w-xs text-sm leading-6 text-[#888888]">Decision intelligence for founder-led outbound teams.</p>
+      </div>
+      <nav aria-label="Footer product navigation" className="flex flex-col items-start gap-3">
+        <p className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#888888]">Product</p>
+        <button type="button" onClick={launchAudit} data-tripwire-guard="true" className="text-left text-sm text-white/80 transition-colors hover:text-[#FF5A1F]">Audit</button>
+        <Link href="#capabilities" className="text-sm text-white/80 transition-colors hover:text-[#FF5A1F]">How It Works</Link>
+        <Link href="#simulation" className="text-sm text-white/80 transition-colors hover:text-[#FF5A1F]">Product</Link>
+        <Link href="#pricing" className="text-sm text-white/80 transition-colors hover:text-[#FF5A1F]">Pricing</Link>
+        <Link href="#faq" className="text-sm text-white/80 transition-colors hover:text-[#FF5A1F]">FAQ</Link>
+      </nav>
+      <nav aria-label="Footer company navigation" className="flex flex-col items-start gap-3">
+        <p className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#888888]">Company</p>
+        <a href="https://app.frameleads.io/login" className="text-sm text-white/80 transition-colors hover:text-[#FF5A1F]">Log In</a>
+        <a href="mailto:akram@frameleads.io" className="text-sm text-white/80 transition-colors hover:text-[#FF5A1F]">Contact / Support</a>
+        <Link href="/terms" className="text-sm text-white/80 transition-colors hover:text-[#FF5A1F]">Terms of Service</Link>
+        <Link href="/privacy" className="text-sm text-white/80 transition-colors hover:text-[#FF5A1F]">Privacy Policy</Link>
+      </nav>
+    </div>
+    <div className="mx-auto mt-14 flex w-full max-w-6xl flex-col justify-between gap-4 border-t border-white/10 pt-6 text-xs text-[#888888] sm:flex-row sm:items-center">
+      <p>© 2026 FrameLeads. A BrandFlow Studio Company.</p>
+      <div className="flex items-center gap-6"><Link href="/privacy" className="transition-colors hover:text-[#FF5A1F]">Privacy</Link><Link href="/terms" className="transition-colors hover:text-[#FF5A1F]">Terms</Link></div>
+    </div>
+  </footer>
+  <AuditModal returnFocusRef={auditTrigger} open={isAuditModalOpen} onClose={closeAudit} onComplete={setAuditResult} />
+  {!isAuditModalOpen && <ExitIntentPopup openRequest={isMicroPilotRequested} onOpenRequestChange={setIsMicroPilotRequested} />}
+  </>;
 }
 
 export function LegacyHome() {

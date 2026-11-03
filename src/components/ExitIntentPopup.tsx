@@ -109,7 +109,7 @@ export default function ExitIntentPopup({ openRequest = false, onOpenRequestChan
     <AnimatePresence>
       {isOpen && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center overflow-x-hidden bg-black/75 px-3 py-4 backdrop-blur-lg sm:px-6 sm:py-6" onMouseDown={(event) => { if (event.target === event.currentTarget) closeOffer(); }}>
-          <motion.div initial={{ opacity: 0, y: 18, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.98 }} transition={{ duration: 0.25, ease: "easeOut" }} role="dialog" aria-modal="true" aria-labelledby="micro-pilot-title" className="relative box-border max-h-[calc(100dvh-2rem)] w-full min-w-0 max-w-6xl overflow-x-hidden overflow-y-auto overscroll-contain rounded-2xl border border-white/10 bg-[#1A1A1A] p-4 shadow-2xl sm:max-h-[calc(100dvh-3rem)] sm:p-6 lg:p-7">
+          <motion.div initial={{ opacity: 0, y: 18, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.98 }} transition={{ duration: 0.25, ease: "easeOut" }} role="dialog" aria-modal="true" aria-labelledby="micro-pilot-title" className="relative box-border max-h-[calc(100dvh-2rem)] w-full min-w-0 max-w-6xl overflow-x-hidden overflow-y-auto overscroll-contain rounded-2xl border border-[#FF5A1F]/20 bg-[radial-gradient(ellipse_at_88%_0%,rgba(255,90,31,.09),transparent_56%),linear-gradient(135deg,#242424,#1A1A1A_72%)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.065),0_28px_70px_rgba(26,26,26,.6),0_0_36px_rgba(255,90,31,.08)] sm:max-h-[calc(100dvh-3rem)] sm:p-6 lg:p-7">
             <button type="button" onClick={closeOffer} aria-label="Close Micro-Pilot offer" className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-xl text-[#888888] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F]"><span aria-hidden="true">&times;</span></button>
             <div className="min-w-0 pr-10">
               <div className="flex min-w-0 items-start gap-2.5 sm:items-center sm:gap-3"><MicroPilotBurstIcon /><div className="min-w-0">
@@ -120,13 +120,13 @@ export default function ExitIntentPopup({ openRequest = false, onOpenRequestChan
               <motion.p variants={sectionSubheadingMotion} initial="hidden" animate="visible" className="mt-3 text-sm leading-relaxed text-[#888888] sm:text-base">See how FrameLeads interprets real prospect replies, explains the signals behind interest, and chooses the next safe action before you commit to a full plan.</motion.p>
             </div>
             <motion.div variants={sectionVisualMotion} initial="hidden" animate="visible" className="mt-5 grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2">
-              <div className="min-w-0 rounded-xl border border-white/10 bg-[#242424] p-4">
+              <div className="min-w-0 rounded-2xl border border-[#FF5A1F]/25 bg-[radial-gradient(ellipse_at_10%_0%,rgba(255,90,31,.11),transparent_62%),linear-gradient(135deg,#242424,#1A1A1A_72%)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.065),0_16px_34px_rgba(26,26,26,.22)]">
                 <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-white">Included</p>
                 <ul className="mt-3 space-y-1.5 text-sm text-white/75">
                   {["25 total outbound prospects", "3 first-time prospect reply analyses with interest, Why Now evidence, and the recommended next action", "A suggested reply when the governance rules permit it — otherwise a clear human-review hold", "Research up to 3 qualified prospects once each", "One company context, 2 sales rules, and 1 governance rule", "Original replies and completed Decision Replays remain readable afterward"].map(item => <li key={item} className="flex min-w-0 gap-2.5"><span className="shrink-0 text-white" aria-hidden="true">✓</span><span className="min-w-0 break-words">{item}</span></li>)}
                 </ul>
               </div>
-              <div className="min-w-0 rounded-xl border border-white/10 bg-[#242424] p-4">
+              <div className="min-w-0 rounded-2xl border border-[#FF5A1F]/20 bg-[radial-gradient(ellipse_at_90%_0%,rgba(255,90,31,.07),transparent_62%),linear-gradient(135deg,#242424,#1A1A1A_72%)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.06),0_16px_34px_rgba(26,26,26,.18)]">
                 <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-[#888888]">Full deployment adds</p>
                 <p className="mt-3 text-sm leading-relaxed text-[#888888]">Core expands prospect research, decision intelligence, company context, and sales playbook configuration. Enterprise adds expanded governance controls and automation.</p>
               </div>
