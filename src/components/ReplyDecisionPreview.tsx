@@ -75,9 +75,9 @@ function ProspectAvatar({ scenario }: { scenario: ReplyScenario }) {
     className="h-12 w-12 shrink-0 rounded-full border border-[#FF9B70]/50 object-cover shadow-[0_0_0_3px_rgba(255,90,31,.08),0_5px_15px_rgba(0,0,0,.35)]" />;
 }
 
-function ProcessingBolt({ onSkip, reducedMotion }: { onSkip: () => void; reducedMotion: boolean }) {
-  return <div role="status" aria-label="Illustrative reply processing" className="flex min-h-[235px] flex-col items-center justify-center gap-3 rounded-xl bg-[#222223] px-4 py-5 text-center">
-    <motion.svg aria-hidden="true" viewBox="0 0 40 40" width="76" height="76" fill="none"
+function ProcessingBolt({ reducedMotion }: { reducedMotion: boolean }) {
+  return <div role="status" aria-label="Illustrative reply processing" className="flex min-h-[235px] flex-col items-center justify-center gap-3 rounded-2xl bg-[#222223] px-4 py-5 text-center">
+    <motion.svg aria-hidden="true" viewBox="0 0 40 40" width="42" height="42" fill="none"
       className="overflow-visible text-[#FF5A1F]"
       animate={reducedMotion ? {} : { opacity: [.48, 1, .48], filter: ["drop-shadow(0 0 0px rgba(255,90,31,0))", "drop-shadow(0 0 17px rgba(255,90,31,.95))", "drop-shadow(0 0 0px rgba(255,90,31,0))"] }}
       transition={{ duration: 1.15, ease: "easeInOut", repeat: reducedMotion ? 0 : Infinity }}>
@@ -88,12 +88,11 @@ function ProcessingBolt({ onSkip, reducedMotion }: { onSkip: () => void; reduced
     <span className="mt-1 h-1 w-40 overflow-hidden rounded-full bg-white/10" aria-hidden="true">
       <motion.span className="block h-full w-1/3 rounded-full bg-[#FF5A1F]" animate={reducedMotion ? {} : { x: [0, 115, 0] }} transition={{ duration: 1.2, repeat: reducedMotion ? 0 : Infinity, ease: "easeInOut" }} />
     </span>
-    <button type="button" onClick={onSkip} className="mt-2 rounded-md px-3 py-2 text-xs text-[#A7A7AB] underline-offset-4 hover:text-white hover:underline focus-visible:outline-2 focus-visible:outline-[#FF5A1F]">Skip animation</button>
     <p className="text-[10px] text-[#85858A]">Illustration only. Not a live AI analysis or message send.</p>
   </div>;
 }
 
-function DecisionPacket({ scenario, phase, reducedMotion, onSkip }: { scenario: ReplyScenario; phase: number; reducedMotion: boolean; onSkip: () => void }) {
+function DecisionPacket({ scenario, phase, reducedMotion }: { scenario: ReplyScenario; phase: number; reducedMotion: boolean }) {
   const ready = phase > 0;
   return <article className="mt-6 min-w-0 overflow-hidden rounded-2xl border border-white/[.095] bg-[#191919] shadow-[0_20px_48px_-32px_rgba(0,0,0,.85)]" aria-label="FrameLeads reply decision packet" data-testid="compact-decision-packet">
     <header className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[.075] px-4 py-3 sm:px-5">
@@ -103,7 +102,7 @@ function DecisionPacket({ scenario, phase, reducedMotion, onSkip }: { scenario: 
       <span className="rounded-full border border-[#FF5A1F]/20 bg-[#FF5A1F]/[.085] px-2.5 py-1 text-[10px] font-semibold text-[#FFA37D]">{ready ? scenario.authority : "Illustrative processing"}</span>
     </header>
 
-    <div className="grid min-w-0 gap-3 p-3 sm:p-4 md:grid-cols-2">
+    <div className="mb-4 grid min-w-0 gap-3 p-3 sm:p-4 md:grid-cols-2">
       <section className="relative flex min-w-0 flex-col overflow-hidden rounded-2xl border border-[#FFB27D]/[.13] bg-[radial-gradient(ellipse_at_5%_0%,rgba(255,134,87,.15),transparent_56%),linear-gradient(145deg,#302823,#242323_74%)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.07),0_12px_26px_rgba(0,0,0,.18)] sm:p-5" aria-label="Incoming reply">
         <div className="flex min-w-0 items-center gap-3 border-b border-white/[.09] pb-4">
           <ProspectAvatar scenario={scenario} />
@@ -112,14 +111,14 @@ function DecisionPacket({ scenario, phase, reducedMotion, onSkip }: { scenario: 
             <p className="truncate text-[11px] text-[#B6B5B8]">{scenario.role} · {scenario.company}</p>
           </div>
         </div>
-        <p className="mt-4 break-words rounded-xl rounded-tl-sm border border-white/[.055] bg-black/[.16] px-3.5 py-3 text-[14px] font-medium leading-[1.6] text-white/95 shadow-[inset_0_1px_0_rgba(255,255,255,.025)] sm:mt-5 sm:px-4 sm:py-3.5 sm:text-[15px]">“{scenario.reply}”</p>
+        <p className="mt-4 break-words rounded-xl border border-white/[.055] bg-black/[.16] px-3.5 py-3 text-[14px] font-medium leading-[1.6] text-white/95 shadow-[inset_0_1px_0_rgba(255,255,255,.025)] sm:mt-5 sm:px-4 sm:py-3.5 sm:text-[15px]">“{scenario.reply}”</p>
         <div className="mt-auto pt-4">
           <p className="font-mono text-[9px] font-medium uppercase tracking-[.11em] text-[#98989C]">Incoming reply · fictional example</p>
         </div>
       </section>
 
       <section className="flex min-w-0 flex-col" aria-label="Recommended decision" aria-live="polite">
-        {!ready ? <ProcessingBolt onSkip={onSkip} reducedMotion={reducedMotion} /> : <motion.div
+        {!ready ? <ProcessingBolt reducedMotion={reducedMotion} /> : <motion.div
           key={scenario.id + "-ready"}
           initial={reducedMotion ? false : { opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }} transition={{ duration: reducedMotion ? 0 : .5 }}
@@ -195,8 +194,6 @@ export default function ReplyDecisionPreview() {
     window.requestAnimationFrame(() => decisionRef.current?.scrollIntoView({ behavior: reducedMotion ? "instant" : "smooth", block: "start" }));
   }
 
-  function skipAnimation() { setPhase(4); setCycle(0); }
-
   return <main id="main-content" className="min-h-screen min-w-0 overflow-x-clip bg-[#131313] text-white">
     <div className="h-[3px] bg-gradient-to-r from-[#FF5A1F] via-[#FF8A58] to-transparent" />
     <div className="mx-auto w-full max-w-[1120px] px-4 pb-16 pt-6 sm:px-7 lg:px-9">
@@ -216,7 +213,7 @@ export default function ReplyDecisionPreview() {
           {replyScenarios.map((scenario) => {
             const selected = selectedId === scenario.id;
             return <button key={scenario.id} type="button" aria-pressed={selected} onClick={() => selectScenario(scenario.id)}
-              className={"min-w-0 rounded-xl border px-4 py-3 text-left transition-[background,box-shadow,border-color,transform] duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F] " +
+              className={"min-w-0 rounded-2xl border px-4 py-3 text-left transition-[background,box-shadow,border-color,transform] duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F] " +
                 (selected ? "border-[#FF5A1F]/65 bg-[radial-gradient(ellipse_at_75%_0%,rgba(255,91,31,.22),transparent_70%),linear-gradient(145deg,#2C211C,#201C1B_70%)] shadow-[0_9px_25px_rgba(255,90,31,.085),inset_0_1px_0_rgba(255,166,115,.16)]" : "border-white/[.12] bg-[radial-gradient(ellipse_at_90%_0%,rgba(134,58,30,.14),transparent_67%),linear-gradient(145deg,#232122,#1A1A1B)] shadow-[inset_0_1px_0_rgba(255,255,255,.045)] hover:border-[#FF5A1F]/40 hover:shadow-[0_10px_27px_rgba(255,90,31,.065)] hover:-translate-y-0.5")}>
               <span className="font-mono text-[9px] uppercase tracking-[.11em] text-[#FF9A70]">Scenario {scenario.number}</span>
               <span className="mt-1 block text-[14px] font-semibold text-white">{scenario.title}</span>
@@ -227,13 +224,13 @@ export default function ReplyDecisionPreview() {
       </section>
 
       <div ref={decisionRef} className="scroll-mt-4">
-        <DecisionPacket scenario={active} phase={phase} reducedMotion={Boolean(reducedMotion)} onSkip={skipAnimation} />
+        <DecisionPacket scenario={active} phase={phase} reducedMotion={Boolean(reducedMotion)} />
       </div>
       <div className="relative mt-6 flex flex-col items-center justify-center gap-4 overflow-hidden rounded-2xl border border-[#FF5A1F]/25 bg-[radial-gradient(ellipse_at_50%_0%,rgba(255,90,31,.16),transparent_60%),linear-gradient(135deg,#28201D,#1D1C1D_72%)] px-5 py-6 text-center shadow-[inset_0_1px_0_rgba(255,255,255,.065),0_16px_34px_rgba(0,0,0,.22)] sm:px-8 sm:py-7">
         <p className="max-w-2xl text-[13px] leading-relaxed text-[#C9C1BE] sm:text-sm"><span className="mb-1.5 block text-base font-bold text-white sm:text-lg">Want to stop being the bottleneck every time someone replies?</span>Try the $10 Micro-Pilot to see what clearer next moves and faster follow-up decisions could look like in your own outbound workflow—with fewer replies waiting on you and less second-guessing for your team.</p>
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <Link href="/checkout/micro-pilot" className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#FF5A1F] px-4 py-2 text-sm font-semibold text-white hover:bg-[#FF7342]">Try the $10 Micro-Pilot</Link>
-          <Link href="/?audit=open" className="inline-flex min-h-11 items-center justify-center rounded-lg border border-white/20 px-4 py-2 text-sm text-[#D7D7D9] hover:border-white/40 hover:text-white">Find My Reply Bottleneck</Link>
+          <Link href="/checkout/micro-pilot" className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#FF5A1F] px-4 py-2 text-sm font-semibold text-white hover:bg-[#FF7342]">Try the $10 Micro-Pilot</Link>
+          <Link href="/?audit=open" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/20 px-4 py-2 text-sm text-[#D7D7D9] hover:border-white/40 hover:text-white">Find My Reply Bottleneck</Link>
         </div>
       </div>
       <footer className="mt-6 border-t border-white/[.06] pt-5 text-[11px] leading-relaxed text-[#8E8E93]">
