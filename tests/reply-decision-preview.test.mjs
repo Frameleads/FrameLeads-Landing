@@ -26,17 +26,17 @@ test("homepage has a clear dedicated scenario CTA without replacing the Audit", 
   assert.ok(hero.includes("aria-expanded={scenariosExpanded}"));
   assert.ok(!hero.includes('href="/reply-decision-preview#scenarios"'));
   assert.ok(homepage.includes("<ReplyDecisionPreview embedded />"));
-  assert.ok(hero.includes("Explore 3 reply scenarios"));
+  assert.ok(hero.includes("Explore Reply Scenarios"));
   assert.ok(hero.includes("Find My Reply Bottleneck"));
   assert.ok(hero.includes("onAudit"));
   assert.ok(homepage.includes("AuditModal"));
 });
 
-test("legacy scenario route points at homepage inline reveal, pricing remains initially visible", () => {
+test("legacy scenario route points at homepage inline choices without preselecting a result", () => {
   assert.ok(route.includes('redirect("/#reply-scenarios")'));
   assert.ok(component.includes('id="scenarios"'));
-  assert.ok(component.includes('useState<ReplyScenario["id"]>("pricing")'));
-  assert.ok(component.includes("Preselected example is readable immediately"));
+  assert.ok(component.includes('useState<ReplyScenario["id"] | null>(null)'));
+  assert.ok(component.includes("No packet until a visitor selects a scenario."));
   assert.ok(component.includes('aria-pressed={selected}'));
   assert.ok(component.includes("onClick={() => selectScenario(scenario.id)}"));
 });
@@ -144,7 +144,7 @@ test("loading animation pulses the bolt itself with no square or grey icon backg
 
 test("homepage hero CTAs are paired centrally with no arrow icon", () => {
   assert.ok(hero.includes("mt-8 flex flex-wrap items-center justify-center gap-3"));
-  assert.ok(hero.includes("Explore 3 reply scenarios"));
+  assert.ok(hero.includes("Explore Reply Scenarios"));
   assert.ok(hero.includes("Find My Reply Bottleneck"));
   assert.ok(!hero.includes("↗"));
 });
@@ -194,7 +194,7 @@ test("homepage reveal keeps the navigation and page around it", () => {
   assert.ok(homepage.includes("<AuditModal"));
   assert.ok(homepage.includes("<ExitIntentPopup"));
   assert.ok(hero.includes("Find My Reply Bottleneck"));
-  assert.ok(hero.includes("Explore 3 reply scenarios"));
+  assert.ok(hero.includes("Explore Reply Scenarios"));
   assert.ok(!hero.includes("<Link"));
 });
 
@@ -221,4 +221,37 @@ test("reveal is reduced-motion aware and supports deep links to homepage", () =>
   assert.ok(homepage.includes("scenarioSectionRef.current?.scrollIntoView"));
   assert.ok(homepage.includes('reducedMotionForScenarios ? "auto" : "smooth"'));
   assert.ok(route.includes('redirect("/#reply-scenarios")'));
+});
+
+test("no decision packet or offer is mounted before a scenario selection", () => {
+  assert.ok(component.includes('const [selectedId, setSelectedId] = useState<ReplyScenario["id"] | null>(null)'));
+  assert.ok(component.includes("const active = selectedId ? replyScenarios.find"));
+  assert.ok(component.includes('{active && <motion.div key={active.id}'));
+  assert.ok(component.includes('data-testid="selected-scenario-results"'));
+  assert.ok(component.indexOf("<DecisionPacket scenario={active}") > component.indexOf("{active && <motion.div"));
+  assert.ok(component.indexOf("Try it Risk-Free</Link>") > component.indexOf("{active && <motion.div"));
+});
+
+test("scenario selection animates result entry and retains the staged bolt processing", () => {
+  assert.ok(component.includes('<AnimatePresence mode="wait">'));
+  assert.ok(component.includes('initial={reducedMotion ? false : { opacity: 0, y: 22, height: 0 }}'));
+  assert.ok(component.includes('animate={{ opacity: 1, y: 0, height: "auto" }}'));
+  assert.ok(component.includes("transition={{ duration: reducedMotion ? 0 : 0.48"));
+  assert.ok(component.includes('setPhase(reducedMotion ? 4 : 0)'));
+  assert.ok(component.includes("[2600, 3240, 3880, 4520]"));
+});
+
+test("CTA labels are updated without changing the checkout route", () => {
+  assert.ok(hero.includes(">Explore Reply Scenarios</button>"));
+  assert.ok(!hero.includes("Explore 3 reply scenarios"));
+  assert.ok(component.includes('href="/checkout/micro-pilot"'));
+  assert.ok(component.includes(">Try it Risk-Free</Link>"));
+  assert.ok(!component.includes(">Try the $10 Micro-Pilot</Link>"));
+});
+
+
+test("hero scenario CTA uses approved title-case label", () => {
+  assert.ok(hero.includes(">Explore Reply Scenarios</button>"));
+  assert.ok(!hero.includes(">Explore reply Scenarios</button>"));
+  assert.ok(hero.includes("aria-expanded={scenariosExpanded}"));
 });
