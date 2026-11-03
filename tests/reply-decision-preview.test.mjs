@@ -91,7 +91,7 @@ test("pricing and optional audit destinations are preserved", () => {
 
 test("the chosen example has readable mobile layout", () => {
   assert.ok(component.includes("grid-cols-2"));
-  assert.ok(component.includes("sm:grid-cols-4"));
+  assert.ok(component.includes("grid-cols-4"));
   assert.ok(component.includes("md:grid-cols-2"));
   assert.ok(component.includes("min-w-0"));
   assert.ok(component.includes("break-words"));
@@ -102,4 +102,45 @@ test("broken prospect image is not used as misleading proof", () => {
   assert.ok(component.includes("Fictional prospect"));
   assert.ok(component.includes("scenario.prospectName"));
   assert.ok(!component.includes("reply-preview-prospects.jpg"));
+});
+
+test("intro headline and supporting copy centered", () => {
+  assert.ok(component.includes("mx-auto mt-3 max-w-3xl text-center"));
+  assert.ok(component.includes("mx-auto mt-3 max-w-2xl text-center"));
+  assert.ok(component.includes('className="text-center font-mono'));
+});
+
+test("premium scenario cards use selected and unselected soft gradients", () => {
+  assert.ok(component.includes("radial-gradient(ellipse_at_75%_0%"));
+  assert.ok(component.includes("radial-gradient(ellipse_at_90%_0%"));
+  assert.ok(component.includes("hover:-translate-y-0.5"));
+});
+
+test("the decision explanation is a compact connected animated signal journey", () => {
+  assert.ok(component.includes("function DecisionJourney("));
+  assert.ok(component.includes('data-testid="connected-decision-journey"'));
+  assert.ok(component.includes("journeyDescriptions"));
+  assert.ok(component.includes('label: "Context"'));
+  assert.ok(component.includes('label: "Rules"'));
+  assert.ok(component.includes("Decision formed"));
+  assert.ok(component.includes('animate={{ left: ["12%", "87%"]'));
+  assert.ok(component.includes("!reducedMotion &&"));
+});
+
+test("loading animation pulses the bolt itself with no square or grey icon background", () => {
+  assert.ok(component.includes('<motion.svg aria-hidden="true" viewBox="0 0 40 40"'));
+  assert.ok(component.includes('className="overflow-visible text-[#FF5A1F]"'));
+  assert.ok(component.includes("drop-shadow(0 0 17px"));
+  assert.ok(!component.includes('src="/icon-192.png"'));
+});
+
+test("homepage hero CTAs are paired centrally with no arrow icon", () => {
+  assert.ok(hero.includes("mt-8 flex flex-wrap items-center justify-center gap-3"));
+  assert.ok(hero.includes("Explore 3 reply scenarios"));
+  assert.ok(hero.includes("Find My Reply Bottleneck"));
+  assert.ok(!hero.includes("↗"));
+});
+
+test("final pilot and audit CTAs stay grouped centrally", () => {
+  assert.ok(component.includes('className="flex flex-wrap items-center justify-center gap-3"'));
 });

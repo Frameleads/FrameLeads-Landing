@@ -28,6 +28,43 @@ const decisionSignals: { label: string; icon: SignalIcon }[] = [
   { label: "Approval", icon: "approval" },
 ];
 
+
+const journeyDescriptions = [
+  "Identifies the prospect's stated intent.",
+  "Checks available conversation context.",
+  "Applies the configured seller rules.",
+  "Determines the required human control.",
+] as const;
+
+function DecisionJourney({ reducedMotion }: { reducedMotion: boolean }) {
+  return <div className="relative mt-3 overflow-hidden rounded-xl border border-[#FF5A1F]/15 bg-[radial-gradient(ellipse_at_50%_55%,rgba(123,52,24,.12),transparent_65%),linear-gradient(145deg,#292223,#211F20)] px-2.5 py-4 sm:px-4" data-testid="connected-decision-journey" aria-label="Illustrative connected decision path: Intent, Context, Rules, Approval, then recommended action">
+    <div aria-hidden="true" className="pointer-events-none absolute left-[13%] right-[13%] top-[39px] h-[2px] bg-gradient-to-r from-[#FF5A1F]/20 via-[#FF8048]/55 to-[#FF5A1F]/20" />
+    {!reducedMotion && <motion.span aria-hidden="true" className="pointer-events-none absolute top-[35px] z-10 h-[10px] w-[10px] rounded-full bg-[#FF985F] shadow-[0_0_13px_5px_rgba(255,90,31,.45)]"
+      animate={{ left: ["12%", "87%"], opacity: [0, 1, 1, 0] }} transition={{ duration: 4.8, ease: "linear", repeat: Infinity, repeatDelay: .7 }} />}
+    <div className="relative z-20 grid grid-cols-4 gap-1.5 sm:gap-3">
+      {decisionSignals.map((signal, index) => <div key={signal.label} className="flex min-w-0 flex-col items-center gap-1.5 text-center">
+        <motion.div className="grid h-11 w-11 place-items-center rounded-xl border border-[#FF5A1F]/30 bg-[#35231D] text-[#FF965F] sm:h-12 sm:w-12"
+          animate={reducedMotion ? {} : { boxShadow: ["0 0 0px rgba(255,90,31,0)", "0 0 16px rgba(255,90,31,.55)", "0 0 0px rgba(255,90,31,0)"], borderColor: ["rgba(255,90,31,.25)", "rgba(255,112,52,.85)", "rgba(255,90,31,.25)"] }}
+          transition={{ duration: 1.15, delay: index * 1.06, repeat: Infinity, repeatDelay: 4.1, ease: "easeInOut" }}>
+          <SignalIconMark kind={signal.icon} size={21} />
+        </motion.div>
+        <span className="text-[11px] font-semibold text-white">{signal.label}</span>
+        <span className="hidden max-w-[150px] text-[10px] leading-snug text-[#B1A5A1] sm:block">{journeyDescriptions[index]}</span>
+      </div>)}
+    </div>
+    <div className="mt-4 flex items-center justify-center gap-2 border-t border-[#FF5A1F]/10 pt-3">
+      <span aria-hidden="true" className="h-px w-6 bg-gradient-to-r from-transparent to-[#FF7E4C]" />
+      <motion.span className="grid h-6 w-6 place-items-center rounded-full bg-[#44281C] text-[#FF9A67]"
+        animate={reducedMotion ? {} : { boxShadow: ["0 0 0px rgba(255,90,31,0)", "0 0 14px rgba(255,90,31,.48)", "0 0 0px rgba(255,90,31,0)"] }}
+        transition={{ duration: 1.15, delay: 4.25, repeat: Infinity, repeatDelay: 4.1 }}>
+        <SignalIconMark kind="bolt" size={14} />
+      </motion.span>
+      <span className="text-[11px] font-semibold text-[#FFB18B]">Decision formed</span>
+      <span aria-hidden="true" className="h-px w-6 bg-gradient-to-r from-[#FF7E4C] to-transparent" />
+    </div>
+  </div>;
+}
+
 function ProspectAvatar({ scenario }: { scenario: ReplyScenario }) {
   // The prior generated portrait file was corrupt; use an honest, styled identity
   // fallback rather than showing a broken image or a fabricated real customer.
@@ -37,17 +74,13 @@ function ProspectAvatar({ scenario }: { scenario: ReplyScenario }) {
 }
 
 function ProcessingBolt({ onSkip, reducedMotion }: { onSkip: () => void; reducedMotion: boolean }) {
-  return <div role="status" aria-label="Illustrative reply processing" className="flex min-h-[235px] flex-col items-center justify-center gap-3 rounded-xl border border-white/[.055] bg-[#222223] px-4 py-5 text-center">
-    <motion.div
-      animate={reducedMotion ? {} : { boxShadow: ["0 0 0px rgba(255,90,31,0)", "0 0 32px rgba(255,90,31,.48)", "0 0 0px rgba(255,90,31,0)"] }}
-      transition={{ duration: 1.1, ease: "easeInOut", repeat: reducedMotion ? 0 : Infinity }}
-      className="grid h-16 w-16 place-items-center rounded-2xl border border-[#FF5A1F]/40 bg-[#211B19]">
-      <motion.div
-        animate={reducedMotion ? {} : { opacity: [.5, 1, .5], filter: ["drop-shadow(0 0 0px rgba(255,90,31,0))", "drop-shadow(0 0 14px rgba(255,90,31,.95))", "drop-shadow(0 0 0px rgba(255,90,31,0))"] }}
-        transition={{ duration: 1.1, ease: "easeInOut", repeat: reducedMotion ? 0 : Infinity }}>
-        <Image src="/icon-192.png" alt="" aria-hidden="true" width={43} height={43} className="h-[43px] w-[43px] object-contain" />
-      </motion.div>
-    </motion.div>
+  return <div role="status" aria-label="Illustrative reply processing" className="flex min-h-[235px] flex-col items-center justify-center gap-3 rounded-xl bg-[#222223] px-4 py-5 text-center">
+    <motion.svg aria-hidden="true" viewBox="0 0 40 40" width="76" height="76" fill="none"
+      className="overflow-visible text-[#FF5A1F]"
+      animate={reducedMotion ? {} : { opacity: [.48, 1, .48], filter: ["drop-shadow(0 0 0px rgba(255,90,31,0))", "drop-shadow(0 0 17px rgba(255,90,31,.95))", "drop-shadow(0 0 0px rgba(255,90,31,0))"] }}
+      transition={{ duration: 1.15, ease: "easeInOut", repeat: reducedMotion ? 0 : Infinity }}>
+      <path d="M23 3 8 21h11l-2 16L33 16H22L23 3Z" stroke="currentColor" strokeWidth="2.7" strokeLinejoin="round" strokeLinecap="round" />
+    </motion.svg>
     <p className="text-sm font-semibold text-white">Processing the sample reply…</p>
     <p className="max-w-[260px] text-[11px] leading-relaxed text-[#A8A8AD]">Reading context and checking illustrative seller rules.</p>
     <span className="mt-1 h-1 w-40 overflow-hidden rounded-full bg-white/10" aria-hidden="true">
@@ -108,12 +141,7 @@ function DecisionPacket({ scenario, phase, reducedMotion, onSkip }: { scenario: 
           <p className="text-[11px] font-bold uppercase tracking-[.055em] text-white">How the decision was reached</p>
           <span className="text-sm text-[#AEACAE] transition-transform group-open:rotate-180" aria-hidden="true">⌄</span>
         </div>
-        <div className="mt-3 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
-          {decisionSignals.map((signal, index) => <div key={signal.label} className="flex min-h-[62px] flex-col items-center justify-center gap-1.5 rounded-lg bg-[#303030] px-2 py-2">
-            <motion.span initial={reducedMotion ? false : { opacity: .35 }} animate={{ opacity: 1 }} transition={{ delay: reducedMotion ? 0 : .18 * index + .12 }} className="text-[#FF8A5D]"><SignalIconMark kind={signal.icon} size={17} /></motion.span>
-            <span className="text-[11px] text-[#DEDCDF]">{signal.label}</span>
-          </div>)}
-        </div>
+        <DecisionJourney reducedMotion={reducedMotion} />
       </summary>
       <div className="mt-4 grid gap-4 border-t border-white/[.075] pt-4 text-xs leading-relaxed text-[#C7C6C8] sm:grid-cols-2">
         <div>
@@ -179,15 +207,15 @@ export default function ReplyDecisionPreview() {
       </header>
 
       <section id="scenarios" className="scroll-mt-5 pb-1 pt-10 sm:pt-14" aria-labelledby="scenario-title">
-        <p className="font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#FF8C5F]">Illustrative product preview · no signup required</p>
-        <h1 id="scenario-title" className="mt-3 max-w-3xl font-heading text-3xl font-bold tracking-tight sm:text-4xl">Three replies. Three different decisions.</h1>
-        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#B1B1B5] sm:text-base">Choose a reply to see how FrameLeads would recommend the next action. Human approval remains in control where needed.</p>
+        <p className="text-center font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#FF8C5F]">Illustrative product preview · no signup required</p>
+        <h1 id="scenario-title" className="mx-auto mt-3 max-w-3xl text-center font-heading text-3xl font-bold tracking-tight sm:text-4xl">Three replies. Three different decisions.</h1>
+        <p className="mx-auto mt-3 max-w-2xl text-center text-sm leading-relaxed text-[#B1B1B5] sm:text-base">Choose a reply to see how FrameLeads would recommend the next action. Human approval remains in control where needed.</p>
         <div className="mt-6 grid gap-2.5 sm:grid-cols-3" aria-label="Choose an illustrative reply scenario">
           {replyScenarios.map((scenario) => {
             const selected = selectedId === scenario.id;
             return <button key={scenario.id} type="button" aria-pressed={selected} onClick={() => selectScenario(scenario.id)}
-              className={"min-w-0 rounded-xl border px-4 py-3 text-left transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F] " +
-                (selected ? "border-[#FF5A1F]/60 bg-[#32231D] shadow-[inset_0_1px_0_rgba(255,127,75,.08)]" : "border-white/[.1] bg-[#1E1E1F] hover:border-[#FF5A1F]/30 hover:bg-[#252121]")}>
+              className={"min-w-0 rounded-xl border px-4 py-3 text-left transition-[background,box-shadow,border-color,transform] duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F] " +
+                (selected ? "border-[#FF5A1F]/65 bg-[radial-gradient(ellipse_at_75%_0%,rgba(255,91,31,.22),transparent_70%),linear-gradient(145deg,#2C211C,#201C1B_70%)] shadow-[0_9px_25px_rgba(255,90,31,.085),inset_0_1px_0_rgba(255,166,115,.16)]" : "border-white/[.12] bg-[radial-gradient(ellipse_at_90%_0%,rgba(134,58,30,.14),transparent_67%),linear-gradient(145deg,#232122,#1A1A1B)] shadow-[inset_0_1px_0_rgba(255,255,255,.045)] hover:border-[#FF5A1F]/40 hover:shadow-[0_10px_27px_rgba(255,90,31,.065)] hover:-translate-y-0.5")}>
               <span className="font-mono text-[9px] uppercase tracking-[.11em] text-[#FF9A70]">Scenario {scenario.number}</span>
               <span className="mt-1 block text-[14px] font-semibold text-white">{scenario.title}</span>
               <span className="mt-1 block text-[11px] leading-snug text-[#ABAAAE]">{scenario.teaser}</span>
@@ -199,9 +227,9 @@ export default function ReplyDecisionPreview() {
       <div ref={decisionRef} className="scroll-mt-4">
         <DecisionPacket scenario={active} phase={phase} reducedMotion={Boolean(reducedMotion)} onSkip={skipAnimation} />
       </div>
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/[.07] bg-[#1B1B1C] px-4 py-4">
+      <div className="mt-6 flex flex-col items-center justify-center gap-4 rounded-xl border border-white/[.07] bg-[#1B1B1C] px-4 py-5 text-center">
         <p className="max-w-xl text-[12px] leading-relaxed text-[#BCB9B9]"><span className="font-semibold text-white">Want to try FrameLeads with your own replies?</span> The $10 Micro-Pilot covers 25 prospects and up to three reply decision analyses.</p>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center justify-center gap-3">
           <Link href="/checkout/micro-pilot" className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#FF5A1F] px-4 py-2 text-sm font-semibold text-white hover:bg-[#FF7342]">Try the $10 Micro-Pilot</Link>
           <Link href="/?audit=open" className="inline-flex min-h-11 items-center justify-center rounded-lg border border-white/20 px-4 py-2 text-sm text-[#D7D7D9] hover:border-white/40 hover:text-white">Optional Audit</Link>
         </div>
