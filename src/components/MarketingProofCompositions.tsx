@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import Image from "next/image";
 
 const eliseFeaturedReply = "This is timely. We're comparing outbound partners this week. Could you send your pricing structure, a relevant B2B SaaS example, and how you'd handle prospect replies after campaigns start? Our founder is reviewing options Thursday.";
-const eliseDraftResponse = `Hi Elise,\n\nThanks for the detail. Since your founder is reviewing options Thursday, I'll keep this focused on the information you need to assess fit.\n\nI'll put together our pricing structure, a relevant B2B SaaS example, and a short breakdown of how we'd handle prospect replies after launch.\n\nOne question so I tailor this properly: is your bigger priority increasing qualified meetings or reducing the time your team spends managing replies?\n\nHappy to keep everything in writing so your founder can review it easily.`;
+const eliseDraftResponse = "Hi Elise, thanks for the detail. Since your founder is reviewing options Thursday, I'll keep this focused on what you need to assess fit. I'll put together our pricing structure, a relevant B2B SaaS example, and a short breakdown of how we'd handle prospect replies after launch. To tailor this properly, is your bigger priority increasing qualified meetings or reducing the time your team spends managing replies? Happy to keep everything in writing for your founder's review.";
 
 /**
  * Marketing compositions assembled from isolated modules in actual FrameLeads UI.
@@ -48,16 +48,19 @@ function IntentBadge({ intent }: { intent: "HOT" | "WARM" | "COLD" }) {
   return <span className={"inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold tracking-wide " + styles[intent]}><IntentIcon intent={intent} className="size-3.5" />{intent}</span>;
 }
 
+function SignalStrength({ className = "" }: { className?: string }) {
+  return <svg aria-hidden="true" viewBox="0 0 52 30" fill="none" className={className}>
+    <path d="M4 25V20M15 25V15M26 25V10M37 25V6M48 25V2" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+    <path d="M2 28h48" stroke="rgba(255,255,255,.18)" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>;
+}
+
 function Frame({ children, className = "" }: { children: ReactNode; className?: string }) {
   return <div className={"relative isolate mx-auto mt-9 w-full overflow-hidden rounded-[28px] border border-white/[0.08] bg-[#131112] px-3 py-6 shadow-[0_32px_100px_-62px_rgba(0,0,0,0.9)] sm:px-6 sm:py-9 lg:px-9 " + className}>
     <div aria-hidden="true" className="pointer-events-none absolute -left-20 -top-28 h-72 w-72 rounded-full bg-[#FF5A1F]/[0.075] blur-[88px]" />
     <div aria-hidden="true" className="pointer-events-none absolute -bottom-40 right-[-7rem] h-72 w-96 rounded-full bg-[#FF5A1F]/[0.06] blur-[90px]" />
     <div className="relative z-10">{children}</div>
   </div>;
-}
-
-function EvidenceNote() {
-  return <p className="mt-6 text-center text-[11px] leading-relaxed text-white/35">FrameLeads product UI composition · Illustrative scenario data · No customer-performance claim</p>;
 }
 
 function ValueNote({ icon, text, className = "" }: { icon: string; text: string; className?: string }) {
@@ -99,7 +102,7 @@ function LeadCard({ avatar, name, intent, message, date, primary = false, urgenc
 export function GapProof() {
   return <Frame className="py-5 sm:py-8 lg:py-8">
     <div className="mx-auto mb-5 flex flex-wrap items-center justify-center gap-2.5 rounded-2xl border border-white/[0.11] bg-[#1C1919] px-3 py-3 sm:gap-4 sm:px-5">
-      <SmallLabel>INBOX TRIAGE · ILLUSTRATIVE SCENARIO</SmallLabel>
+      <SmallLabel>INBOX TRIAGE</SmallLabel>
       <span className="hidden h-5 w-px bg-white/[0.13] sm:block" />
       <Chip tone="orange">Received</Chip>
       <span className="text-xs text-white/60">Revenue priority</span>
@@ -127,29 +130,27 @@ export function GapProof() {
       <div><Chip tone="warm">Needs review</Chip></div>
     </Surface>
 
-    <div className="mt-5 grid gap-3 border-t border-white/[0.08] pt-4 lg:grid-cols-[1fr_1fr_auto] lg:items-center lg:gap-5">
-      <ValueNote icon="♨" text="Not every reply means the same thing." />
-      <ValueNote icon="◷" text="Arrival time is not revenue priority." />
+    <div className="mt-5 grid gap-3 border-t border-white/[0.08] pt-4 lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-5">
+      <ValueNote icon="♨" text="Not every reply means the same thing." className="lg:justify-self-start" />
+      <ValueNote icon="◷" text="Arrival time is not revenue priority." className="lg:justify-self-center" />
       <ValueNote icon="◆" text="High-priority exceptions stay visible." className="lg:justify-self-end" />
     </div>
   </Frame>;
 }
 
 function IntentCard() {
-  return <Surface className="mx-auto max-w-[850px] border-[#FF5A1F]/30 bg-[linear-gradient(140deg,rgba(255,90,31,0.09),rgba(26,24,24,0.96)_60%)] p-5 text-left shadow-[0_22px_65px_-35px_rgba(255,90,31,0.28)] sm:p-7">
-    <div className="flex flex-wrap items-start justify-between gap-3">
-      <div>
-        <SmallLabel>Intent read · illustrative</SmallLabel>
-        <div className="mt-2 flex flex-wrap items-center gap-3">
-          <IntentIcon intent="HOT" className="size-8 text-[#FF6B35]" />
-          <p className="font-heading text-5xl font-bold tracking-tight text-white sm:text-6xl">HOT</p>
-          <span className="mb-1 rounded-full border border-[#FF5A1F]/25 bg-[#FF5A1F]/[0.06] px-3 py-1 text-xs font-medium text-[#FF9A72]">High expressed intent</span>
+  return <Surface className="mx-auto max-w-[1060px] border-[#FF5A1F]/30 bg-[linear-gradient(140deg,rgba(255,90,31,0.09),rgba(26,24,24,0.96)_60%)] p-4 text-left shadow-[0_22px_65px_-35px_rgba(255,90,31,0.28)] sm:p-5">
+    <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+      <div className="flex items-center gap-4">
+        <SignalStrength className="h-8 w-14 shrink-0 text-[#FF7A4D]" />
+        <div>
+          <SmallLabel>Lead intent score</SmallLabel>
+          <p className="mt-1 font-heading text-4xl font-bold tracking-tight text-white sm:text-5xl"><span className="tabular-nums">86</span><span className="ml-2 text-xl font-medium text-white/45 sm:text-2xl">/ 100</span></p>
         </div>
       </div>
-      <Chip>Sample reply signals</Chip>
+      <p className="max-w-xl text-xs leading-relaxed text-white/55">The score reflects expressed intent, not closing probability.</p>
     </div>
-    <p className="mt-3 max-w-2xl text-xs leading-relaxed text-white/55">Illustrative classification from the prospect&apos;s explicit evaluation signals. It reflects expressed intent, not closing probability.</p>
-    <div className="mt-5 flex flex-wrap items-center gap-2">
+    <div className="mt-4 flex flex-wrap items-center gap-2">
       <SmallLabel>Why now</SmallLabel>
       <Chip tone="orange">Pricing requested</Chip>
       <Chip tone="green">Proof requested</Chip>
@@ -167,37 +168,36 @@ function PacketBlock({ label, children, emphasis = false }: { label: string; chi
 }
 
 export function DecisionLayerProof() {
-  return <Frame className="max-w-[1200px]">
+  return <Frame className="max-w-[1200px] py-5 sm:py-6">
     <IntentCard />
 
-    <div className="mx-auto mt-4 max-w-[1060px] space-y-3">
-      <Surface className="p-5 text-left sm:p-6">
+    <div className="mx-auto mt-3 max-w-[1060px] space-y-2">
+      <Surface className="p-4 text-left sm:p-5">
         <SmallLabel>Inbound signal · Elise Varner</SmallLabel>
         <p className="mt-2 text-[11px] text-white/45">Founder reviewing options Thursday</p>
-        <p className="mt-3 max-w-4xl text-sm leading-6 text-white/80">{eliseFeaturedReply}</p>
+        <p className="mt-2 max-w-4xl text-sm leading-6 text-white/80">{eliseFeaturedReply}</p>
       </Surface>
-      <Surface className="border-[#FF5A1F]/25 bg-[linear-gradient(145deg,rgba(255,90,31,0.045),rgba(16,16,16,0.96)_62%)] p-5 text-left sm:p-6">
+      <Surface className="border-[#FF5A1F]/25 bg-[linear-gradient(145deg,rgba(255,90,31,0.045),rgba(16,16,16,0.96)_62%)] p-4 text-left sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <SmallLabel>Draft response</SmallLabel>
           <Chip tone="warm">Draft ready for review</Chip>
         </div>
-        <p className="mt-2 text-[11px] text-white/45">Illustrative draft · Nothing has been sent</p>
-        <p className="mt-4 max-w-4xl whitespace-pre-line text-sm leading-6 text-white/80">{eliseDraftResponse}</p>
+        <p className="mt-3 max-w-4xl text-sm leading-6 text-white/80">{eliseDraftResponse}</p>
       </Surface>
     </div>
 
-    <Surface className="mx-auto mt-4 max-w-[1100px] border-[#FF5A1F]/35 bg-[#191414] p-4 text-left sm:p-6">
-      <div className="flex flex-wrap items-center gap-2 border-b border-white/[0.09] pb-4">
+    <Surface className="mx-auto mt-3 max-w-[1060px] border-[#FF5A1F]/35 bg-[#191414] p-4 text-left sm:p-5">
+      <div className="flex flex-wrap items-center gap-2 border-b border-white/[0.09] pb-3">
         <h3 className="mr-2 font-heading text-lg font-bold uppercase text-white sm:text-xl">Decision Packet</h3>
         <Chip tone="red"><ClockIcon />Founder review Thursday</Chip>
         <Chip tone="orange">Recommendation only</Chip>
       </div>
-      <div className="mt-4">
+      <div className="mt-3">
         <PacketBlock label="✧ AI interpretation">
           Prospect is actively comparing outbound partners and requests pricing, relevant proof, and an explanation of post-reply handling. Founder review on Thursday creates a near-term evaluation window.
         </PacketBlock>
       </div>
-      <div className="mt-3 grid gap-3 md:grid-cols-3">
+      <div className="mt-2 grid gap-2 md:grid-cols-3">
         <PacketBlock label="♢ Why this matters">
           The prospect has moved beyond general curiosity. Their questions reveal commercial evaluation, clear information needs, and a defined internal review date.
         </PacketBlock>
@@ -211,9 +211,9 @@ export function DecisionLayerProof() {
       </div>
     </Surface>
 
-    <div className="mx-auto mt-5 grid w-full max-w-[1060px] gap-3 border-t border-white/[0.08] pt-4 lg:grid-cols-[1fr_1fr_auto] lg:items-center lg:gap-5">
-      <ValueNote icon="✦" text="High intent is visible." />
-      <ValueNote icon="♢" text="The right reply is drafted." />
+    <div className="mx-auto mt-4 grid w-full max-w-[1060px] gap-3 border-t border-white/[0.08] pt-3 lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-5">
+      <ValueNote icon="✦" text="High intent is visible." className="lg:justify-self-start" />
+      <ValueNote icon="♢" text="The right reply is drafted." className="lg:justify-self-center" />
       <ValueNote icon="↗" text="Momentum is easier to keep." className="lg:justify-self-end" />
     </div>
   </Frame>;
@@ -258,7 +258,7 @@ export function SandboxProof() {
             <div className="min-h-24 rounded-lg border border-white/[0.14] bg-[#101010] p-3 text-sm text-white/45">Enter an inbound reply to test explicitly</div>
           </div>
         </div>
-        <div className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#FF5A1F] px-5 py-3 text-sm font-bold text-white shadow-[0_8px_27px_-10px_rgba(255,90,31,0.8)]" aria-label="Illustration of the Run Simulation control; not an interactive button"><span aria-hidden="true">▶</span> Run Simulation</div>
+        <div className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#FF5A1F] px-5 py-3 text-sm font-bold text-white shadow-[0_8px_27px_-10px_rgba(255,90,31,0.8)]" aria-label="Run Simulation preview; not interactive"><span aria-hidden="true">▶</span> Run Simulation</div>
       </Surface>
 
       <div className="flex min-w-0 flex-col gap-4">
@@ -286,11 +286,10 @@ export function SandboxProof() {
       </div>
     </div>
 
-    <div className="mt-6 grid gap-3 border-t border-white/[0.08] pt-5 sm:grid-cols-3">
-      <ValueNote icon="◎" text="Choose the decision to test." />
-      <ValueNote icon="☷" text="Explore confidence, risk and holds." />
-      <ValueNote icon="◇" text="Preview the governance route safely." />
+    <div className="mt-6 grid gap-3 border-t border-white/[0.08] pt-5 lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-5">
+      <ValueNote icon="◎" text="Choose the decision to test." className="lg:justify-self-start" />
+      <ValueNote icon="☷" text="Explore confidence, risk and holds." className="lg:justify-self-center" />
+      <ValueNote icon="◇" text="Preview the governance route safely." className="lg:justify-self-end" />
     </div>
-    <EvidenceNote />
   </Frame>;
 }
