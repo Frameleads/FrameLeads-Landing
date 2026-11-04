@@ -353,3 +353,153 @@
     transition: none;
   }
 }
+
+
+/*
+ * Landing V3 interactive attention system.
+ * Repeatable hover/focus motion, rather than ongoing ambient animation.
+ * No content movement on touch devices; cards remain non-clickable.
+ */
+.fl-attention-card,
+.fl-proof-step,
+.fl-proof-screenshot,
+.fl-faq,
+.fl-fit-item,
+.fl-intent-badge,
+.fl-avatar,
+.fl-signal-chip,
+.fl-score-meter {
+  transition-property: border-color, box-shadow, background-color, color, filter, transform;
+  transition-duration: 280ms;
+  transition-timing-function: cubic-bezier(.22, 1, .36, 1);
+}
+
+.fl-attention-card {
+  --fl-hover-accent: rgba(255, 90, 31, .34);
+}
+
+.fl-faq {
+  transition: border-color 300ms ease, box-shadow 320ms ease, background-color 300ms ease;
+}
+
+.fl-faq[open] {
+  border-color: rgba(255, 90, 31, .35);
+  background-color: #1C1919;
+  box-shadow: inset 3px 0 0 rgba(255, 90, 31, .48);
+}
+
+.fl-faq:focus-within {
+  border-color: rgba(255, 90, 31, .45);
+}
+
+/* Progressive enhancement: the native details element remains usable everywhere. */
+@supports (interpolate-size: allow-keywords) {
+  .fl-faq {
+    interpolate-size: allow-keywords;
+  }
+  .fl-faq::details-content {
+    block-size: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: block-size 300ms ease, opacity 220ms ease, content-visibility 300ms allow-discrete;
+  }
+  .fl-faq[open]::details-content {
+    block-size: auto;
+    opacity: 1;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .fl-attention-card:hover {
+    border-color: var(--fl-hover-accent);
+    box-shadow:
+      0 20px 56px -33px rgba(0, 0, 0, .94),
+      0 14px 42px -27px rgba(255, 90, 31, .36),
+      inset 0 1px 0 rgba(255, 145, 90, .08);
+  }
+
+  .fl-attention-card:hover .fl-intent-badge {
+    filter: brightness(1.18);
+    transform: translateY(-1px);
+    box-shadow: 0 0 18px rgba(255,90,31,.09);
+  }
+
+  .fl-attention-card:hover .fl-avatar {
+    transform: scale(1.065);
+    border-color: rgba(255, 125, 73, .45);
+  }
+
+  .fl-attention-card:hover .fl-score-meter {
+    box-shadow: 0 0 21px rgba(255, 90, 31, .3);
+  }
+
+  .fl-attention-card:hover .fl-signal-chip {
+    filter: brightness(1.11);
+  }
+
+  .fl-proof-step:hover {
+    transform: translateX(3px);
+    border-color: rgba(255, 90, 31, .3);
+    box-shadow: 0 9px 26px -20px rgba(255, 90, 31, .4);
+  }
+
+  .fl-proof-screenshot:hover {
+    transform: translateY(-3px);
+    border-color: rgba(255, 90, 31, .24);
+    box-shadow: 0 28px 68px -33px rgba(0,0,0,.9), 0 16px 40px -22px rgba(255,90,31,.26);
+  }
+
+  .pricing-ambient-card {
+    transition: transform 290ms cubic-bezier(.22, 1, .36, 1), border-color 420ms ease, box-shadow 500ms ease;
+  }
+
+  .pricing-ambient-card:hover {
+    transform: translateY(-5px);
+  }
+
+  .fl-faq:hover {
+    border-color: rgba(255, 90, 31, .34);
+    background-color: #1B1919;
+    box-shadow: 0 12px 35px -28px rgba(255, 90, 31, .36);
+  }
+
+  .fl-faq[open]:hover {
+    box-shadow: inset 3px 0 0 rgba(255, 90, 31, .5), 0 12px 35px -28px rgba(255, 90, 31, .36);
+  }
+
+  .fl-fit-item:hover {
+    transform: translateX(4px);
+    color: #fff;
+  }
+}
+
+/* Keyboard navigation gets contrast feedback without requiring hover. */
+.fl-proof-step:focus-visible {
+  border-color: rgba(255, 90, 31, .48);
+  box-shadow: 0 0 0 1px rgba(255, 90, 31, .18);
+}
+.fl-proof-screenshot:focus-within {
+  border-color: rgba(255, 90, 31, .36);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fl-attention-card,
+  .fl-proof-step,
+  .fl-proof-screenshot,
+  .fl-faq,
+  .fl-faq::details-content,
+  .fl-fit-item,
+  .fl-intent-badge,
+  .fl-avatar,
+  .fl-signal-chip,
+  .fl-score-meter,
+  .pricing-ambient-card {
+    transition: none !important;
+  }
+  .fl-proof-step:hover,
+  .fl-proof-screenshot:hover,
+  .fl-fit-item:hover,
+  .pricing-ambient-card:hover {
+    transform: none !important;
+  }
+}
