@@ -68,6 +68,21 @@ function DraftResponseIcon({ className = "size-4" }: { className?: string }) {
   </svg>;
 }
 
+function DraftActionIcon({ action, className = "size-[18px]" }: { action: "archive" | "regenerate" | "send"; className?: string }) {
+  if (action === "archive") return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className={className} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7h16v13H4zM3 4h18v3H3zM9 11h6" /></svg>;
+  if (action === "regenerate") return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className={className} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M20 7v5h-5M4.8 9A7.5 7.5 0 0 1 18 6l2 2M4 17v-5h5m10.2 3A7.5 7.5 0 0 1 6 18l-2-2" /></svg>;
+  return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className={className} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="m3 11 18-8-8 18-2.5-7.5L3 11Z" /><path d="M10.5 13.5 21 3" /></svg>;
+}
+
+function DraftActions() {
+  const neutral = "grid size-9 place-items-center rounded-lg border border-white/[0.12] bg-[#151313] text-white/65 transition-colors";
+  return <div className="mt-4 flex items-center justify-end gap-2.5 border-t border-white/[0.08] pt-3">
+    <button type="button" disabled aria-label="Reject and archive" className={neutral}><DraftActionIcon action="archive" /></button>
+    <button type="button" disabled aria-label="Regenerate draft" className={neutral}><DraftActionIcon action="regenerate" /></button>
+    <button type="button" disabled aria-label="Approve and send" className="grid size-9 place-items-center rounded-lg border border-[#FF5A1F]/60 bg-[#FF5A1F] text-white shadow-[0_8px_27px_-10px_rgba(255,90,31,0.8)]"><DraftActionIcon action="send" /></button>
+  </div>;
+}
+
 function Frame({ children, className = "" }: { children: ReactNode; className?: string }) {
   return <div className={"relative isolate mx-auto mt-9 w-full overflow-hidden rounded-[28px] border border-white/[0.08] bg-[#131112] px-3 py-6 shadow-[0_32px_100px_-62px_rgba(0,0,0,0.9)] sm:px-6 sm:py-9 lg:px-9 " + className}>
     <div aria-hidden="true" className="pointer-events-none absolute -left-20 -top-28 h-72 w-72 rounded-full bg-[#FF5A1F]/[0.075] blur-[88px]" />
@@ -196,14 +211,8 @@ export function DecisionLayerProof() {
           <div className="flex items-center gap-2"><DraftResponseIcon className="size-4 text-[#FF8858]" /><SmallLabel>Draft response</SmallLabel></div>
           <Chip tone="warm">Draft ready for review</Chip>
         </div>
-        <div className="mt-3 grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_12.75rem] lg:items-end">
-          <p className="min-w-0 text-[13px] leading-[1.85] text-white/80 sm:text-sm sm:leading-6 lg:text-[13px] lg:leading-[1.75]">{eliseDraftResponse}</p>
-          <div className="flex w-full min-w-0 flex-col gap-2 sm:ml-auto sm:max-w-[17rem] lg:max-w-none" role="img" aria-label="Preview of the FrameLeads reply controls: Reject and Archive, Regenerate Draft, and Approve and Send. These visual controls do not send messages.">
-            <div aria-hidden="true" className="flex min-h-9 items-center justify-center rounded-lg px-3 text-center text-xs font-medium text-white/65">Reject &amp; Archive</div>
-            <div aria-hidden="true" className="flex min-h-10 items-center justify-center rounded-xl border border-white/[0.10] bg-[#212121] px-3 text-center text-xs font-semibold text-white">Regenerate Draft</div>
-            <div aria-hidden="true" className="flex min-h-11 items-center justify-center rounded-xl bg-[#FF5A1F] px-3 text-center text-sm font-bold text-white shadow-[0_8px_27px_-10px_rgba(255,90,31,0.8)]">Approve &amp; Send</div>
-          </div>
-        </div>
+        <p className="mt-3 max-w-4xl text-[13px] leading-[1.85] text-white/80 sm:text-sm sm:leading-6 lg:text-[13px] lg:leading-[1.75]">{eliseDraftResponse}</p>
+        <DraftActions />
       </Surface>
     </div>
 
