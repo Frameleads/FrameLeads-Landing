@@ -48,10 +48,15 @@ function IntentBadge({ intent }: { intent: "HOT" | "WARM" | "COLD" }) {
   return <span className={"inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold tracking-wide " + styles[intent]}><IntentIcon intent={intent} className="size-3.5" />{intent}</span>;
 }
 
-function SignalStrength({ className = "" }: { className?: string }) {
-  return <svg aria-hidden="true" viewBox="0 0 52 30" fill="none" className={className}>
-    <path d="M4 25V20M15 25V15M26 25V10M37 25V6M48 25V2" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-    <path d="M2 28h48" stroke="rgba(255,255,255,.18)" strokeWidth="1.5" strokeLinecap="round" />
+function InboxSignalIcon({ className = "size-4" }: { className?: string }) {
+  return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className={className} stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 5.5h16v13H4z" /><path d="M4 14h4l1.5 2h5L16 14h4" /><path d="M8 9h8" />
+  </svg>;
+}
+
+function DraftResponseIcon({ className = "size-4" }: { className?: string }) {
+  return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className={className} stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M5 4.5h9l5 5v10H5z" /><path d="M14 4.5v5h5M8 13h8M8 16.5h6" />
   </svg>;
 }
 
@@ -140,18 +145,17 @@ export function GapProof() {
 
 function IntentCard() {
   return <Surface className="mx-auto max-w-[1060px] border-[#FF5A1F]/30 bg-[linear-gradient(140deg,rgba(255,90,31,0.09),rgba(26,24,24,0.96)_60%)] p-4 text-left shadow-[0_22px_65px_-35px_rgba(255,90,31,0.28)] sm:p-5">
-    <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
-      <div className="flex items-center gap-4">
-        <SignalStrength className="h-8 w-14 shrink-0 text-[#FF7A4D]" />
-        <div>
-          <SmallLabel>Lead intent score</SmallLabel>
-          <p className="mt-1 font-heading text-4xl font-bold tracking-tight text-white sm:text-5xl"><span className="tabular-nums">86</span><span className="ml-2 text-xl font-medium text-white/45 sm:text-2xl">/ 100</span></p>
-        </div>
-      </div>
-      <p className="max-w-xl text-xs leading-relaxed text-white/55">The score reflects expressed intent, not closing probability.</p>
+    <div className="flex items-start justify-between gap-4">
+      <SmallLabel>Lead intent score</SmallLabel>
+      <IntentBadge intent="WARM" />
     </div>
+    <p className="mt-2 text-left font-heading text-4xl font-bold tracking-tight text-white sm:text-5xl"><span className="tabular-nums">86</span><span className="ml-2 text-xl font-medium text-white/45 sm:text-2xl">/ 100</span></p>
+    <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-[#302522]" role="img" aria-label="Intent score: 86 out of 100">
+      <div className="h-full rounded-full bg-gradient-to-r from-[#FF5A1F] via-[#FF7848] to-[#FFC06A]" style={{ width: "86%" }} />
+    </div>
+    <p className="mt-2 text-left text-xs leading-relaxed text-white/55">The score reflects expressed intent, not closing probability.</p>
     <div className="mt-4 flex flex-wrap items-center gap-2">
-      <SmallLabel>Why now</SmallLabel>
+      <SmallLabel>WHY NOW</SmallLabel>
       <Chip tone="orange">Pricing requested</Chip>
       <Chip tone="green">Proof requested</Chip>
       <Chip tone="warm">Relevant workflow</Chip>
@@ -173,13 +177,13 @@ export function DecisionLayerProof() {
 
     <div className="mx-auto mt-3 max-w-[1060px] space-y-2">
       <Surface className="p-4 text-left sm:p-5">
-        <SmallLabel>Inbound signal · Elise Varner</SmallLabel>
+        <div className="flex items-center gap-2"><InboxSignalIcon className="size-4 text-[#FF8858]" /><SmallLabel>Inbound signal · Elise Varner</SmallLabel></div>
         <p className="mt-2 text-[11px] text-white/45">Founder reviewing options Thursday</p>
         <p className="mt-2 max-w-4xl text-sm leading-6 text-white/80">{eliseFeaturedReply}</p>
       </Surface>
       <Surface className="border-[#FF5A1F]/25 bg-[linear-gradient(145deg,rgba(255,90,31,0.045),rgba(16,16,16,0.96)_62%)] p-4 text-left sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <SmallLabel>Draft response</SmallLabel>
+          <div className="flex items-center gap-2"><DraftResponseIcon className="size-4 text-[#FF8858]" /><SmallLabel>Draft response</SmallLabel></div>
           <Chip tone="warm">Draft ready for review</Chip>
         </div>
         <p className="mt-3 max-w-4xl text-sm leading-6 text-white/80">{eliseDraftResponse}</p>
