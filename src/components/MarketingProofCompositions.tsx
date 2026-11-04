@@ -70,7 +70,7 @@ function DraftResponseIcon({ className = "size-4" }: { className?: string }) {
 
 function DraftActionIcon({ action, className = "size-[18px]" }: { action: "archive" | "regenerate" | "send"; className?: string }) {
   if (action === "archive") return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className={className} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7h16v13H4zM3 4h18v3H3zM9 11h6" /></svg>;
-  if (action === "regenerate") return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className={className} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M20 7v5h-5M4.8 9A7.5 7.5 0 0 1 18 6l2 2M4 17v-5h5m10.2 3A7.5 7.5 0 0 1 6 18l-2-2" /></svg>;
+  if (action === "regenerate") return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className={className} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M20.2 11a8.2 8.2 0 0 0-14.9-4L3.5 9M3.5 5.5V9h3.6M3.8 13a8.2 8.2 0 0 0 14.9 4l1.8-2M20.5 18.5V15h-3.6" /></svg>;
   return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className={className} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="m3 11 18-8-8 18-2.5-7.5L3 11Z" /><path d="M10.5 13.5 21 3" /></svg>;
 }
 
@@ -211,7 +211,7 @@ export function DecisionLayerProof() {
           <div className="flex items-center gap-2"><DraftResponseIcon className="size-4 text-[#FF8858]" /><SmallLabel>Draft response</SmallLabel></div>
           <Chip tone="warm">Draft ready for review</Chip>
         </div>
-        <p className="mt-3 max-w-4xl text-[13px] leading-[1.85] text-white/80 sm:text-sm sm:leading-6 lg:text-[13px] lg:leading-[1.75]">{eliseDraftResponse}</p>
+        <p className="mt-3 w-full max-w-none text-[13px] leading-[1.85] text-white/80 sm:text-sm sm:leading-6 lg:text-[13px] lg:leading-[1.75]">{eliseDraftResponse}</p>
         <DraftActions />
       </Surface>
     </div>
