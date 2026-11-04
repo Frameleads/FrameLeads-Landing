@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
+import { ExampleScoreFill, ProofReveal } from "./ProofReveal";
 
 const eliseFeaturedReply = "This is timely. We're comparing outbound partners this week. Could you send your pricing structure, a relevant B2B SaaS example, and how you'd handle prospect replies after campaigns start? Our founder is reviewing options Thursday.";
 const eliseDraftResponse = "Hi Elise, thanks for the detail. Since your founder is reviewing options Thursday, I'll keep this focused on what you need to assess fit. I'll put together our pricing structure, a relevant B2B SaaS example, and a short breakdown of how we'd handle prospect replies after launch. To tailor this properly, is your bigger priority increasing qualified meetings or reducing the time your team spends managing replies? Happy to keep everything in writing for your founder's review.";
@@ -9,8 +10,8 @@ const eliseDraftResponse = "Hi Elise, thanks for the detail. Since your founder 
  * These are illustrations using the owner's sample/test scenario, NOT screenshots,
  * live activity, real-customer outcomes, or functioning software controls.
  */
-function Surface({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <div className={"relative min-w-0 rounded-2xl border border-white/[0.12] bg-[#191717] shadow-[0_18px_55px_-36px_rgba(0,0,0,0.95)] " + className}>{children}</div>;
+function Surface({ children, className = "", delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
+  return <ProofReveal hover delay={delay} className={"relative min-w-0 rounded-2xl border border-white/[0.12] bg-[#191717] shadow-[0_18px_55px_-36px_rgba(0,0,0,0.95)] " + className}>{children}</ProofReveal>;
 }
 
 function Chip({ children, tone = "neutral" }: { children: ReactNode; tone?: "neutral" | "warm" | "cold" | "red" | "green" | "orange" }) {
@@ -84,18 +85,18 @@ function DraftActions() {
 }
 
 function Frame({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <div className={"relative isolate mx-auto mt-9 w-full overflow-hidden rounded-[28px] border border-white/[0.08] bg-[#131112] px-3 py-6 shadow-[0_32px_100px_-62px_rgba(0,0,0,0.9)] sm:px-6 sm:py-9 lg:px-9 " + className}>
+  return <ProofReveal gentle className={"relative isolate mx-auto mt-9 w-full overflow-hidden rounded-[28px] border border-white/[0.08] bg-[#131112] px-3 py-6 shadow-[0_32px_100px_-62px_rgba(0,0,0,0.9)] sm:px-6 sm:py-9 lg:px-9 " + className}>
     <div aria-hidden="true" className="pointer-events-none absolute -left-20 -top-28 h-72 w-72 rounded-full bg-[#FF5A1F]/[0.075] blur-[88px]" />
     <div aria-hidden="true" className="pointer-events-none absolute -bottom-40 right-[-7rem] h-72 w-96 rounded-full bg-[#FF5A1F]/[0.06] blur-[90px]" />
     <div className="relative z-10">{children}</div>
-  </div>;
+  </ProofReveal>;
 }
 
 function ValueNote({ icon, text, className = "" }: { icon: string; text: string; className?: string }) {
-  return <div className={"flex items-center gap-2 text-left text-xs font-medium text-white/80 sm:text-sm " + className}>
+  return <ProofReveal gentle className={"flex items-center gap-2 text-left text-xs font-medium text-white/80 sm:text-sm " + className}>
     <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-[#FF5A1F]/20 bg-[#FF5A1F]/[0.075] text-base text-[#FF8A5A]" aria-hidden="true">{icon}</span>
     <span>{text}</span>
-  </div>;
+  </ProofReveal>;
 }
 
 function CardActions({ primary = false }: { primary?: boolean }) {
@@ -110,7 +111,7 @@ function CardActions({ primary = false }: { primary?: boolean }) {
 function LeadCard({ avatar, name, intent, message, date, primary = false, urgencyLabel }: {
   avatar: string; name: string; intent: "HOT" | "WARM" | "COLD"; message: string; date: string; primary?: boolean; urgencyLabel?: string;
 }) {
-  return <Surface className={"flex h-full flex-col p-4 text-left sm:p-5 " + (primary ? "border-[#FF5A1F]/40 bg-[linear-gradient(145deg,rgba(255,90,31,0.085),rgba(30,23,22,0.9)_52%)] shadow-[0_0_28px_-22px_rgba(255,90,31,0.24)]" : "")}>
+  return <Surface delay={primary ? 0 : intent === "WARM" ? 0.09 : 0.18} className={"flex h-full flex-col p-4 text-left sm:p-5 " + (primary ? "border-[#FF5A1F]/40 bg-[linear-gradient(145deg,rgba(255,90,31,0.085),rgba(30,23,22,0.9)_52%)] shadow-[0_0_28px_-22px_rgba(255,90,31,0.24)]" : "")}>
     <div className="flex min-w-0 flex-wrap items-center gap-2.5 md:grid md:grid-cols-[2.25rem_minmax(0,1fr)] md:items-center md:gap-x-2.5 md:gap-y-2 lg:flex lg:flex-wrap">
       <span className="relative size-9 shrink-0 overflow-hidden rounded-full border border-white/[0.18] bg-[#292424]">
         <Image src={avatar} alt="" fill sizes="36px" className="object-cover" />
@@ -174,7 +175,7 @@ function IntentCard() {
     </div>
     <p className="mt-2 text-left font-heading text-4xl font-bold tracking-tight text-white sm:text-5xl"><span className="tabular-nums">86</span><span className="ml-2 text-xl font-medium text-white/45 sm:text-2xl">/ 100</span></p>
     <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-[#302522]" role="img" aria-label="Example scenario intent score: 86 out of 100">
-      <div className="h-full rounded-full bg-gradient-to-r from-[#FF5A1F] via-[#FF7848] to-[#FFC06A]" style={{ width: "86%" }} />
+      <ExampleScoreFill />
     </div>
     <p className="mt-2 text-left text-xs leading-relaxed text-white/55">Example scenario score; not calculated by a production scoring engine.</p>
     <div className="mt-4 text-left">
@@ -190,10 +191,10 @@ function IntentCard() {
 }
 
 function PacketBlock({ label, children, emphasis = false }: { label: string; children: ReactNode; emphasis?: boolean }) {
-  return <div className={"min-w-0 rounded-xl border p-4 text-left sm:p-5 " + (emphasis ? "border-[#FF5A1F]/55 bg-[#FF5A1F]/[0.12] shadow-[0_0_34px_-23px_rgba(255,90,31,0.55)]" : "border-[#FF5A1F]/[0.18] bg-[#FF5A1F]/[0.045]")}>
+  return <ProofReveal gentle hover className={"min-w-0 rounded-xl border p-4 text-left sm:p-5 " + (emphasis ? "border-[#FF5A1F]/55 bg-[#FF5A1F]/[0.12] shadow-[0_0_34px_-23px_rgba(255,90,31,0.55)]" : "border-[#FF5A1F]/[0.18] bg-[#FF5A1F]/[0.045]")}>
     <span className="font-mono text-[10px] uppercase tracking-wider text-[#FF946A]">{label}</span>
     <div className="mt-2 text-sm leading-relaxed text-white/75">{children}</div>
-  </div>;
+  </ProofReveal>;
 }
 
 export function DecisionLayerProof() {
@@ -305,11 +306,11 @@ export function SandboxProof() {
           <h3 className="mt-2 font-heading text-xl font-bold text-white sm:text-2xl">Governance Simulation</h3>
           <p className="mt-2 text-sm text-white/55">Preview how a decision passes through the governance checks.</p>
           <div className="mt-6 grid grid-cols-3 gap-2 sm:grid-cols-5">
-            {simulationSteps.map((step) => <div key={step.number} className="flex min-h-28 min-w-0 flex-col items-center justify-center rounded-xl border border-[#FF5A1F]/[0.17] bg-[#FF5A1F]/[0.03] px-1 py-3 text-center">
+            {simulationSteps.map((step, index) => <ProofReveal gentle delay={index * 0.055} key={step.number} className="flex min-h-28 min-w-0 flex-col items-center justify-center rounded-xl border border-[#FF5A1F]/[0.17] bg-[#FF5A1F]/[0.03] px-1 py-3 text-center">
               <span aria-hidden="true" className="text-xl text-[#FF8756]">{step.symbol}</span>
               <span className="mt-2 text-[11px] font-medium text-white/80">{step.name}</span>
               <span className="mt-1 font-mono text-[10px] text-white/35">{step.number}</span>
-            </div>)}
+            </ProofReveal>)}
           </div>
           <p className="mt-5 text-xs text-white/45">A dry run previews possible behavior; it does not send a message or change operational records.</p>
         </Surface>
