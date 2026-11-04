@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
+import { ProofReveal } from "./ProofReveal";
 import { useState, type ReactNode } from "react";
 
 /**
@@ -89,7 +90,7 @@ function Pill({ children, tone = "neutral" }: { children: ReactNode; tone?: Tone
 }
 
 function ProductCard({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <div className={"min-w-0 rounded-2xl border border-white/[0.11] bg-[#1A1717] p-4 shadow-[0_18px_50px_-38px_rgba(0,0,0,0.95)] sm:p-5 " + className}>{children}</div>;
+  return <ProofReveal gentle hover className={"min-w-0 rounded-2xl border border-white/[0.11] bg-[#1A1717] p-4 shadow-[0_18px_50px_-38px_rgba(0,0,0,0.95)] sm:p-5 " + className}>{children}</ProofReveal>;
 }
 
 function Outcome({ children }: { children: ReactNode }) {
