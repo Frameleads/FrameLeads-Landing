@@ -437,6 +437,11 @@
     filter: brightness(1.11);
   }
 
+  .fl-stage-tab:hover {
+    border-color: rgba(255, 90, 31, .38);
+    box-shadow: 0 10px 26px -20px rgba(255, 90, 31, .28);
+  }
+
   .fl-proof-step:hover {
     transform: translateX(3px);
     border-color: rgba(255, 90, 31, .3);
@@ -474,6 +479,9 @@
 }
 
 /* Keyboard navigation gets contrast feedback without requiring hover. */
+.fl-stage-tab:focus-visible {
+  border-color: rgba(255, 90, 31, .48);
+}
 .fl-proof-step:focus-visible {
   border-color: rgba(255, 90, 31, .48);
   box-shadow: 0 0 0 1px rgba(255, 90, 31, .18);
