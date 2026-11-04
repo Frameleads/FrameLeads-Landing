@@ -90,7 +90,7 @@ function Pill({ children, tone = "neutral" }: { children: ReactNode; tone?: Tone
 }
 
 function ProductCard({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <ProofReveal gentle hover className={"min-w-0 rounded-2xl border border-white/[0.11] bg-[#1A1717] p-4 shadow-[0_18px_50px_-38px_rgba(0,0,0,0.95)] sm:p-5 " + className}>{children}</ProofReveal>;
+  return <ProofReveal gentle hover className={"fl-attention-card min-w-0 rounded-2xl border border-white/[0.11] bg-[#1A1717] p-4 shadow-[0_18px_50px_-38px_rgba(0,0,0,0.95)] sm:p-5 " + className}>{children}</ProofReveal>;
 }
 
 function Outcome({ children }: { children: ReactNode }) {
@@ -259,7 +259,7 @@ export default function DecisionIntelligenceWalkthrough() {
             aria-pressed={selected}
             aria-controls="frameleads-walkthrough-panel"
             onClick={() => setActive(item.id)}
-            className={"group relative min-w-0 rounded-xl border px-3 py-3 text-left transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF875D] sm:px-4 " + (selected ? "border-[#FF5A1F]/40 bg-[#FF5A1F]/[0.10]" : "border-white/[0.10] bg-[#1C1919] hover:border-[#FF5A1F]/[0.25] hover:bg-white/[0.035]")}
+            className={"fl-stage-tab group relative min-w-0 rounded-xl border px-3 py-3 text-left transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF875D] sm:px-4 " + (selected ? "border-[#FF5A1F]/40 bg-[#FF5A1F]/[0.10]" : "border-white/[0.10] bg-[#1C1919] hover:border-[#FF5A1F]/[0.25] hover:bg-white/[0.035]")}
           >
             <span className={"block font-mono text-[10px] " + (selected ? "text-[#FF9166]" : "text-white/35")}>{item.number}</span>
             <span className={"mt-1 block font-heading text-xs font-bold uppercase tracking-[0.07em] sm:text-sm " + (selected ? "text-white" : "text-white/65")}>{item.label}</span>
