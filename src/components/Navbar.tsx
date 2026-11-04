@@ -44,7 +44,7 @@ export default function Navbar({ onAuditClick, onMicroPilotClick }: NavbarProps)
       </nav>
       <div className="hidden items-center justify-end gap-5 lg:flex">
         <Link href={loginHref} className="inline-flex h-10 shrink-0 items-center justify-center whitespace-nowrap text-sm font-semibold text-white transition-colors hover:text-[#FF5A1F] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F]">Log In</Link>
-        {onMicroPilotClick && <button type="button" onClick={openMicroPilot} className="inline-flex h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-lg bg-[#FF5A1F] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#e8511b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F]">Try it Risk-Free</button>}
+        {onMicroPilotClick && <button type="button" onClick={openMicroPilot} className="fl-cta-pop inline-flex h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-lg bg-[#FF5A1F] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#e8511b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F]">Try it Risk-Free</button>}
       </div>
 
       <Link href={loginHref} className="ml-auto inline-flex h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-lg bg-[#FF5A1F] px-3 text-xs font-semibold text-white transition-colors hover:bg-[#e8511b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F] sm:px-4 sm:text-sm lg:hidden">Log In</Link>
@@ -58,7 +58,7 @@ export default function Navbar({ onAuditClick, onMicroPilotClick }: NavbarProps)
           <div className="mx-auto flex max-w-7xl flex-col gap-1">
             <button type="button" data-tripwire-guard="true" onClick={openAudit} className="rounded-lg px-3 py-3 text-left text-sm text-white transition-colors hover:bg-white/[0.05] hover:text-[#FFB08D]">Audit</button>
             {sectionLinks.map((item) => <Link key={item.href} href={item.href} onClick={() => setIsMenuOpen(false)} className="rounded-lg px-3 py-3 text-sm text-white transition-colors hover:bg-white/[0.05] hover:text-[#FFB08D]">{item.label}</Link>)}
-            {onMicroPilotClick && <button type="button" onClick={openMicroPilot} className="mt-2 rounded-lg bg-[#FF5A1F] px-4 py-3 text-left text-sm font-semibold text-white transition-colors hover:bg-[#e8511b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F]">Try it Risk-Free</button>}
+            {onMicroPilotClick && <button type="button" onClick={openMicroPilot} className="fl-cta-pop mt-2 rounded-lg bg-[#FF5A1F] px-4 py-3 text-left text-sm font-semibold text-white transition-colors hover:bg-[#e8511b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F]">Try it Risk-Free</button>}
           </div>
         </nav>
       )}

@@ -37,7 +37,7 @@ function ScreenshotVisual({
   return (
     <div className="relative isolate">
       <div aria-hidden="true" className="pointer-events-none absolute -inset-14 z-0 rounded-[4rem] bg-[radial-gradient(ellipse_at_center,rgba(255,90,31,0.28),rgba(255,90,31,0.12)_45%,transparent_78%)] opacity-90 blur-3xl" />
-      <div className="relative z-10 overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.015] p-1.5 shadow-[0_34px_90px_-34px_rgba(0,0,0,.88),0_18px_46px_-30px_rgba(255,90,31,.2)] backdrop-blur-sm sm:p-2">
+      <div className="fl-proof-screenshot relative z-10 overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.015] p-1.5 shadow-[0_34px_90px_-34px_rgba(0,0,0,.88),0_18px_46px_-30px_rgba(255,90,31,.2)] backdrop-blur-sm sm:p-2">
         <button
           ref={triggerRef}
           type="button"
@@ -117,7 +117,7 @@ export default function ProductProofHowItWorks({ onMicroPilot }: { onMicroPilot:
               const next = event.key === "Home" ? 0 : event.key === "End" ? steps.length - 1 : (index + (event.key === "ArrowDown" || event.key === "ArrowRight" ? 1 : -1) + steps.length) % steps.length;
               selectStep(next);
               document.getElementById(`proof-tab-${next}`)?.focus();
-            }} className={`group flex min-h-[4.5rem] w-full items-start gap-4 rounded-xl border p-4 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F] sm:p-5 ${active === index ? "border-[#FF5A1F]/45 bg-[#1A1A1A]" : "border-white/[0.07] bg-[#151515] hover:border-white/20"}`}>
+            }} className={`fl-proof-step group flex min-h-[4.5rem] w-full items-start gap-4 rounded-xl border p-4 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F] sm:p-5 ${active === index ? "border-[#FF5A1F]/45 bg-[#1A1A1A]" : "border-white/[0.07] bg-[#151515] hover:border-white/20"}`}>
               <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg border font-mono text-xs ${active === index ? "border-[#FF5A1F]/40 bg-[#FF5A1F]/10 text-[#FF5A1F]" : "border-white/10 bg-white/[0.03] text-white/50"}`}>{step.number}</span>
               <span className="min-w-0 flex-1"><span className="flex min-h-9 items-center"><span className={`text-base font-semibold ${active === index ? "text-white" : "text-white/75"}`}>{step.title}</span></span><span aria-hidden={active !== index} className={`grid transition-[grid-template-rows,opacity] duration-200 ease-out motion-reduce:transition-none ${active === index ? "mt-1.5 grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}><span className="overflow-hidden text-sm leading-relaxed text-[#929292]">{step.description}</span></span></span>
             </button>
@@ -133,7 +133,7 @@ export default function ProductProofHowItWorks({ onMicroPilot }: { onMicroPilot:
         <div className="flex min-w-0 flex-col gap-2">
           {steps.map((step, index) => (
             <div key={step.number} className="min-w-0">
-              <button id={`proof-mobile-step-${index}`} type="button" aria-pressed={active === index} aria-controls={active === index ? "proof-mobile-panel" : `proof-mobile-description-${index}`} onClick={() => selectStep(index)} className={`flex min-h-16 w-full min-w-0 items-start gap-4 rounded-xl border p-4 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F] ${active === index ? "border-[#FF5A1F]/45 bg-[#1A1A1A]" : "border-white/[0.07] bg-[#151515] hover:border-white/20"}`}>
+              <button id={`proof-mobile-step-${index}`} type="button" aria-pressed={active === index} aria-controls={active === index ? "proof-mobile-panel" : `proof-mobile-description-${index}`} onClick={() => selectStep(index)} className={`fl-proof-step flex min-h-16 w-full min-w-0 items-start gap-4 rounded-xl border p-4 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F] ${active === index ? "border-[#FF5A1F]/45 bg-[#1A1A1A]" : "border-white/[0.07] bg-[#151515] hover:border-white/20"}`}>
                 <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg border font-mono text-xs ${active === index ? "border-[#FF5A1F]/40 bg-[#FF5A1F]/10 text-[#FF5A1F]" : "border-white/10 bg-white/[0.03] text-white/50"}`}>{step.number}</span>
                 <span className="min-w-0 flex-1"><span className="flex min-h-8 items-center"><span className={`text-sm font-semibold sm:text-base ${active === index ? "text-white" : "text-white/75"}`}>{step.title}</span></span><span id={`proof-mobile-description-${index}`} aria-hidden={active !== index} className={`grid transition-[grid-template-rows,opacity] duration-200 ease-out motion-reduce:transition-none ${active === index ? "mt-1 grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}><span className="overflow-hidden text-sm leading-relaxed text-[#929292]">{step.description}</span></span></span>
               </button>
@@ -143,7 +143,7 @@ export default function ProductProofHowItWorks({ onMicroPilot }: { onMicroPilot:
         </div>
       </div>
 
-      <div className="mt-8 text-center"><button type="button" onClick={onMicroPilot} className="rounded-xl bg-[#FF5A1F] px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-[#ff6b35] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F]">Try it Risk-Free</button></div>
+      <div className="mt-8 text-center lg:text-left"><button type="button" onClick={onMicroPilot} className="fl-cta-pop rounded-xl bg-[#FF5A1F] px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-[#ff6b35] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F]">Try it Risk-Free</button></div>
 
       {lightboxOpen && <div className="fixed inset-0 z-[140] flex items-center justify-center bg-black/90 p-2 sm:p-5" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setLightboxOpen(false); }}>
         <div role="dialog" aria-modal="true" aria-label={`Full screenshot: ${current.title}`} className="flex max-h-[96vh] w-full max-w-[96vw] flex-col overflow-hidden rounded-xl border border-white/15 bg-[#141414] shadow-2xl">
