@@ -23,7 +23,7 @@ function Chip({ children, tone = "neutral" }: { children: ReactNode; tone?: "neu
     green: "border-emerald-400/30 bg-emerald-400/[0.08] text-emerald-300",
     orange: "border-[#FF5A1F]/45 bg-[#FF5A1F]/[0.11] text-[#FF956E]",
   };
-  return <span className={"inline-flex max-w-full items-center gap-1 whitespace-nowrap rounded-full border px-2.5 py-1 text-[10px] font-semibold leading-tight " + colors[tone]}>{children}</span>;
+  return <span className={"fl-signal-chip inline-flex max-w-full items-center gap-1 whitespace-nowrap rounded-full border px-2.5 py-1 text-[10px] font-semibold leading-tight " + colors[tone]}>{children}</span>;
 }
 
 function SmallLabel({ children }: { children: ReactNode }) {
@@ -46,7 +46,7 @@ function IntentBadge({ intent }: { intent: "HOT" | "WARM" | "COLD" }) {
     WARM: "border-amber-400/30 bg-amber-400/[0.09] text-amber-300",
     COLD: "border-sky-400/25 bg-sky-400/[0.07] text-sky-200",
   };
-  return <span className={"inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold tracking-wide " + styles[intent]}><IntentIcon intent={intent} className="size-3.5" />{intent}</span>;
+  return <span className={"fl-intent-badge inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold tracking-wide " + styles[intent]}><IntentIcon intent={intent} className="size-3.5" />{intent}</span>;
 }
 
 function IntentScoreGaugeIcon({ className = "size-4" }: { className?: string }) {
@@ -113,7 +113,7 @@ function LeadCard({ avatar, name, intent, message, date, primary = false, urgenc
 }) {
   return <Surface attention delay={primary ? 0 : intent === "WARM" ? 0.09 : 0.18} className={"flex h-full flex-col p-4 text-left sm:p-5 " + (primary ? "border-[#FF5A1F]/40 bg-[linear-gradient(145deg,rgba(255,90,31,0.085),rgba(30,23,22,0.9)_52%)] shadow-[0_0_28px_-22px_rgba(255,90,31,0.24)]" : "")}>
     <div className="flex min-w-0 flex-wrap items-center gap-2.5 md:grid md:grid-cols-[2.25rem_minmax(0,1fr)] md:items-center md:gap-x-2.5 md:gap-y-2 lg:flex lg:flex-wrap">
-      <span className="relative size-9 shrink-0 overflow-hidden rounded-full border border-white/[0.18] bg-[#292424]">
+      <span className="fl-avatar relative size-9 shrink-0 overflow-hidden rounded-full border border-white/[0.18] bg-[#292424]">
         <Image src={avatar} alt="" fill sizes="36px" className="object-cover" />
       </span>
       <span className="min-w-0 flex-1 text-sm font-bold text-white sm:text-base">{name}</span>
@@ -174,7 +174,7 @@ function IntentCard() {
       <IntentBadge intent="HOT" />
     </div>
     <p className="mt-2 text-left font-heading text-4xl font-bold tracking-tight text-white sm:text-5xl"><span className="tabular-nums">86</span><span className="ml-2 text-xl font-medium text-white/45 sm:text-2xl">/ 100</span></p>
-    <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-[#302522]" role="img" aria-label="Example scenario intent score: 86 out of 100">
+    <div className="fl-score-meter mt-3 h-2 w-full overflow-hidden rounded-full bg-[#302522]" role="img" aria-label="Example scenario intent score: 86 out of 100">
       <ExampleScoreFill />
     </div>
     <p className="mt-2 text-left text-xs leading-relaxed text-white/55">Example scenario score; not calculated by a production scoring engine.</p>
