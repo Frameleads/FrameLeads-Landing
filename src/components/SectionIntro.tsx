@@ -1,9 +1,10 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { sectionEyebrowMotion, sectionHeadingMotion, sectionSubheadingMotion, sectionViewport } from "./section-motion";
 
-type Props = { eyebrow: string; heading: string; description?: string; className?: string };
+type Props = { eyebrow: string; heading: ReactNode; description?: string; className?: string };
 
 export default function SectionIntro({ eyebrow, heading, description, className = "" }: Props) {
   const reduce = useReducedMotion();

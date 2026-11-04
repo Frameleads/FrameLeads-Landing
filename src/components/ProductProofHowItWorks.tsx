@@ -102,9 +102,9 @@ export default function ProductProofHowItWorks({ onMicroPilot }: { onMicroPilot:
 
   return (
     <section id="how-it-works" aria-labelledby="proof-heading" className="relative mx-auto w-full max-w-7xl scroll-mt-32 overflow-x-clip border-t border-white/[0.06] px-4 py-16 sm:px-6 lg:px-8 md:py-24">
-      <div className="mx-auto max-w-3xl text-center">
+      <div className="mx-auto max-w-5xl text-center">
         <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-[#FF5A1F]">Inside FrameLeads · Actual product screens</p>
-        <h2 id="proof-heading" className="mt-4 text-balance font-[family-name:var(--font-oxanium)] text-3xl font-bold tracking-tight text-white sm:text-4xl">See what happens after a prospect replies.</h2>
+        <h2 id="proof-heading" className="mt-5 text-balance font-[family-name:var(--font-oxanium)] text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">See what happens after a prospect replies.</h2>
         <p className="mx-auto mt-4 max-w-2xl text-pretty text-base leading-relaxed text-[#A1A1AA]">From the incoming signal to a governed next action. Explore the actual interface behind the decision.</p>
       </div>
 
