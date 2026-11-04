@@ -10,8 +10,8 @@ const eliseDraftResponse = "Hi Elise, thanks for the detail. Since your founder 
  * These are illustrations using the owner's sample/test scenario, NOT screenshots,
  * live activity, real-customer outcomes, or functioning software controls.
  */
-function Surface({ children, className = "", delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
-  return <ProofReveal hover delay={delay} className={"relative min-w-0 rounded-2xl border border-white/[0.12] bg-[#191717] shadow-[0_18px_55px_-36px_rgba(0,0,0,0.95)] " + className}>{children}</ProofReveal>;
+function Surface({ children, className = "", delay = 0, attention = false }: { children: ReactNode; className?: string; delay?: number; attention?: boolean }) {
+  return <ProofReveal hover={attention} delay={delay} className={"relative min-w-0 rounded-2xl border border-white/[0.12] bg-[#191717] shadow-[0_18px_55px_-36px_rgba(0,0,0,0.95)] " + (attention ? "fl-attention-card " : "") + className}>{children}</ProofReveal>;
 }
 
 function Chip({ children, tone = "neutral" }: { children: ReactNode; tone?: "neutral" | "warm" | "cold" | "red" | "green" | "orange" }) {
@@ -111,7 +111,7 @@ function CardActions({ primary = false }: { primary?: boolean }) {
 function LeadCard({ avatar, name, intent, message, date, primary = false, urgencyLabel }: {
   avatar: string; name: string; intent: "HOT" | "WARM" | "COLD"; message: string; date: string; primary?: boolean; urgencyLabel?: string;
 }) {
-  return <Surface delay={primary ? 0 : intent === "WARM" ? 0.09 : 0.18} className={"flex h-full flex-col p-4 text-left sm:p-5 " + (primary ? "border-[#FF5A1F]/40 bg-[linear-gradient(145deg,rgba(255,90,31,0.085),rgba(30,23,22,0.9)_52%)] shadow-[0_0_28px_-22px_rgba(255,90,31,0.24)]" : "")}>
+  return <Surface attention delay={primary ? 0 : intent === "WARM" ? 0.09 : 0.18} className={"flex h-full flex-col p-4 text-left sm:p-5 " + (primary ? "border-[#FF5A1F]/40 bg-[linear-gradient(145deg,rgba(255,90,31,0.085),rgba(30,23,22,0.9)_52%)] shadow-[0_0_28px_-22px_rgba(255,90,31,0.24)]" : "")}>
     <div className="flex min-w-0 flex-wrap items-center gap-2.5 md:grid md:grid-cols-[2.25rem_minmax(0,1fr)] md:items-center md:gap-x-2.5 md:gap-y-2 lg:flex lg:flex-wrap">
       <span className="relative size-9 shrink-0 overflow-hidden rounded-full border border-white/[0.18] bg-[#292424]">
         <Image src={avatar} alt="" fill sizes="36px" className="object-cover" />
@@ -148,7 +148,7 @@ export function GapProof() {
         message="Thanks for reaching out. We're not evaluating any new outbound support this quarter. Please check back next quarter." date="New reply" />
     </div>
 
-    <Surface className="mt-4 flex flex-col gap-3 border-[#FF5A1F]/[0.3] bg-[linear-gradient(100deg,rgba(255,90,31,0.10),rgba(34,25,24,0.7))] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+    <Surface attention className="mt-4 flex flex-col gap-3 border-[#FF5A1F]/[0.3] bg-[linear-gradient(100deg,rgba(255,90,31,0.10),rgba(34,25,24,0.7))] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
       <div className="flex items-center gap-3">
         <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#FF5A1F]/[0.13] text-[#FF8858]">⚡</span>
         <div className="min-w-0 text-left">
@@ -168,7 +168,7 @@ export function GapProof() {
 }
 
 function IntentCard() {
-  return <Surface className="mx-auto max-w-[1060px] border-[#FF5A1F]/30 bg-[linear-gradient(140deg,rgba(255,90,31,0.09),rgba(26,24,24,0.96)_60%)] p-4 text-left shadow-[0_22px_65px_-35px_rgba(255,90,31,0.28)] sm:p-5">
+  return <Surface attention className="mx-auto max-w-[1060px] border-[#FF5A1F]/30 bg-[linear-gradient(140deg,rgba(255,90,31,0.09),rgba(26,24,24,0.96)_60%)] p-4 text-left shadow-[0_22px_65px_-35px_rgba(255,90,31,0.28)] sm:p-5">
     <div className="flex items-start justify-between gap-4">
       <span className="inline-flex items-center gap-2"><IntentScoreGaugeIcon className="size-4 text-[#FF8858]" /><SmallLabel>Example intent score</SmallLabel></span>
       <IntentBadge intent="HOT" />
@@ -191,7 +191,7 @@ function IntentCard() {
 }
 
 function PacketBlock({ label, children, emphasis = false }: { label: string; children: ReactNode; emphasis?: boolean }) {
-  return <ProofReveal gentle hover className={"min-w-0 rounded-xl border p-4 text-left sm:p-5 " + (emphasis ? "border-[#FF5A1F]/55 bg-[#FF5A1F]/[0.12] shadow-[0_0_34px_-23px_rgba(255,90,31,0.55)]" : "border-[#FF5A1F]/[0.18] bg-[#FF5A1F]/[0.045]")}>
+  return <ProofReveal gentle hover={emphasis} className={"min-w-0 rounded-xl border p-4 text-left sm:p-5 " + (emphasis ? "fl-attention-card " : "") + (emphasis ? "border-[#FF5A1F]/55 bg-[#FF5A1F]/[0.12] shadow-[0_0_34px_-23px_rgba(255,90,31,0.55)]" : "border-[#FF5A1F]/[0.18] bg-[#FF5A1F]/[0.045]")}>
     <span className="font-mono text-[10px] uppercase tracking-wider text-[#FF946A]">{label}</span>
     <div className="mt-2 text-sm leading-relaxed text-white/75">{children}</div>
   </ProofReveal>;
@@ -202,12 +202,12 @@ export function DecisionLayerProof() {
     <IntentCard />
 
     <div className="mx-auto mt-3 max-w-[1060px] space-y-2">
-      <Surface className="p-4 text-left sm:p-5">
+      <Surface attention className="p-4 text-left sm:p-5">
         <div className="flex items-center gap-2"><InboxSignalIcon className="size-4 text-[#FF8858]" /><SmallLabel>Inbound signal · Elise Varner</SmallLabel></div>
         <p className="mt-2 text-[11px] text-white/45">Founder reviewing options Thursday</p>
         <p className="mt-2 text-[13px] leading-[1.85] text-white/80 sm:text-sm sm:leading-6 lg:text-[13px] lg:leading-[1.75]">{eliseFeaturedReply}</p>
       </Surface>
-      <Surface className="border-[#FF5A1F]/25 bg-[linear-gradient(145deg,rgba(255,90,31,0.045),rgba(16,16,16,0.96)_62%)] p-4 text-left sm:p-5">
+      <Surface attention className="border-[#FF5A1F]/25 bg-[linear-gradient(145deg,rgba(255,90,31,0.045),rgba(16,16,16,0.96)_62%)] p-4 text-left sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2"><DraftResponseIcon className="size-4 text-[#FF8858]" /><SmallLabel>Draft response</SmallLabel></div>
           <Chip tone="warm">Draft ready for review</Chip>
@@ -273,7 +273,7 @@ export function SandboxProof() {
     </div>
 
     <div className="grid items-stretch gap-4 lg:grid-cols-[1fr_1.13fr]">
-      <Surface className="border-[#FF5A1F]/25 bg-[linear-gradient(140deg,rgba(255,90,31,0.07),rgba(27,23,23,0.94)_53%)] p-5 text-left sm:p-6">
+      <Surface attention className="border-[#FF5A1F]/25 bg-[linear-gradient(140deg,rgba(255,90,31,0.07),rgba(27,23,23,0.94)_53%)] p-5 text-left sm:p-6">
         <div className="flex items-center gap-3">
           <span className="grid size-10 place-items-center rounded-xl bg-[#FF5A1F]/[0.12] font-mono font-bold text-[#FF5A1F]">01</span>
           <div>
@@ -301,7 +301,7 @@ export function SandboxProof() {
             <Field label="Prospect hold" value="No override" />
           </div>
         </Surface>
-        <Surface className="flex-1 border-[#FF5A1F]/20 p-5 text-left sm:p-6">
+        <Surface attention className="flex-1 border-[#FF5A1F]/20 p-5 text-left sm:p-6">
           <SmallLabel>Decision preview</SmallLabel>
           <h3 className="mt-2 font-heading text-xl font-bold text-white sm:text-2xl">Governance Simulation</h3>
           <p className="mt-2 text-sm text-white/55">Preview how a decision passes through the governance checks.</p>
