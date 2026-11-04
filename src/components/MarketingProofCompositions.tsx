@@ -48,6 +48,14 @@ function IntentBadge({ intent }: { intent: "HOT" | "WARM" | "COLD" }) {
   return <span className={"inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold tracking-wide " + styles[intent]}><IntentIcon intent={intent} className="size-3.5" />{intent}</span>;
 }
 
+function IntentScoreGaugeIcon({ className = "size-4" }: { className?: string }) {
+  return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className={className} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4.2 17.8a9.2 9.2 0 1 1 15.6 0" />
+    <path d="m12 15.8 4.2-5.8" />
+    <circle cx="12" cy="15.8" r="1.3" fill="currentColor" stroke="none" />
+  </svg>;
+}
+
 function InboxSignalIcon({ className = "size-4" }: { className?: string }) {
   return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className={className} stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
     <path d="M4 5.5h16v13H4z" /><path d="M4 14h4l1.5 2h5L16 14h4" /><path d="M8 9h8" />
@@ -146,7 +154,7 @@ export function GapProof() {
 function IntentCard() {
   return <Surface className="mx-auto max-w-[1060px] border-[#FF5A1F]/30 bg-[linear-gradient(140deg,rgba(255,90,31,0.09),rgba(26,24,24,0.96)_60%)] p-4 text-left shadow-[0_22px_65px_-35px_rgba(255,90,31,0.28)] sm:p-5">
     <div className="flex items-start justify-between gap-4">
-      <SmallLabel>Lead intent score</SmallLabel>
+      <span className="inline-flex items-center gap-2"><IntentScoreGaugeIcon className="size-4 text-[#FF8858]" /><SmallLabel>Lead intent score</SmallLabel></span>
       <IntentBadge intent="WARM" />
     </div>
     <p className="mt-2 text-left font-heading text-4xl font-bold tracking-tight text-white sm:text-5xl"><span className="tabular-nums">86</span><span className="ml-2 text-xl font-medium text-white/45 sm:text-2xl">/ 100</span></p>
@@ -154,12 +162,14 @@ function IntentCard() {
       <div className="h-full rounded-full bg-gradient-to-r from-[#FF5A1F] via-[#FF7848] to-[#FFC06A]" style={{ width: "86%" }} />
     </div>
     <p className="mt-2 text-left text-xs leading-relaxed text-white/55">The score reflects expressed intent, not closing probability.</p>
-    <div className="mt-4 flex flex-wrap items-center gap-2">
-      <SmallLabel>WHY NOW</SmallLabel>
-      <Chip tone="orange">Pricing requested</Chip>
-      <Chip tone="green">Proof requested</Chip>
-      <Chip tone="warm">Relevant workflow</Chip>
-      <Chip tone="red"><ClockIcon />Founder review Thursday</Chip>
+    <div className="mt-4 text-left">
+      <SmallLabel>WHY NOW / SIGNALS</SmallLabel>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <Chip tone="orange">Pricing requested</Chip>
+        <Chip tone="green">Proof requested</Chip>
+        <Chip tone="warm">Relevant workflow</Chip>
+        <Chip tone="red"><ClockIcon />Founder review Thursday</Chip>
+      </div>
     </div>
   </Surface>;
 }
@@ -179,14 +189,21 @@ export function DecisionLayerProof() {
       <Surface className="p-4 text-left sm:p-5">
         <div className="flex items-center gap-2"><InboxSignalIcon className="size-4 text-[#FF8858]" /><SmallLabel>Inbound signal · Elise Varner</SmallLabel></div>
         <p className="mt-2 text-[11px] text-white/45">Founder reviewing options Thursday</p>
-        <p className="mt-2 max-w-4xl text-sm leading-6 text-white/80">{eliseFeaturedReply}</p>
+        <p className="mt-2 text-[13px] leading-[1.85] text-white/80 sm:text-sm sm:leading-6 lg:text-[13px] lg:leading-[1.75]">{eliseFeaturedReply}</p>
       </Surface>
       <Surface className="border-[#FF5A1F]/25 bg-[linear-gradient(145deg,rgba(255,90,31,0.045),rgba(16,16,16,0.96)_62%)] p-4 text-left sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2"><DraftResponseIcon className="size-4 text-[#FF8858]" /><SmallLabel>Draft response</SmallLabel></div>
           <Chip tone="warm">Draft ready for review</Chip>
         </div>
-        <p className="mt-3 max-w-4xl text-sm leading-6 text-white/80">{eliseDraftResponse}</p>
+        <div className="mt-3 grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_12.75rem] lg:items-end">
+          <p className="min-w-0 text-[13px] leading-[1.85] text-white/80 sm:text-sm sm:leading-6 lg:text-[13px] lg:leading-[1.75]">{eliseDraftResponse}</p>
+          <div className="flex w-full min-w-0 flex-col gap-2 sm:ml-auto sm:max-w-[17rem] lg:max-w-none" role="img" aria-label="Preview of the FrameLeads reply controls: Reject and Archive, Regenerate Draft, and Approve and Send. These visual controls do not send messages.">
+            <div aria-hidden="true" className="flex min-h-9 items-center justify-center rounded-lg px-3 text-center text-xs font-medium text-white/65">Reject &amp; Archive</div>
+            <div aria-hidden="true" className="flex min-h-10 items-center justify-center rounded-xl border border-white/[0.10] bg-[#212121] px-3 text-center text-xs font-semibold text-white">Regenerate Draft</div>
+            <div aria-hidden="true" className="flex min-h-11 items-center justify-center rounded-xl bg-[#FF5A1F] px-3 text-center text-sm font-bold text-white shadow-[0_8px_27px_-10px_rgba(255,90,31,0.8)]">Approve &amp; Send</div>
+          </div>
+        </div>
       </Surface>
     </div>
 
