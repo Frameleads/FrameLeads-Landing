@@ -169,14 +169,14 @@ export function GapProof() {
 function IntentCard() {
   return <Surface className="mx-auto max-w-[1060px] border-[#FF5A1F]/30 bg-[linear-gradient(140deg,rgba(255,90,31,0.09),rgba(26,24,24,0.96)_60%)] p-4 text-left shadow-[0_22px_65px_-35px_rgba(255,90,31,0.28)] sm:p-5">
     <div className="flex items-start justify-between gap-4">
-      <span className="inline-flex items-center gap-2"><IntentScoreGaugeIcon className="size-4 text-[#FF8858]" /><SmallLabel>Lead intent score</SmallLabel></span>
-      <IntentBadge intent="WARM" />
+      <span className="inline-flex items-center gap-2"><IntentScoreGaugeIcon className="size-4 text-[#FF8858]" /><SmallLabel>Example intent score</SmallLabel></span>
+      <IntentBadge intent="HOT" />
     </div>
     <p className="mt-2 text-left font-heading text-4xl font-bold tracking-tight text-white sm:text-5xl"><span className="tabular-nums">86</span><span className="ml-2 text-xl font-medium text-white/45 sm:text-2xl">/ 100</span></p>
-    <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-[#302522]" role="img" aria-label="Intent score: 86 out of 100">
+    <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-[#302522]" role="img" aria-label="Example scenario intent score: 86 out of 100">
       <div className="h-full rounded-full bg-gradient-to-r from-[#FF5A1F] via-[#FF7848] to-[#FFC06A]" style={{ width: "86%" }} />
     </div>
-    <p className="mt-2 text-left text-xs leading-relaxed text-white/55">The score reflects expressed intent, not closing probability.</p>
+    <p className="mt-2 text-left text-xs leading-relaxed text-white/55">Example scenario score; not calculated by a production scoring engine.</p>
     <div className="mt-4 text-left">
       <SmallLabel>WHY NOW / SIGNALS</SmallLabel>
       <div className="mt-2 flex flex-wrap items-center gap-2">
