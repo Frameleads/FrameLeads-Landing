@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 
 /**
  * Progressive, transform-only motion for the landing's product-proof visuals.
- * Each card enters once, then stays still. Reduced-motion visitors receive
+ * Cards enter once, then respond on every subsequent hover. Reduced-motion visitors receive
  * the fully visible layout immediately. No continuous animation or layout shift.
  */
 export function ProofReveal({
@@ -29,7 +29,7 @@ export function ProofReveal({
       whileInView={reducedMotion ? undefined : { opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.12, margin: "0px 0px -36px 0px" }}
       transition={{ duration: gentle ? 0.52 : 0.62, delay: Math.min(delay, 0.24), ease: [0.22, 1, 0.36, 1] }}
-      whileHover={hover && !reducedMotion ? { y: -3 } : undefined}
+      whileHover={hover && !reducedMotion ? { y: -5, scale: 1.006, transition: { duration: 0.25, ease: "easeOut", delay: 0 } } : undefined}
     >
       {children}
     </motion.div>
