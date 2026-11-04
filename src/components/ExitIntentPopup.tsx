@@ -131,7 +131,7 @@ export default function ExitIntentPopup({ openRequest = false, onOpenRequestChan
                 <p className="mt-3 text-sm leading-relaxed text-[#888888]">Core expands prospect research, decision intelligence, company context, and sales playbook configuration. Enterprise adds expanded governance controls and automation.</p>
               </div>
             </motion.div>
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .68, delay: .5, ease: [0.22, 1, 0.36, 1] }}><Link href={MICRO_PILOT_URL} data-tripwire-guard="true" className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[#FF5A1F] px-6 py-3 text-center font-bold text-white hover:bg-[#ff6b35] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F] focus-visible:ring-offset-2 focus-visible:ring-offset-black">Run the Micro-Pilot — $10</Link></motion.div>
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .68, delay: .5, ease: [0.22, 1, 0.36, 1] }}><Link href={MICRO_PILOT_URL} data-tripwire-guard="true" className="fl-cta-pop mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[#FF5A1F] px-6 py-3 text-center font-bold text-white hover:bg-[#ff6b35] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F] focus-visible:ring-offset-2 focus-visible:ring-offset-black">Run the Micro-Pilot — $10</Link></motion.div>
           </motion.div>
         </motion.div>
       )}
