@@ -136,11 +136,41 @@ test("Preview Sandbox requires its own company, all tier plans, safe hosted URLs
   assert.deepEqual(embeddedCheckoutPolicy("core", { ...sandbox, VERCEL_ENV: "production" }), { available: false, reason: "wrong_environment" });
 });
 
-test("raw referrals wait for consent and use hosted checkout without forwarding URL data", () => {
+test("Core direct affiliate Sandbox CTA is independent of ordinary all-tier Preview checkout", () => {
+  const page = fs.readFileSync(new URL("../src/app/checkout/[plan]/page.tsx", import.meta.url), "utf8");
+  const checkout = fs.readFileSync(new URL("../src/components/EmbeddedWhopCheckout.tsx", import.meta.url), "utf8");
+  // Ordinary Preview checkout still needs all three Sandbox tiers; direct
+  // partner verification is independently gated and may test Core alone.
+  assert.match(page, /const directPartnerPreviewEnabled = plan === "core"/);
+  assert.match(page, /WHOP_SANDBOX_COMPANY_ID === "biz_6YudF3G7nc8Wdw"/);
+  assert.match(page, /WHOP_CORE_SANDBOX_PLAN_ID === "plan_kgrX8LpuAH2Ba"/);
+  assert.match(page, /FRAMELEADS_DIRECT_AFFILIATE_CHECKOUT_ENABLED === "true"/);
+  assert.match(page, /AFFILIATE_REFERRAL_PRIVACY_APPROVED === "true"/);
+  assert.match(page, /AFFILIATE_CONSENT_EVIDENCE_ENABLED === "true"/);
+  assert.match(page, /WHOP_AFFILIATE_CHECKOUT_ENABLED === "true"/);
+  assert.match(page, /directPartnerPreviewEnabled=\{directPartnerPreviewEnabled\}/);
+  assert.match(checkout, /directPartnerPreviewEnabled = false/);
+  assert.match(checkout, /if \(decision === "await_verified"\)/);
+  assert.ok(checkout.indexOf('if (decision === "await_verified")') < checkout.indexOf('if (!hostedFallback)'),
+    "a verified consented referral must reach its Core-only Sandbox CTA even without a generic hosted plan fallback");
+  assert.match(checkout, /if \(!embedEnabled \|\| !hostedFallback \|\| decision !== "allowed"\) return/);
+  assert.doesNotMatch(checkout, /process\.env\.NEXT_PUBLIC_FRAMELEADS_DIRECT_AFFILIATE_CHECKOUT_ENABLED/);
+  const unconfigured = embeddedCheckoutPolicy("core", {
+    VERCEL_ENV: "preview", WHOP_ENVIRONMENT: "sandbox",
+    WHOP_SANDBOX_COMPANY_ID: "biz_6YudF3G7nc8Wdw",
+    WHOP_CORE_SANDBOX_PLAN_ID: "plan_kgrX8LpuAH2Ba",
+  });
+  assert.equal(unconfigured.available, false, "ordinary plan checkout remains disabled with Core-only Sandbox setup");
+});
+
+test("partner-consented referrals cannot silently lose attribution on generic checkout", () => {
   assert.equal(referralCheckoutDecision({ rawReferralPresent: true, advertisingConsent: null }), "pending");
   assert.equal(referralCheckoutDecision({ rawReferralPresent: true, advertisingConsent: false }), "hosted");
   assert.equal(referralCheckoutDecision({ rawReferralPresent: true, advertisingConsent: true }), "hosted");
-  assert.equal(referralCheckoutDecision({ rawReferralPresent: false, advertisingConsent: true }), "allowed");
+  assert.equal(referralCheckoutDecision({ rawReferralPresent: true, advertisingConsent: true, affiliateConsent: true }), "await_verified");
+  assert.equal(referralCheckoutDecision({ rawReferralPresent: true, advertisingConsent: false, affiliateConsent: true }), "await_verified");
+  assert.equal(referralCheckoutDecision({ rawReferralPresent: false, advertisingConsent: true, affiliateConsent: true }), "allowed");
+  assert.equal(referralCheckoutDecision({ rawReferralPresent: false, advertisingConsent: false }), "allowed");
 });
 
 test("native form uses Whop fields and contains no custom payment or ledger route", () => {
@@ -157,7 +187,9 @@ test("native form uses Whop fields and contains no custom payment or ledger rout
   assert.doesNotMatch(component, /observeMeasurement\("CHECKOUT_CLICK"\)/);
   assert.doesNotMatch(component, /track\(\s*["']purchase/i);
   assert.doesNotMatch(component, /data-whop-affiliate\s*=/);
-  assert.doesNotMatch(page, /brand.?brain|checkout\/continue|receipt|ledger/i);
+  // The server page may describe receipt verification, but must never perform
+  // payment-ledger writes or call Brand Brain directly during rendering.
+  assert.doesNotMatch(page, /checkout\/continue|\bfetch\(|\bsupabase\b|from [^\n]*brand.?brain/i);
   assert.match(page, /hostedFallback=\{config\.hostedFallback \?\? ""\}/);
   assert.match(page, /environment=\{config\.environment \?\? "sandbox"\}/);
   assert.match(page, /embedEnabled=\{config\.available\}/);
@@ -204,7 +236,12 @@ test("Whop Elements only exposes hosted fallback on load failure", () => {
   assert.match(component, /onComplete=\{\(completion\) =>/);
   assert.match(component, /completion\.result === "payment"/);
   assert.match(component, /setCheckoutFinished\(true\)/);
-  assert.doesNotMatch(component, /window\.location\.(?:assign|replace)/);
+  // Explicit verified partner initiation may navigate to a same-origin
+  // checkout, but Whop's onComplete must never grant access or navigate.
+  assert.match(component, /if \(response\.ok && next === "\/checkout\/affiliate\/core"\)/);
+  assert.match(component, /window\.location\.assign\(next\)/);
+  const onComplete = component.split("onComplete={(completion) => {")[1]?.split("}}")[0] ?? "";
+  assert.doesNotMatch(onComplete, /window\.location\.(?:assign|replace)/);
   assert.doesNotMatch(component, /observeMeasurement\(["'](?:Purchase|PURCHASE)["']/);
   assert.match(component, /<CheckoutElement/);
   assert.match(component, /if \(elementsUnavailable\)/);
@@ -261,7 +298,8 @@ test("Whop Elements initialization happens only in the browser after hydration",
   const component = fs.readFileSync("src/components/EmbeddedWhopCheckout.tsx", "utf8");
   assert.doesNotMatch(component, /const whopElements = loadWhop\(\)/);
   assert.match(component, /useEffect\(\(\) => \{/);
-  assert.match(component, /if \(!embedEnabled \|\| !hostedFallback \|\| referralHintPresent\) return/);
+  assert.match(component, /if \(!embedEnabled \|\| !hostedFallback \|\| decision !== "allowed"\) return/);
+  assert.match(component, /affiliateConsent: hasCurrentAffiliateNoticeConsent\(consent\)/);
   assert.match(component, /setWhopElements\(loadWhop\(\)\)/);
   assert.match(component, /if \(!whopElements\)/);
   assert.match(component, /setElementsUnavailable\(true\)/);

@@ -1,0 +1,62 @@
+name: Affiliate privacy disclosure (draft-only)
+
+on:
+  pull_request:
+    paths:
+      - "src/components/PrivacyChoices.tsx"
+      - "src/app/privacy/page.tsx"
+      - "src/affiliate-checkout-return.ts"
+      - "src/affiliate-native-session.ts"
+      - "src/direct-affiliate-handoff.ts"
+      - "tests/direct-affiliate-handoff.test.ts"
+      - "src/direct-affiliate-actor.ts"
+      - "src/direct-affiliate-actor-session.ts"
+      - "src/app/api/affiliate/direct/**"
+      - "tests/direct-affiliate-actor.test.ts"
+      - "src/components/VerifiedAffiliateCheckout.tsx"
+      - "src/app/checkout/affiliate/**"
+      - "tests/affiliate-native-session.test.ts"
+      - "src/app/api/checkout/**"
+      - "src/app/api/audit-lead/continue/route.ts"
+      - "src/app/api/audit-lead/route.ts"
+      - "src/components/PipelineAudit.tsx"
+      - "src/privacy-consent.ts"
+      - "src/marketing-events.ts"
+      - "src/audit-capture.ts"
+      - "src/audit.ts"
+      - "tests/marketing-attribution.test.ts"
+      - "tests/marketing-events.test.ts"
+      - "src/app/checkout/continue/**"
+      - "src/app/checkout/verify/**"
+      - "tests/affiliate-checkout-return.test.ts"
+      - "tests/affiliate-disclosure-gate.test.mjs"
+      - ".github/workflows/affiliate-privacy-disclosure-review.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install locked dependencies without postinstall scripts
+        run: npm ci --ignore-scripts
+      - name: Verify gated notice and unchanged hosted fallback
+        run: node --test tests/affiliate-disclosure-gate.test.mjs
+      - name: Verify checkout return host/plan and fail-closed flags
+        run: npx tsx --test tests/affiliate-checkout-return.test.ts tests/affiliate-native-session.test.ts tests/direct-affiliate-handoff.test.ts tests/direct-affiliate-actor.test.ts
+      - name: test reviewed referral capture and withdrawal
+        run: npx tsx --test tests/marketing-attribution.test.ts tests/marketing-events.test.ts
+      - name: TypeScript check
+        run: npx tsc --noEmit
+      - name: Production build (review only, no deployment)
+        run: npm run build

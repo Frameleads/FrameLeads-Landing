@@ -1,11 +1,12 @@
 import type { AuditLeadPayload } from "./audit.ts";
 
-export const advertisingAttributionKeys = ["fbp", "fbc", "fbclid", "ttp", "ttclid"] as const;
+export const advertisingAttributionKeys = ["fbp", "fbc", "fbclid", "ttp", "ttclid", "affiliateCode"] as const;
 
 /** Consent is consumed at the public boundary, never forwarded as an unsupported upstream field. */
-export function captureAttribution(payload: AuditLeadPayload, advertising: boolean): AuditLeadPayload {
+export function captureAttribution(payload: AuditLeadPayload, advertising: boolean, affiliateReferralApproved = false): AuditLeadPayload {
   const attribution = { ...payload.attribution };
   if (!advertising) for (const key of advertisingAttributionKeys) delete attribution[key];
+  if (!affiliateReferralApproved) delete attribution.affiliateCode;
   return { ...payload, attribution };
 }
 
