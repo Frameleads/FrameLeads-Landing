@@ -547,6 +547,7 @@ export default function Home() {
         <Link href="#simulation" className="text-sm text-white/80 transition-colors hover:text-[#FF5A1F]">Product</Link>
         <Link href="#pricing" className="text-sm text-white/80 transition-colors hover:text-[#FF5A1F]">Pricing</Link>
         <Link href="#faq" className="text-sm text-white/80 transition-colors hover:text-[#FF5A1F]">FAQ</Link>
+        <Link href="/ai-inbox-triage" className="text-sm text-white/80 transition-colors hover:text-[#FF5A1F]">AI Inbox Triage Guide</Link>
       </nav>
       <nav aria-label="Footer company navigation" className="flex flex-col items-start gap-3">
         <p className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#888888]">Company</p>
