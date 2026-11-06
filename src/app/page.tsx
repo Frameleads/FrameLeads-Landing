@@ -550,6 +550,7 @@ export default function Home() {
       </nav>
       <nav aria-label="Footer company navigation" className="flex flex-col items-start gap-3">
         <p className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#888888]">Company</p>
+        <Link href="/about" className="text-sm text-white/80 transition-colors hover:text-[#FF5A1F]">About FrameLeads</Link>
         <a href="https://app.frameleads.io/login" className="text-sm text-white/80 transition-colors hover:text-[#FF5A1F]">Log In</a>
         <a href="mailto:akram@frameleads.io" className="text-sm text-white/80 transition-colors hover:text-[#FF5A1F]">Contact / Support</a>
         <Link href="/terms" className="text-sm text-white/80 transition-colors hover:text-[#FF5A1F]">Terms of Service</Link>
