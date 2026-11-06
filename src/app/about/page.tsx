@@ -207,6 +207,7 @@ export default function AboutPage() {
             <Answer id="different-from-automation" number="05" eyebrow="The difference" question="How is it different from more automation?">
               <p>Adding more outbound automation usually helps a team send, sequence, or trigger more messages. FrameLeads focuses on a different bottleneck: <strong>understanding the incoming reply and deciding what should happen next.</strong></p>
               <p>An LLM can draft text. FrameLeads adds a workflow around that draft: prospect context, decision rules, priority, a suggested action, and the controls needed to review or execute it. These are complementary functions, not interchangeable promises.</p>
+              <p>For a practical breakdown of cold email reply classification, buyer qualification and human review, read our <Link href="/ai-inbox-triage">AI Inbox Triage guide for B2B outbound teams</Link>.</p>
             </Answer>
 
             <Answer id="existing-tools" number="06" eyebrow="The stack" question="Does it replace my outbound tools or SDRs?">
