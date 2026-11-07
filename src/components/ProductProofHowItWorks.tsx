@@ -143,7 +143,7 @@ export default function ProductProofHowItWorks({ onMicroPilot }: { onMicroPilot:
         </div>
       </div>
 
-      <div className="mt-8 text-center lg:text-left"><button type="button" onClick={onMicroPilot} className="fl-cta-pop rounded-xl bg-[#FF5A1F] px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-[#ff6b35] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F]">Try it Risk-Free</button></div>
+      <div className="mt-8 text-center lg:text-left"><button type="button" onClick={onMicroPilot} className="fl-cta-pop rounded-xl bg-[#FF5A1F] px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-[#ff6b35] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F]">Try the $10 Micro-Pilot</button></div>
 
       {lightboxOpen && <div className="fixed inset-0 z-[140] flex items-center justify-center bg-black/90 p-2 sm:p-5" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setLightboxOpen(false); }}>
         <div role="dialog" aria-modal="true" aria-label={`Full screenshot: ${current.title}`} className="flex max-h-[96vh] w-full max-w-[96vw] flex-col overflow-hidden rounded-xl border border-white/15 bg-[#141414] shadow-2xl">

@@ -225,7 +225,7 @@ export default function ReplyDecisionPreview({ embedded = false }: { embedded?: 
       <div className="relative mt-6 flex flex-col items-center justify-center gap-4 overflow-hidden rounded-2xl border border-[#FF5A1F]/25 bg-[radial-gradient(ellipse_at_50%_0%,rgba(255,90,31,.1),transparent_60%),linear-gradient(135deg,#242424,#1A1A1A_72%)] px-5 py-6 text-center shadow-[inset_0_1px_0_rgba(255,255,255,.065),0_16px_34px_rgba(26,26,26,.22)] sm:px-8 sm:py-7">
         <p className="max-w-2xl text-[13px] leading-relaxed text-white/75 sm:text-sm"><span className="mb-1.5 block text-base font-bold text-white sm:text-lg">Want to stop being the bottleneck every time someone replies?</span>Try the $10 Micro-Pilot to see what clearer next moves and faster follow-up decisions could look like in your own outbound workflow—with fewer replies waiting on you and less second-guessing for your team.</p>
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <Link href="/checkout/micro-pilot" className="fl-cta-pop inline-flex min-h-11 items-center justify-center rounded-xl bg-[#FF5A1F] px-4 py-2 text-sm font-semibold text-white hover:bg-[#FF5A1F]/90">Try it Risk-Free</Link>
+          <Link href="/checkout/micro-pilot" className="fl-cta-pop inline-flex min-h-11 items-center justify-center rounded-xl bg-[#FF5A1F] px-4 py-2 text-sm font-semibold text-white hover:bg-[#FF5A1F]/90">Try the $10 Micro-Pilot</Link>
           <Link href="/?audit=open" className="fl-cta-pop fl-cta-pop--secondary inline-flex min-h-11 items-center justify-center rounded-xl border border-white/20 px-4 py-2 text-sm text-white/85 hover:border-white/40 hover:text-white">Find My Reply Bottleneck</Link>
         </div>
       </div>
