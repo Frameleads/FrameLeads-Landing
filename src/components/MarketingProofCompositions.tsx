@@ -168,7 +168,7 @@ export function GapProof() {
       <div className="flex items-center gap-3">
         <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#FF5A1F]/[0.13] text-[#FF8858]"><svg viewBox="0 0 24 24" className="size-5" fill="currentColor"><path d="M13.6 2 5.2 13.2h5.9L10.3 22l8.5-11.4h-5.7L13.6 2Z" /></svg></span>
         <div className="min-w-0 text-left">
-          <p className="font-heading text-base font-bold uppercase text-white sm:text-lg">Executive Override Queue</p>
+          <p className="font-heading text-lg font-bold uppercase text-white">Executive Override Queue</p>
           <p className="mt-1 text-xs text-white/55">3 replies received · 1 HOT reply surfaced for Thursday review</p>
         </div>
       </div>
