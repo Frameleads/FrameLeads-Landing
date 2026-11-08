@@ -507,7 +507,7 @@ export default function Home() {
           </motion.section>
         )}
       </AnimatePresence>
-      <section className="mx-auto max-w-5xl text-center"><motion.div initial={{ opacity: 0, y: 20, scale: .985 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: .72, ease: "easeOut", delay: .46 }} className="mt-10"><VideoSection /></motion.div></section>
+      <section className="mx-auto max-w-6xl text-center"><motion.div initial={{ opacity: 0, y: 20, scale: .985 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: .72, ease: "easeOut", delay: .46 }} className="mt-10"><VideoSection /></motion.div></section>
 
       <section id="problem" className="mx-auto mt-16 max-w-6xl scroll-mt-32 border-t border-white/[0.06] py-16 text-center md:mt-24 md:py-24"><SectionIntro eyebrow="The gap" heading={<><span className="block">The inbox tells you who replied.</span><span className="block text-[#FF5A1F]">Not what to do next.</span></>} description="Warm and cold signals can land in the same queue. The next move depends on urgency, context, and judgment." /><GapProof /></section>
 
