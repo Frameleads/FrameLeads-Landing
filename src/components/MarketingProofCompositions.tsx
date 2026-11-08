@@ -92,9 +92,25 @@ function Frame({ children, className = "" }: { children: ReactNode; className?: 
   </ProofReveal>;
 }
 
+// Render proof symbols as vectors so iOS cannot substitute colorful emoji glyphs.
+function ProofSymbol({ icon }: { icon: string }) {
+  const base = "size-[18px] shrink-0";
+  if (icon === "♨") return <svg aria-hidden="true" viewBox="0 0 24 24" className={base} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M7 4.5c-2.3 2.4 2.1 3.1 0 5.4M12 3.5c-2.5 2.8 2.4 3.8 0 6.5M17 4.5c-2.3 2.4 2.1 3.1 0 5.4M4 14.5h16M5.7 17.5c4.2 2.3 8.4 2.3 12.6 0" /></svg>;
+  if (icon === "◷") return <svg aria-hidden="true" viewBox="0 0 24 24" className={base} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="8" /><path d="M12 7.5V12l3.4 2.1" /></svg>;
+  if (icon === "◆") return <svg aria-hidden="true" viewBox="0 0 24 24" className={base} fill="currentColor"><path d="M12 3 21 12 12 21 3 12Z" /></svg>;
+  if (icon === "✦") return <svg aria-hidden="true" viewBox="0 0 24 24" className={base} fill="currentColor"><path d="M12 2.5 14.9 9l6.6 3-6.6 2.9L12 21.5l-2.9-6.6L2.5 12l6.6-3Z" /></svg>;
+  if (icon === "♢" || icon === "◇") return <svg aria-hidden="true" viewBox="0 0 24 24" className={base} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"><path d="M12 2.5 20.5 12 12 21.5 3.5 12Z" /></svg>;
+  if (icon === "↗") return <svg aria-hidden="true" viewBox="0 0 24 24" className={base} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 18 18 6M9 6h9v9" /></svg>;
+  if (icon === "◎" || icon === "◉") return <svg aria-hidden="true" viewBox="0 0 24 24" className={base} fill="none" stroke="currentColor" strokeWidth="1.7"><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="3.5" fill={icon === "◉" ? "currentColor" : "none"} /></svg>;
+  if (icon === "☷") return <svg aria-hidden="true" viewBox="0 0 24 24" className={base} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M4 6h16M4 12h16M4 18h16" /></svg>;
+  if (icon === "⚖") return <svg aria-hidden="true" viewBox="0 0 24 24" className={base} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v18M6 21h12M4 7h16M6 7l-3 7h6L6 7Zm12 0-3 7h6l-3-7Z" /></svg>;
+  if (icon === "▣") return <svg aria-hidden="true" viewBox="0 0 24 24" className={base} fill="none" stroke="currentColor" strokeWidth="1.7"><rect x="3.5" y="3.5" width="17" height="17" rx="1.5" /><rect x="8" y="8" width="8" height="8" fill="currentColor" /></svg>;
+  return <span aria-hidden="true" className="font-sans">{icon}</span>;
+}
+
 function ValueNote({ icon, text, className = "" }: { icon: string; text: string; className?: string }) {
   return <ProofReveal gentle className={"flex items-center gap-2 text-left text-xs font-medium text-white/80 sm:text-sm " + className}>
-    <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-[#FF5A1F]/20 bg-[#FF5A1F]/[0.075] text-base text-[#FF8A5A]" aria-hidden="true">{icon}</span>
+    <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-[#FF5A1F]/20 bg-[#FF5A1F]/[0.075] text-[#FF8A5A]" aria-hidden="true"><ProofSymbol icon={icon} /></span>
     <span>{text}</span>
   </ProofReveal>;
 }
@@ -150,9 +166,9 @@ export function GapProof() {
 
     <Surface attention className="mt-4 flex flex-col gap-3 border-[#FF5A1F]/[0.3] bg-[linear-gradient(100deg,rgba(255,90,31,0.10),rgba(34,25,24,0.7))] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
       <div className="flex items-center gap-3">
-        <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#FF5A1F]/[0.13] text-[#FF8858]">⚡</span>
+        <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#FF5A1F]/[0.13] text-[#FF8858]"><svg viewBox="0 0 24 24" className="size-5" fill="currentColor"><path d="M13.6 2 5.2 13.2h5.9L10.3 22l8.5-11.4h-5.7L13.6 2Z" /></svg></span>
         <div className="min-w-0 text-left">
-          <p className="font-heading text-base font-bold uppercase text-white sm:text-lg">Executive Override Queue</p>
+          <p className="font-heading text-lg font-bold uppercase text-white">Executive Override Queue</p>
           <p className="mt-1 text-xs text-white/55">3 replies received · 1 HOT reply surfaced for Thursday review</p>
         </div>
       </div>
@@ -289,7 +305,7 @@ export function SandboxProof() {
             <div className="min-h-24 rounded-lg border border-white/[0.14] bg-[#101010] p-3 text-sm text-white/45">Enter an inbound reply to test explicitly</div>
           </div>
         </div>
-        <div className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#FF5A1F] px-5 py-3 text-sm font-bold text-white shadow-[0_8px_27px_-10px_rgba(255,90,31,0.8)]" aria-label="Run Simulation preview; not interactive"><span aria-hidden="true">▶</span> Run Simulation</div>
+        <div className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#FF5A1F] px-5 py-3 text-sm font-bold text-white shadow-[0_8px_27px_-10px_rgba(255,90,31,0.8)]" aria-label="Run Simulation preview; not interactive"><svg aria-hidden="true" viewBox="0 0 24 24" className="size-4 shrink-0" fill="currentColor"><path d="M7 4.5a1 1 0 0 1 1.5-.85l11 7.5a1 1 0 0 1 0 1.7l-11 7.5A1 1 0 0 1 7 19.5Z" /></svg> Run Simulation</div>
       </Surface>
 
       <div className="flex min-w-0 flex-col gap-4">
@@ -307,7 +323,7 @@ export function SandboxProof() {
           <p className="mt-2 text-sm text-white/55">Preview how a decision passes through the governance checks.</p>
           <div className="mt-6 grid grid-cols-3 gap-2 sm:grid-cols-5">
             {simulationSteps.map((step, index) => <ProofReveal gentle delay={index * 0.055} key={step.number} className="flex min-h-28 min-w-0 flex-col items-center justify-center rounded-xl border border-[#FF5A1F]/[0.17] bg-[#FF5A1F]/[0.03] px-1 py-3 text-center">
-              <span aria-hidden="true" className="text-xl text-[#FF8756]">{step.symbol}</span>
+              <span aria-hidden="true" className="grid size-6 place-items-center text-[#FF8756]"><ProofSymbol icon={step.symbol} /></span>
               <span className="mt-2 text-[11px] font-medium text-white/80">{step.name}</span>
               <span className="mt-1 font-mono text-[10px] text-white/35">{step.number}</span>
             </ProofReveal>)}
