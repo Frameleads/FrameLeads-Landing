@@ -496,7 +496,7 @@ export default function Home() {
             exit={reducedMotionForScenarios ? { opacity: 0 } : { opacity: 0, height: 0 }}
             transition={{ duration: reducedMotionForScenarios ? 0 : 0.42, ease: "easeOut" }}
             className="mx-auto mt-6 w-full max-w-[1120px] scroll-mt-24 overflow-hidden text-left sm:mt-8">
-            <div className="flex justify-end px-2 pt-4">
+            <div className="flex justify-center px-2 pt-4">
               <button type="button" onClick={closeScenarios} aria-label="Close reply scenarios"
                 className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/20 bg-[#1A1A1A] px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:border-[#FF5A1F]/50 hover:bg-[#242424] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F]">
                 <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
