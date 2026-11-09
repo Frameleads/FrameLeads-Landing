@@ -48,14 +48,19 @@ test("signed actor cookie cannot be forged or replayed after expiry", () => {
   assert.ok(actor);
   assert.equal(actor.actorScopeHash.length, 64);
   assert.equal(readDirectActorSession(actor.cookieValue, signingKey, now+20)?.actorScopeHash, actor.actorScopeHash);
-  assert.equal(readDirectActorSession(actor.cookieValue, signingKey, now+3600), null);
+  assert.equal(readDirectActorSession(actor.cookieValue, signingKey, now + 29*24*3600)?.actorScopeHash, actor.actorScopeHash);
+  assert.equal(readDirectActorSession(actor.cookieValue, signingKey, now + 30*24*3600-1)?.actorScopeHash, actor.actorScopeHash);
+  assert.equal(readDirectActorSession(actor.cookieValue, signingKey, now + 30*24*3600), null);
+  assert.equal(readDirectActorSession(actor.cookieValue, signingKey, now + 31*24*3600), null);
+  assert.equal(readDirectActorSession(actor.cookieValue, signingKey, now + 29*24*3600+1)?.issuedAt, now,
+    "reading an actor session must not silently refresh attribution");
   assert.equal(readDirectActorSession(actor.cookieValue, "d".repeat(64), now+1), null);
   assert.equal(readDirectActorSession(actor.cookieValue+"a", signingKey, now+1), null);
   assert.equal(readDirectActorSession(actor.cookieValue, signingKey, now-1), null);
   assert.equal(issueDirectActorSession("weak", now), null);
   assert.match(DIRECT_AFFILIATE_ACTOR_COOKIE, /^__Host-/);
   const header = directActorCookieHeader(actor.cookieValue);
-  assert.match(header, /HttpOnly; Secure; SameSite=Strict/);
+  assert.match(header, /Max-Age=2592000; HttpOnly; Secure; SameSite=Lax/);
   assert.doesNotMatch(header, /Domain=/);
 });
 
