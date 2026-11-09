@@ -4,6 +4,13 @@
  * never a passive referral page view or generic marketing acceptance.
  */
 export const DIRECT_AFFILIATE_ACTOR_COOKIE = "__Host-frameleads-direct-affiliate-actor";
+export const DIRECT_AFFILIATE_WITHDRAWAL_BLOCK_COOKIE = "__Host-frameleads-affiliate-withdrawal-blocked";
+
+/** Fail closed for new attributed checkout even if backend withdrawal times out. */
+export function withdrawalBlockCookieHeader(blocked: boolean): string {
+  return `${DIRECT_AFFILIATE_WITHDRAWAL_BLOCK_COOKIE}=${blocked ? "1" : ""}; Path=/; Max-Age=${blocked ? 2592000 : 0}; HttpOnly; Secure; SameSite=Lax`;
+}
+
 const hex64 = /^[a-f0-9]{64}$/;
 const codePattern = /^[A-Za-z0-9_-]{1,64}$/;
 
