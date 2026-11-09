@@ -14,9 +14,20 @@ test('affiliate compensation disclosure is gated behind independent public priva
   assert.match(consent, /partnerPurposeAvailable && partnerReferral \? "accept" : "decline"/);
   assert.doesNotMatch(consent, />Accept optional<\/button>/);
   assert.match(consent, />Accept analytics &amp; advertising<\/button>/);
-  assert.match(consent, /partner may earn a one-time commission/);
-  assert.match(consent, /You can decline and still buy normally/);
+  assert.match(consent, /SANDBOX_AFFILIATE_NOTICE_DETAILS/);
+  assert.match(consent, /SANDBOX_AFFILIATE_NOTICE_CHECKBOX/);
   assert.match(consent, /Advertising and conversion measurement/);
+});
+
+test('approved Sandbox notice text is immutable without a matching reviewed SHA-256', async () => {
+  const { createHash } = await import('node:crypto');
+  const notice = await import('../src/affiliate-notice.ts');
+  const sha = createHash('sha256').update(notice.SANDBOX_AFFILIATE_NOTICE_CANONICAL, 'utf8').digest('hex');
+  assert.equal(sha, notice.SANDBOX_AFFILIATE_NOTICE_SHA256);
+  assert.match(notice.SANDBOX_AFFILIATE_NOTICE_DETAILS, /separate from analytics and advertising/);
+  assert.match(notice.SANDBOX_AFFILIATE_NOTICE_DETAILS, /Whop/);
+  assert.match(notice.SANDBOX_AFFILIATE_NOTICE_DETAILS, /withdraw your consent/);
+  assert.match(notice.SANDBOX_AFFILIATE_NOTICE_CHECKBOX, /up to 30 days/);
 });
 
 test('staged privacy copy does not itself send affiliate code or emit Whop purchases', () => {
