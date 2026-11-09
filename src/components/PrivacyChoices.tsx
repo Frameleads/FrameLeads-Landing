@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { currentAffiliateNoticeVersion, getPrivacyConsent, hasCurrentAffiliateNoticeConsent, requiresAffiliateNoticeChoice, savePrivacyConsent, subscribePrivacyConsent } from "../privacy-consent";
+import { SANDBOX_AFFILIATE_NOTICE_HEADING, SANDBOX_AFFILIATE_NOTICE_CHECKBOX, SANDBOX_AFFILIATE_NOTICE_DETAILS } from "../affiliate-notice";
 
 declare global {
   interface Window {
@@ -133,9 +134,10 @@ export default function PrivacyChoices() {
             onChange={(event) => setPartnerReferral(event.target.checked)}
             className="mt-1 h-4 w-4 accent-[#FF5A1F]"
             aria-label="Allow compensated partner referral attribution" />
-          <span><span className="block font-semibold text-white">Partner referrals (optional, separate choice)</span>
+          <span><span className="block font-semibold text-white">{SANDBOX_AFFILIATE_NOTICE_HEADING}</span>
+            <span className="mt-1 block text-xs leading-relaxed text-white/75">{SANDBOX_AFFILIATE_NOTICE_CHECKBOX}</span>
             <span className="mt-1 block text-xs leading-relaxed text-white/55">
-              If you arrived through a partner link, FrameLeads can remember the referring partner for up to 30 days and link an eligible purchase so the partner may earn a one-time commission. Whop receives necessary referral and purchase confirmation. This is separate from analytics and advertising and costs you nothing. You can decline and still buy normally, or withdraw later in Privacy settings. Completed purchases and legally required payment records may be retained longer.
+              {SANDBOX_AFFILIATE_NOTICE_DETAILS} <a href="/privacy" className="underline underline-offset-2">Privacy Policy</a>.
             </span></span>
         </label>}
         <p className="text-xs leading-relaxed text-white/45">You can change these choices later with the Privacy settings control. Necessary site storage is limited to remembering your choice.</p>
