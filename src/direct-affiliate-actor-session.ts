@@ -2,7 +2,9 @@ import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypt
 import { DIRECT_AFFILIATE_ACTOR_COOKIE } from "./direct-affiliate-actor";
 
 const hex64 = /^[a-f0-9]{64}$/;
-const lifetimeSeconds = 3600;
+// One affirmative consent establishes a bounded 30-day eligibility window.
+// Reads and passive page visits never extend the expiry.
+const lifetimeSeconds = 30 * 24 * 60 * 60;
 
 export type ValidDirectActorSession = {
   cookieValue: string;
@@ -57,5 +59,5 @@ export function readDirectActorSession(
 }
 
 export function directActorCookieHeader(value: string, maxAge = lifetimeSeconds): string {
-  return `${DIRECT_AFFILIATE_ACTOR_COOKIE}=${value}; Path=/; Max-Age=${maxAge}; HttpOnly; Secure; SameSite=Strict`;
+  return `${DIRECT_AFFILIATE_ACTOR_COOKIE}=${value}; Path=/; Max-Age=${maxAge}; HttpOnly; Secure; SameSite=Lax`;
 }
