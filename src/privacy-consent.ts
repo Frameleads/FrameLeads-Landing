@@ -18,13 +18,13 @@ export function currentAffiliateNoticeVersion(): string | null {
 
 export function hasCurrentAffiliateNoticeConsent(value: PrivacyConsent | null): boolean {
   const version = currentAffiliateNoticeVersion();
-  return Boolean(version && value?.advertising === true && value.affiliateNoticeAcceptedVersion === version);
+  return Boolean(version && value?.affiliateNoticeAcceptedVersion === version);
 }
 
 /** Existing old advertising preferences may stay active but cannot transfer to the new purpose. */
 export function requiresAffiliateNoticeChoice(value: PrivacyConsent | null): boolean {
   const version = currentAffiliateNoticeVersion();
-  return Boolean(version && value?.advertising === true && value.affiliateNoticeAcceptedVersion !== version
+  return Boolean(version && value && value.affiliateNoticeAcceptedVersion !== version
     && value.affiliateNoticeDeclinedVersion !== version);
 }
 
@@ -80,13 +80,19 @@ export function savePrivacyConsent(
   preferences: Pick<PrivacyConsent, "analytics" | "advertising">,
   // General analytics/advertising consent is never an affiliate opt-in.
   // Only a fresh, explicit partner checkbox may call this with "accept".
-  affiliateChoice: "accept" | "decline" = "decline",
+  affiliateChoice: "accept" | "decline" | "preserve" = "preserve",
 ): PrivacyConsent {
   const previous = getPrivacyConsent();
   const version = currentAffiliateNoticeVersion();
   const next: PrivacyConsent = { ...preferences, savedAt: new Date().toISOString(),
-    ...(version && preferences.advertising && affiliateChoice === "accept" ? { affiliateNoticeAcceptedVersion: version } : {}),
-    ...(version && preferences.advertising && affiliateChoice === "decline" ? { affiliateNoticeDeclinedVersion: version } : {}),
+    // Unrelated analytics/advertising choices cannot silently grant, revoke, or
+    // extend the independent compensated-partner purpose.
+    ...(affiliateChoice === "preserve" ? {
+      affiliateNoticeAcceptedVersion: previous?.affiliateNoticeAcceptedVersion,
+      affiliateNoticeDeclinedVersion: previous?.affiliateNoticeDeclinedVersion,
+    } : {}),
+    ...(version && affiliateChoice === "accept" ? { affiliateNoticeAcceptedVersion: version } : {}),
+    ...(version && affiliateChoice === "decline" ? { affiliateNoticeDeclinedVersion: version } : {}),
   };
   memoryConsent = next;
   try {
@@ -107,9 +113,8 @@ export function savePrivacyConsent(
       // Clearing optional identifiers is best effort when storage is blocked.
     }
   }
-  if (!next.advertising) {
-    clearAdvertisingAttribution();
-  } else if (affiliateChoice === "decline" && version) {
+  if (!next.advertising) clearAdvertisingAttribution();
+  if (affiliateChoice === "decline" && version) {
     // Declining the new partner purpose must scrub the referral even when
     // existing, unrelated advertising permission is retained.
     discardAffiliateReferral();
@@ -132,17 +137,17 @@ export function subscribePrivacyConsent(onChange: () => void): () => void {
       try {
         const value: unknown = event.newValue ? JSON.parse(event.newValue) : null;
         advertising = Boolean(value && typeof value === "object" && (value as Record<string, unknown>).advertising === true);
-        currentAffiliateNotice = Boolean(advertising && currentAffiliateNoticeVersion()
+        currentAffiliateNotice = Boolean(currentAffiliateNoticeVersion()
           && value && typeof value === "object"
           && (value as Record<string, unknown>).affiliateNoticeAcceptedVersion === currentAffiliateNoticeVersion());
-        declinedAffiliateNotice = Boolean(advertising && currentAffiliateNoticeVersion()
+        declinedAffiliateNotice = Boolean(currentAffiliateNoticeVersion()
           && value && typeof value === "object"
           && (value as Record<string, unknown>).affiliateNoticeDeclinedVersion === currentAffiliateNoticeVersion());
       } catch {
         // An unreadable changed preference fails closed for referral capture.
       }
       if (!advertising) clearAdvertisingAttribution();
-      else if (declinedAffiliateNotice) discardAffiliateReferral();
+      if (declinedAffiliateNotice || !event.newValue) discardAffiliateReferral();
       else if (!currentAffiliateNotice) clearAffiliateReferralForOutdatedNotice();
     }
     onChange();
@@ -161,7 +166,6 @@ export function isAffiliateCaptureBlockedForCurrentPage(code?: string): boolean 
 }
 
 function clearAdvertisingAttribution(): void {
-  affiliateCaptureBlockedForCurrentPage = true;
   clearAdvertisingCookies();
   try {
     const saved = window.sessionStorage.getItem("frameleads:b71:session");
@@ -177,7 +181,6 @@ function clearAdvertisingAttribution(): void {
   } catch {
     // Removing optional ad identifiers is best effort when storage is blocked.
   }
-  discardAffiliateReferral();
 }
 
 /** Invalidate a referral under an obsolete notice, without treating it as a withdrawal. */
