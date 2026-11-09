@@ -18,7 +18,7 @@ test("a missing or invalid new code does not erase the stored referral", () => {
   assert.deepEqual(mergeMarketingAttribution(existing, { affiliateCode: "bad code" }), existing);
 });
 
-test("affiliate referral capture requires both advertising consent and an approved privacy basis", () => {
+test("affiliate referral capture requires separate partner consent and an approved notice, not advertising", () => {
   assert.equal(captureAffiliateCode("partner_alpha", true), undefined);
   assert.equal(captureAffiliateCode("partner_alpha", true, true), "partner_alpha");
   assert.equal(captureAffiliateCode("partner_alpha", false, true), undefined);
