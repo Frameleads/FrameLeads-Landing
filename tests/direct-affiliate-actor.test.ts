@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  DIRECT_AFFILIATE_ACTOR_COOKIE, directConsentBrowserGate,
+  DIRECT_AFFILIATE_ACTOR_COOKIE, DIRECT_AFFILIATE_WITHDRAWAL_BLOCK_COOKIE,
+  withdrawalBlockCookieHeader, directConsentBrowserGate,
   directInitializeBrowserGate, parseDirectConsentRequest, validateDirectBrowserOrigin,
 } from "../src/direct-affiliate-actor.ts";
 import {
@@ -62,6 +63,20 @@ test("signed actor cookie cannot be forged or replayed after expiry", () => {
   const header = directActorCookieHeader(actor.cookieValue);
   assert.match(header, /Max-Age=2592000; HttpOnly; Secure; SameSite=Lax/);
   assert.doesNotMatch(header, /Domain=/);
+});
+
+test("a pending withdrawal blocks new affiliate checkout without losing server retry identity", async () => {
+  const { readFileSync } = await import("node:fs");
+  assert.match(DIRECT_AFFILIATE_WITHDRAWAL_BLOCK_COOKIE, /^__Host-/);
+  assert.match(withdrawalBlockCookieHeader(true), /Max-Age=2592000; HttpOnly; Secure; SameSite=Lax/);
+  assert.match(withdrawalBlockCookieHeader(false), /Max-Age=0; HttpOnly; Secure; SameSite=Lax/);
+  const consent = readFileSync(new URL("../src/app/api/affiliate/direct/consent/route.ts", import.meta.url), "utf8");
+  const init = readFileSync(new URL("../src/app/api/affiliate/direct/initialize/route.ts", import.meta.url), "utf8");
+  assert.match(consent, /guardedResponse/);
+  assert.match(consent, /withdrawalBlockCookieHeader\(true\)/);
+  assert.match(consent, /withdrawalBlockCookieHeader\(parsed.action === "withdraw"\)/);
+  assert.match(init, /cookieParts\.includes\(/);
+  assert.match(init, /"WITHDRAWAL_PENDING"/);
 });
 
 test("direct initialization does not require an Audit and cannot work when consent/anti-abuse gates are missing", () => {
