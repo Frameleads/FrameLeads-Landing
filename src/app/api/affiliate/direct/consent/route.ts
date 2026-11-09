@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getVercelOidcToken } from "@vercel/oidc";
 import {
   DIRECT_AFFILIATE_ACTOR_COOKIE,
+  withdrawalBlockCookieHeader,
   directConsentBrowserGate,
   parseDirectConsentRequest,
   validateDirectBrowserOrigin,
@@ -48,21 +49,29 @@ export async function POST(request: Request): Promise<NextResponse> {
   try { raw = JSON.parse(text); } catch { return respond(400, "INVALID"); }
   const parsed = parseDirectConsentRequest(raw);
   if (!parsed) return respond(400, "INVALID");
+  // A failed provider withdrawal must still block any NEW affiliate checkout
+  // from this browser. Keep the actor cookie temporarily for a retry.
+  const guardedResponse = (status: number, state: string) => {
+    const response = respond(status, state);
+    if (parsed.action === "withdraw")
+      response.headers.append("Set-Cookie", withdrawalBlockCookieHeader(true));
+    return response;
+  };
 
   if (parsed.action === "accept" && (process.env.AFFILIATE_REFERRAL_PRIVACY_APPROVED !== "true"
     || process.env.AFFILIATE_CONSENT_EVIDENCE_ENABLED !== "true"
     || process.env.AFFILIATE_CONSENT_RATE_LIMIT_VERIFIED !== "true"))
-    return respond(503, "UNAVAILABLE");
+    return guardedResponse(503, "UNAVAILABLE");
 
   const key = process.env.FRAMELEADS_DIRECT_AFFILIATE_ACTOR_SIGNING_KEY;
   const existing = readDirectActorSession(existingCookie(request), key);
   const actor = parsed.action === "accept" ? existing ?? issueDirectActorSession(key) : existing;
-  if (!actor) return respond(parsed.action === "withdraw" ? 410 : 503, "UNAVAILABLE");
+  if (!actor) return guardedResponse(parsed.action === "withdraw" ? 410 : 503, "UNAVAILABLE");
 
   const base = brandBrainIngestUrl(
     process.env.BRAND_BRAIN_AUDIT_INGEST_URL, process.env.BRAND_BRAIN_AUDIT_INGEST_SECRET,
   );
-  if (!base) return respond(503, "UNAVAILABLE");
+  if (!base) return guardedResponse(503, "UNAVAILABLE");
   try {
     const oidc = await getVercelOidcToken();
     const upstream = await fetch(new URL("/api/marketing/direct-affiliate/consent", base), {
@@ -78,17 +87,18 @@ export async function POST(request: Request): Promise<NextResponse> {
         ...(parsed.action === "accept" ? { affiliateCode: parsed.affiliateCode } : {}),
       }),
     });
-    if (!upstream.ok) return respond(503, "UNAVAILABLE");
+    if (!upstream.ok) return guardedResponse(503, "UNAVAILABLE");
     const payload: unknown = await upstream.json();
     const status = payload && typeof payload === "object" && "status" in payload ? payload.status : null;
     if (typeof status !== "string"
       || status !== (parsed.action === "accept" ? "ACCEPTED" : "WITHDRAWN"))
-      return respond(503, "UNAVAILABLE");
+      return guardedResponse(503, "UNAVAILABLE");
 
     const output = respond(200, status);
     output.headers.set("Set-Cookie", parsed.action === "accept"
       ? directActorCookieHeader(actor.cookieValue)
       : directActorCookieHeader("", 0));
+    output.headers.append("Set-Cookie", withdrawalBlockCookieHeader(parsed.action === "withdraw"));
     return output;
-  } catch { return respond(503, "UNAVAILABLE"); }
+  } catch { return guardedResponse(503, "UNAVAILABLE"); }
 }
