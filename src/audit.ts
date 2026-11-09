@@ -66,7 +66,7 @@ export type AuditLeadPayload = {
   diagnosis: DiagnosisType;
   signals: AuditSignal[];
   answers: AuditAnswers;
-  attribution: Partial<Record<"utmSource" | "utmMedium" | "utmCampaign" | "utmContent" | "utmTerm" | "referrer" | "landingPath", string>> & Attribution;
+  attribution: Partial<Record<"utmSource" | "utmMedium" | "utmCampaign" | "utmContent" | "utmTerm" | "referrer" | "landingPath" | "affiliateCode", string>> & Attribution;
 };
 const signalSet = new Set<AuditSignal>(["HIGH_VALUE", "HIGH_VOLUME", "HIGH_MANUAL_BURDEN", "FOUNDER_OWNED", "AUTOMATION_RISK", "INCONSISTENT_OWNERSHIP"]);
 export function validateAuditLeadPayload(value: unknown): AuditLeadPayload | null {
@@ -81,9 +81,10 @@ export function validateAuditLeadPayload(value: unknown): AuditLeadPayload | nul
   if (body.firstName !== undefined && (typeof body.firstName !== "string" || body.firstName.length > 100)) return null;
   const rawAttribution = body.attribution && typeof body.attribution === "object" ? body.attribution as Record<string, unknown> : {};
   const attribution: AuditLeadPayload["attribution"] = {};
-  for (const key of ["utmSource", "utmMedium", "utmCampaign", "utmContent", "utmTerm", "referrer", "landingPath"] as const) {
+  for (const key of ["utmSource", "utmMedium", "utmCampaign", "utmContent", "utmTerm", "referrer", "landingPath", "affiliateCode"] as const) {
     const item = rawAttribution[key];
-    if (typeof item === "string" && item.length <= 1000) attribution[key] = item;
+    if (typeof item === "string" && item.length <= (key === "affiliateCode" ? 64 : 1000)
+      && (key !== "affiliateCode" || /^[A-Za-z0-9_-]{1,64}$/.test(item))) attribution[key] = item;
   }
   Object.assign(attribution,normalizeAttribution(Object.fromEntries(attributionFields.map(key=>[key,rawAttribution[key]]))));
   return { firstName: typeof body.firstName === "string" && body.firstName.trim() ? body.firstName.trim() : undefined, workEmail: body.workEmail.trim().toLowerCase(), companyWebsite, diagnosis: body.diagnosis as DiagnosisType, signals: body.signals as AuditSignal[], answers: body.answers, attribution };
