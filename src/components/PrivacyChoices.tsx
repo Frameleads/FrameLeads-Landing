@@ -59,7 +59,7 @@ export default function PrivacyChoices() {
     if (saving) return;
     setSaving(true);
     setPartnerConsentError(null);
-    const wantsPartner = partnerPurposeAvailable && next.advertising && affiliateChoice === "accept";
+    const wantsPartner = partnerPurposeAvailable && affiliateChoice === "accept";
     const hadPartner = hasCurrentAffiliateNoticeConsent(consent);
     const request = async (payload: { action: "accept"; affiliateCode: string } | { action: "withdraw" }) => {
       const response = await fetch("/api/affiliate/direct/consent", {
@@ -129,14 +129,13 @@ export default function PrivacyChoices() {
           <span><span className="block font-semibold text-white">Advertising and conversion measurement</span><span className="mt-1 block text-xs leading-relaxed text-white/55">Configured Meta/TikTok browser tags, eligible server-side conversion matching, and the Whop analytics tag. This choice does not authorize partner referral attribution.</span></span>
         </label>
         {partnerPurposeAvailable && <label className="flex cursor-pointer items-start gap-3 text-sm text-white/85">
-          <input type="checkbox" checked={partnerReferral && advertising}
-            disabled={!advertising}
+          <input type="checkbox" checked={partnerReferral}
             onChange={(event) => setPartnerReferral(event.target.checked)}
-            className="mt-1 h-4 w-4 accent-[#FF5A1F] disabled:cursor-not-allowed disabled:opacity-40"
+            className="mt-1 h-4 w-4 accent-[#FF5A1F]"
             aria-label="Allow compensated partner referral attribution" />
           <span><span className="block font-semibold text-white">Partner referrals (optional, separate choice)</span>
             <span className="mt-1 block text-xs leading-relaxed text-white/55">
-              If you arrived via a partner link, FrameLeads may link your referral to your Audit and a later purchase to determine whether the partner earns a commission. The Audit and normal checkout work if you decline. You can change your choice later. This requires advertising measurement to be enabled under the current proposed policy.
+              If you arrived through a partner link, FrameLeads can remember the referring partner for up to 30 days and link an eligible purchase so the partner may earn a one-time commission. Whop receives necessary referral and purchase confirmation. This is separate from analytics and advertising and costs you nothing. You can decline and still buy normally, or withdraw later in Privacy settings. Completed purchases and legally required payment records may be retained longer.
             </span></span>
         </label>}
         <p className="text-xs leading-relaxed text-white/45">You can change these choices later with the Privacy settings control. Necessary site storage is limited to remembering your choice.</p>
@@ -144,12 +143,12 @@ export default function PrivacyChoices() {
       <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
         {!managing ? <>
           {renewalNeeded && consent && <button type="button" onClick={() => save({ analytics: consent.analytics, advertising: consent.advertising }, "decline")} className="rounded-lg border border-white/15 px-4 py-2.5 text-sm font-medium text-white/80 hover:text-white">Keep existing preferences without partner referrals</button>}
-          <button type="button" onClick={() => save({ analytics: false, advertising: false })} className="rounded-lg border border-white/15 px-4 py-2.5 text-sm font-medium text-white/80 transition-colors hover:border-white/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F]">Reject optional</button>
+          <button type="button" onClick={() => save({ analytics: false, advertising: false }, "decline")} className="rounded-lg border border-white/15 px-4 py-2.5 text-sm font-medium text-white/80 transition-colors hover:border-white/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F]">Reject optional</button>
           <button type="button" onClick={() => save({ analytics: true, advertising: true })} className="rounded-lg bg-[#FF5A1F] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#ff6b35] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Accept analytics &amp; advertising</button>
           <button type="button" onClick={() => setManaging(true)} className="rounded-lg px-3 py-2.5 text-sm text-white/65 underline decoration-white/20 underline-offset-4 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F]">Manage choices</button>
         </> : <>
-          <button type="button" onClick={() => save({ analytics: false, advertising: false })} className="rounded-lg border border-white/15 px-4 py-2.5 text-sm font-medium text-white/80 transition-colors hover:border-white/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F]">Reject optional</button>
-          <button type="button" onClick={() => save({ analytics, advertising }, partnerPurposeAvailable && advertising && partnerReferral ? "accept" : "decline")} className="rounded-lg bg-[#FF5A1F] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#ff6b35] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Save preferences</button>
+          <button type="button" onClick={() => save({ analytics: false, advertising: false }, "decline")} className="rounded-lg border border-white/15 px-4 py-2.5 text-sm font-medium text-white/80 transition-colors hover:border-white/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F]">Reject optional</button>
+          <button type="button" onClick={() => save({ analytics, advertising }, partnerPurposeAvailable && partnerReferral ? "accept" : "decline")} className="rounded-lg bg-[#FF5A1F] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#ff6b35] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Save preferences</button>
         </>}
       </div>
     </section> : <button type="button" onClick={() => window.dispatchEvent(new Event("frameleads:open-privacy-choices"))} className="fixed bottom-3 left-3 z-[90] rounded-full border border-white/15 bg-[#111111]/90 px-3 py-2 font-mono text-[9px] uppercase tracking-wider text-white/60 shadow-lg backdrop-blur-md transition-colors hover:border-white/25 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F] sm:bottom-5 sm:left-5">Privacy settings</button>}
