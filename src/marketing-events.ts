@@ -59,9 +59,9 @@ function safeReferrer(referrer: string): string | undefined {
   }
 }
 
-export function captureAffiliateCode(value: string | null, advertisingConsent: boolean, affiliateReferralApproved = false): string | undefined {
+export function captureAffiliateCode(value: string | null, partnerConsent: boolean, affiliateReferralApproved = false): string | undefined {
   const code = value?.trim();
-  return advertisingConsent && affiliateReferralApproved && code && /^[A-Za-z0-9_-]{1,64}$/.test(code) ? code : undefined;
+  return partnerConsent && affiliateReferralApproved && code && /^[A-Za-z0-9_-]{1,64}$/.test(code) ? code : undefined;
 }
 
 export function mergeMarketingAttribution(
@@ -92,8 +92,11 @@ export function captureMarketingAttribution(
     clearStoredAffiliateReferral();
     return {};
   }
-  if (!consent.advertising) discardAffiliateReferral();
-  if (!consent.analytics && !consent.advertising) return {};
+  // Referral consent is independent. Advertising opt-out cannot erase a
+  // separately authorized compensated referral; no marketing analytics are
+  // collected when both unrelated purposes are off.
+  const partnerAllowed = hasCurrentAffiliateNoticeConsent(consent) && affiliateReferralApproved;
+  if (!consent.analytics && !consent.advertising && !partnerAllowed) return {};
 
   let existing: MarketingAttribution = {};
   try {
@@ -114,7 +117,8 @@ export function captureMarketingAttribution(
   if (isAffiliateCaptureBlockedForCurrentPage() || !hasCurrentAffiliateNoticeConsent(consent)) delete existing.affiliateCode;
 
   const params = new URLSearchParams(currentWindow.location.search);
-  const incoming: MarketingAttribution = { landingPath: currentWindow.location.pathname };
+  const minimalPartnerOnly = !consent.analytics && !consent.advertising;
+  const incoming: MarketingAttribution = minimalPartnerOnly ? {} : { landingPath: currentWindow.location.pathname };
   const mapping = {
     utm_source: "utmSource",
     utm_medium: "utmMedium",
@@ -122,15 +126,18 @@ export function captureMarketingAttribution(
     utm_content: "utmContent",
     utm_term: "utmTerm",
   } as const;
-  for (const key of utmKeys) incoming[mapping[key]] = cleanString(params.get(key));
+  if (!minimalPartnerOnly) for (const key of utmKeys) incoming[mapping[key]] = cleanString(params.get(key));
   if (!affiliateReferralApproved) discardAffiliateReferral();
   const queryAffiliateCode = params.get("a");
   const affiliateCode = isAffiliateCaptureBlockedForCurrentPage(queryAffiliateCode ?? undefined)
     ? undefined
     : captureAffiliateCode(queryAffiliateCode, hasCurrentAffiliateNoticeConsent(consent), affiliateReferralApproved);
   if (affiliateCode) incoming.affiliateCode = affiliateCode;
-  incoming.referrer = safeReferrer(currentWindow.document.referrer);
+  if (!minimalPartnerOnly) incoming.referrer = safeReferrer(currentWindow.document.referrer);
 
+  // Never surface previously saved marketing analytics after the user turns
+  // off both unrelated measurement choices. Retain only the permitted code.
+  if (minimalPartnerOnly) existing = existing.affiliateCode ? { affiliateCode: existing.affiliateCode } : {};
   const merged = mergeMarketingAttribution(existing, incoming);
   try {
     currentWindow.sessionStorage.setItem(attributionStorageKey, JSON.stringify(merged));
