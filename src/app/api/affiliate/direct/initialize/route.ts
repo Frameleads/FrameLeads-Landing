@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getVercelOidcToken } from "@vercel/oidc";
 import {
   DIRECT_AFFILIATE_ACTOR_COOKIE,
+  DIRECT_AFFILIATE_WITHDRAWAL_BLOCK_COOKIE,
   directInitializeBrowserGate,
   validateDirectBrowserOrigin,
 } from "../../../../../direct-affiliate-actor";
@@ -34,7 +35,10 @@ export async function POST(request: Request): Promise<NextResponse> {
     || Object.keys(parsed).length !== 1 || !("plan" in parsed)
     || parsed.plan !== "CORE") return respond(400, "INVALID");
 
-  const session = request.headers.get("cookie")?.split(";").map(x => x.trim())
+  const cookieParts = request.headers.get("cookie")?.split(";").map(x => x.trim()) ?? [];
+  if (cookieParts.includes(`${DIRECT_AFFILIATE_WITHDRAWAL_BLOCK_COOKIE}=1`))
+    return respond(410, "WITHDRAWAL_PENDING");
+  const session = cookieParts
     .find(x => x.startsWith(`${DIRECT_AFFILIATE_ACTOR_COOKIE}=`));
   const sessionCookie = session?.slice(DIRECT_AFFILIATE_ACTOR_COOKIE.length + 1);
   const actor = readDirectActorSession(
