@@ -148,7 +148,7 @@ export function subscribePrivacyConsent(onChange: () => void): () => void {
       }
       if (!advertising) clearAdvertisingAttribution();
       if (declinedAffiliateNotice || !event.newValue) discardAffiliateReferral();
-      else if (!currentAffiliateNotice) clearAffiliateReferralForOutdatedNotice();
+      else if (!currentAffiliateNotice) discardAffiliateReferral(); // Cross-tab consent removal is a withdrawal, not an undecided page visit.
     }
     onChange();
   };
