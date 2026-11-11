@@ -5,7 +5,7 @@
  * Prerequisites:
  * - Existing production build (.next)
  * - FEEDBACK_SUPABASE_SECRET_KEY: dedicated sb_secret_* Supabase key, server-only
- * - FEEDBACK_RATE_HMAC_SECRET: random server-only value, at least 32 chars
+ * - FEEDBACK_RATE_HMAC_SECRET: optional; a fresh local-only value is generated if absent
  * - FEEDBACK_SMOKE_ALLOW_PRODUCTION_DB=YES: explicit local one-test opt-in
  *
  * This makes ONE POST to a loopback Next.js server which writes to the existing
@@ -14,14 +14,14 @@
  * Never use an unrelated app-wide legacy service_role JWT.
  */
 import { spawn } from "node:child_process";
-import { createHmac, randomInt, randomUUID } from "node:crypto";
+import { createHmac, randomBytes, randomInt, randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
 import { setTimeout as delay } from "node:timers/promises";
 import { join } from "node:path";
 
 const targetRef = "campgoqhyvniokwvjvtb";
 const secret = process.env.FEEDBACK_SUPABASE_SECRET_KEY || "";
-const hmacSecret = process.env.FEEDBACK_RATE_HMAC_SECRET || "";
+const hmacSecret = process.env.FEEDBACK_RATE_HMAC_SECRET || randomBytes(48).toString("hex");
 const port = process.env.FEEDBACK_SMOKE_PORT ? Number(process.env.FEEDBACK_SMOKE_PORT) : randomInt(30000, 50000);
 function blocked(reason) {
   console.error("STOP (no request sent): " + reason);
@@ -56,6 +56,7 @@ if (process.env.FEEDBACK_SMOKE_ALLOW_PRODUCTION_DB !== "YES") {
         ...process.env,
         VERCEL_ENV: "production",
         FEEDBACK_SUPABASE_PROJECT_REF: targetRef,
+        FEEDBACK_RATE_HMAC_SECRET: hmacSecret,
         FEEDBACK_COLLECTION_ENABLED: "true",
         FEEDBACK_PRODUCTION_RELEASE_APPROVED: "true",
         NEXT_PUBLIC_FEEDBACK_COLLECTION_ENABLED: "false",
