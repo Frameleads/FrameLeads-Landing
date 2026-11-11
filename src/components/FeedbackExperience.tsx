@@ -39,7 +39,7 @@ export default function FeedbackExperience() {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") closePanel();
       if (event.key === "Tab") {
-        const focusable = document.querySelectorAll<HTMLElement>("[data-feedback-dialog] button:not(:disabled), [data-feedback-dialog] textarea");
+        const focusable = document.querySelectorAll<HTMLElement>("[data-feedback-dialog] button:not(:disabled), [data-feedback-dialog] a[href], [data-feedback-dialog] textarea");
         const first = focusable[0]; const last = focusable[focusable.length - 1];
         if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
         else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
