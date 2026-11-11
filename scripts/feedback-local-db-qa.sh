@@ -32,7 +32,7 @@ echo "4. Test concurrent submissions against a single hourly limit"
 fingerprint="$(printf "d%.0s" {1..64})"
 for i in $(seq 1 10); do
   {
-    docker exec "$CONTAINER" psql -X -At -v ON_ERROR_STOP=1 -U postgres -d postgres
+    docker exec "$CONTAINER" psql -X -At -v ON_ERROR_STOP=1 -U postgres -d postgres \
       -c "set role service_role; select public.accept_website_feedback('price',null,'/','core','$fingerprint');" >/dev/null
   } &
 done
