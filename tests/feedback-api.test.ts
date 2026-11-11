@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import ts from 'typescript';
 import * as crypto from 'node:crypto';
+import * as net from 'node:net';
 
 type Handler = (request: Request) => Promise<Response>;
 type HarnessOptions = { env?: Record<string, string>; fetch?: typeof fetch };
@@ -35,6 +36,7 @@ function route(options: HarnessOptions = {}): Handler {
   }).outputText;
   const modules: Record<string, unknown> = {
     'node:crypto': crypto,
+    'node:net': net,
     '../../../feedback-validation': requireFeedbackValidation(),
     '../../../feedback-target': requireFeedbackTarget(),
   };
@@ -74,7 +76,7 @@ function compileModule(relativePath: string, dependencies: Record<string, unknow
 function request(body: unknown, headers: Record<string, string> = {}): Request {
   return new Request('https://frameleads.io/api/feedback', {
     method: 'POST',
-    headers: { origin: 'https://frameleads.io', 'content-type': 'application/json', ...headers },
+    headers: { origin: 'https://frameleads.io', 'content-type': 'application/json', 'x-vercel-forwarded-for': '203.0.113.7', ...headers },
     body: typeof body === 'string' ? body : JSON.stringify(body),
   });
 }
@@ -136,4 +138,12 @@ test('feedback API maps rate limits to HTTP 429 with Retry-After', async () => {
   assert.equal(response.status, 429);
   assert.equal(response.headers.get('retry-after'), '3600');
   assert.doesNotMatch(await response.text(), /stored|fingerprint/i);
+});
+
+test('feedback API rejects absent or invalid edge client IP before calling storage', async () => {
+  let calls = 0;
+  const post = route({ fetch: async () => { calls++; throw Error('unexpected storage access'); } });
+  assert.equal((await post(request(validFeedback, { 'x-vercel-forwarded-for': '' }))).status, 503);
+  assert.equal((await post(request(validFeedback, { 'x-vercel-forwarded-for': 'not-an-ip' }))).status, 503);
+  assert.equal(calls, 0);
 });
