@@ -1,4 +1,4 @@
-import { FEEDBACK_REASONS, type FeedbackPlanContext, type FeedbackReason } from "./feedback";
+import type { FeedbackPlanContext, FeedbackReason } from "./feedback";
 
 export type ParsedFeedback = {
   reason: FeedbackReason | null;
@@ -6,7 +6,7 @@ export type ParsedFeedback = {
   plan_context: FeedbackPlanContext;
 };
 
-const reasonIds = new Set<string>(FEEDBACK_REASONS.map((reason) => reason.id));
+const reasonIds = new Set<string>(["price", "customer_results", "offer_clarity", "workflow_fit", "ai_control"]);
 const contexts = new Set<string>(["core", "enterprise", "micro_pilot", "general"]);
 
 export function parseFeedbackPayload(value: unknown): ParsedFeedback | null {
