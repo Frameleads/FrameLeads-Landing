@@ -17,19 +17,24 @@ The key is highly privileged; even though the route only invokes the feedback RP
 ## Step 2 — Local HTTP smoke without exposing the website
 Run this only in the existing PR #42 worktree after the correct Next.js build. No production deployment or public form is required.
 
-The checked-in one-shot script `scripts/feedback-hosted-http-smoke.mjs` requires an explicit local opt-in `FEEDBACK_SMOKE_ALLOW_PRODUCTION_DB=YES`, plus the two environment secrets. The script launches Next.js bound to `127.0.0.1` and changes collection gates **in that child process only**. It POSTs exactly one synthetic `offer_clarity` record to the real Brand Brain RPC and expects HTTP 201 `{saved:true}`.
+The checked-in one-shot script `scripts/feedback-hosted-http-smoke.mjs` requires an explicit local opt-in `FEEDBACK_SMOKE_ALLOW_PRODUCTION_DB=YES` and one dedicated Supabase `sb_secret_*` key supplied as a process environment variable. It creates a fresh local-only HMAC rate secret if none is supplied; **the stored Sensitive Vercel production HMAC secret is never exported.** The script starts Next.js on `127.0.0.1`, changes the collection flags **inside that local child process only**, makes ONE real POST to Brand Brain, and requires HTTP 201 `{saved:true}`.
 
-Use an existing authenticated Vercel CLI linked to the correct project. Official CLI supports passing Production environment variables to one local process without writing a secrets file:
+**Important:** Vercel Sensitive/Secret environment values are not generally readable after saving. Do not assume `vercel env run` can retrieve or export them for this local script. Instead, pass the newly created dedicated key to the local process through a secure terminal prompt or a trusted local secrets manager, without saving it in the repository, shell history, or chat. Example for an authenticated owner-operated PowerShell terminal:
 
 ```powershell
-$env:FEEDBACK_SMOKE_ALLOW_PRODUCTION_DB = "YES"
-vercel env run -e production -- node scripts/feedback-hosted-http-smoke.mjs
-Remove-Item Env:\FEEDBACK_SMOKE_ALLOW_PRODUCTION_DB
+$secureKey = Read-Host 'Paste the separately named Supabase secret key' -AsSecureString
+$ptr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureKey)
+try {
+  $env:FEEDBACK_SUPABASE_SECRET_KEY = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr)
+  $env:FEEDBACK_SMOKE_ALLOW_PRODUCTION_DB = 'YES'
+  node scripts/feedback-hosted-http-smoke.mjs
+} finally {
+  Remove-Item Env:\FEEDBACK_SUPABASE_SECRET_KEY, Env:\FEEDBACK_SMOKE_ALLOW_PRODUCTION_DB -ErrorAction SilentlyContinue
+  [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr)
+}
 ```
 
-**Do not run** until the dedicated `sb_secret_...` key is configured. Do not commit or print environment secrets. The script prints only a synthetic UUID marker and pseudonymous rate fingerprint. It must report `PASS` based on an actual HTTP 201 saved acknowledgment, not a mock.
-
-If Vercel CLI is not authenticated or cannot read Sensitive values securely, **STOP** rather than writing private keys into files or logs.
+**Do not run** until the dedicated `sb_secret_...` key has been created and the proper application build is ready. Do not commit, log, or print environment secrets. The script prints only a synthetic UUID marker and test-only pseudonymous rate fingerprint. It must report `PASS` based on an actual HTTP 201 saved acknowledgment, not a mock.
 
 ## Step 3 — Privileged readback and exact cleanup
 Use the authorized Supabase admin connector **after** a real HTTP 201. Read back the synthetic row using the exact marker printed by the smoke script and verify:
