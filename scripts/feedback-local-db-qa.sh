@@ -13,7 +13,10 @@ trap cleanup EXIT
 docker run --rm -d --name "$CONTAINER" --network none -e POSTGRES_HOST_AUTH_METHOD=trust "$IMAGE" >/dev/null
 ready=0
 for _ in $(seq 1 50); do
-  if docker exec "$CONTAINER" pg_isready -U postgres >/dev/null 2>&1; then ready=1; break; fi
+  # pg_isready can succeed against the entrypoint temporary server, which is
+  # stopped before the persistent server starts. Require a working SQL query.
+  if docker exec "$CONTAINER" psql -X -v ON_ERROR_STOP=1 -q -U postgres -d postgres \
+      -c 'select 1' >/dev/null 2>&1; then ready=1; break; fi
   sleep 0.3
 done
 if [[ "$ready" -ne 1 ]]; then echo "Local PostgreSQL failed to start" >&2; exit 1; fi
