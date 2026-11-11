@@ -8,8 +8,11 @@ on:
       - 'src/feedback-target.ts'
       - 'src/app/api/feedback/route.ts'
       - 'src/components/FeedbackExperience.tsx'
+      - 'src/app/privacy/page.tsx'
+      - 'supabase/migrations/**_website_feedback_retention.sql'
       - 'tests/feedback-validation.test.ts'
       - 'tests/feedback-target.test.ts'
+      - 'tests/feedback-retention-migration.test.ts'
       - '.github/workflows/feedback-validation.yml'
   workflow_dispatch:
 
@@ -29,4 +32,4 @@ jobs:
         with:
           node-version: '24'
       - name: Test feedback validation and attribution
-        run: node --experimental-strip-types --test tests/feedback-validation.test.ts tests/feedback-target.test.ts
+        run: node --experimental-strip-types --test tests/feedback-validation.test.ts tests/feedback-target.test.ts tests/feedback-retention-migration.test.ts
