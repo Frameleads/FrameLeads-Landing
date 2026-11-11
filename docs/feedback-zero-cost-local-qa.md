@@ -1,6 +1,6 @@
 # FrameLeads Feedback Intelligence — Zero-new-cost validation (local only)
 
-Status: **SQL and application code prepared; local PostgreSQL integration QA still requires execution in a workstation with Docker and is NOT claimed to have passed.** This file does not authorize any production changes.
+Status: **Local PostgreSQL QA passed on the owner's Docker workstation; a scoped Brand Brain production DB installation was subsequently completed under owner delegation. Public collection remains OFF.** The local QA steps below remain available for regression testing; they do not authorize a public release.
 
 ## Why this path
 - Owner declined the $0.01344/hour Supabase branch charge.
@@ -49,3 +49,6 @@ After local database QA passes, use a verified Supabase CLI in the workstation t
 
 ## Retention prerequisite
 The proposed 90-day feedback / 48-hour rate-key deletion is not enforced yet. The final plan must explicitly schedule and verify cleanup before public activation, and the privacy disclosure requires approval. The tests here do not close that launch gate.
+
+## Hosted installation follow-up
+The reviewed feedback schema and retention jobs were installed into the existing Brand Brain project on November 11, 2026 UTC. The private RPC and retention boundary tests also passed inside rolled-back transactions; the database had zero surviving test records. For the current status and actual migration IDs, use `docs/feedback-phase2-runbook.md`. Live browser-to-Vercel-to-Supabase HTTP submission, Cron's first scheduled execution, and privacy publication remain outstanding.
