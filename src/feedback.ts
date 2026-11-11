@@ -9,7 +9,8 @@ export type FeedbackPlanContext = "core" | "enterprise" | "micro_pilot" | "gener
 
 /** Phase 2 transport contract. submitted_at is supplied by the server, never the browser. */
 export interface FeedbackSubmission {
-  reason: FeedbackReason;
+  /** Optional if an open-text concern is provided; Phase 2 must validate at least one. */
+  reason?: FeedbackReason;
   optional_message?: string;
   source_page: string;
   plan_context: FeedbackPlanContext;
