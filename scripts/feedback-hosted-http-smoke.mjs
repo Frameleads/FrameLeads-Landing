@@ -22,7 +22,7 @@ import { join } from "node:path";
 const targetRef = "campgoqhyvniokwvjvtb";
 const secret = process.env.FEEDBACK_SUPABASE_SECRET_KEY || "";
 const hmacSecret = process.env.FEEDBACK_RATE_HMAC_SECRET || "";
-const port = Number(process.env.FEEDBACK_SMOKE_PORT || "30981");
+const port = process.env.FEEDBACK_SMOKE_PORT ? Number(process.env.FEEDBACK_SMOKE_PORT) : randomInt(30000, 50000);
 function blocked(reason) {
   console.error("STOP (no request sent): " + reason);
   process.exitCode = 2;
@@ -65,7 +65,9 @@ if (process.env.FEEDBACK_SMOKE_ALLOW_PRODUCTION_DB !== "YES") {
       if (child.exitCode !== null) break;
       try {
         const r = await fetch(origin + "/api/feedback");
-        if (r.status === 405) { ready = true; break; }
+        if (r.status === 405 && (await r.json().catch(() => null))?.error === "Method not allowed.") {
+          ready = true; break;
+        }
       } catch { /* Next.js is starting */ }
       await delay(300);
     }
