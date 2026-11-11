@@ -1,12 +1,12 @@
 # Proposed privacy language — Feedback Intelligence
 
-**DRAFT FOR OWNER/LEGAL REVIEW. Do not publish or enable collection automatically.**
+**STAGED IN PR #42 FOR OWNER/LEGAL REVIEW. Not published on the production website; do not enable collection automatically.**
 
 Existing privacy contact verified in `src/app/privacy/page.tsx`: `akram@frameleads.io`.
 
 ## Proposed additions to the existing Privacy Policy
 
-These additions are proposed for the existing sections below. They do not replace or revise any current legal language. The page at `/privacy` is unchanged and this wording is not published or legally approved.
+These additions have been staged in `src/app/privacy/page.tsx` on the unmerged PR branch, preserving the existing sections. They are not published on the production website and are not legally approved. Update the effective date displayed by `LegalPageShell.tsx` at actual publication.
 
 ### Add to section 2, “Information we use”
 
@@ -24,7 +24,7 @@ Supabase provides restricted database storage for private website feedback. Verc
 
 ### Add to section 6, “Retention and security”
 
-**Retention proposal, subject to operational verification:** delete feedback once it is older than 90 days and rate-limit records once they are older than 48 hours using hourly scheduled database jobs. Deletion can occur on the next job run after each threshold. These periods are not active until the retention migration has been approved, applied to the intended database and its job runs and deletion behavior have been verified. No longer retention exception is currently implemented for feedback.
+**Retention configuration, subject to observed scheduled-run verification:** both feedback cleanup jobs have been installed and are active in the existing Brand Brain database. The SQL deletes feedback after it is more than 90 days old and rate-limit records after more than 48 hours, on hourly schedules. Hosted transaction-isolated boundary tests passed, but the first actual scheduled job execution has not yet been observed. The proposed public privacy wording describes this configuration; do not publish it until observed execution has been verified.
 
 For a privacy request, contact `akram@frameleads.io`. We may need information sufficient to locate a submission; anonymous feedback without contact details may not be individually identifiable after submission.
 
