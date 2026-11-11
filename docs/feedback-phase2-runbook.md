@@ -8,7 +8,7 @@
 - Draft database DDL: `docs/feedback-phase2-schema-DRAFT.sql` (NOT applied to any live project).
 - Public browser POST: `/api/feedback`. The API is disabled unless `FEEDBACK_COLLECTION_ENABLED=true` (server-only).
 - UI collection mode is separately disabled unless `NEXT_PUBLIC_FEEDBACK_COLLECTION_ENABLED=true` (public build flag). The existing Phase 1 `NEXT_PUBLIC_FEEDBACK_PREVIEW=true` keeps a non-collecting preview visible.
-- The server uses `FEEDBACK_SUPABASE_SECRET_KEY` (server-only, ideally a dedicated limited-purpose Supabase secret key) and `FEEDBACK_RATE_HMAC_SECRET` (random secret >= 32 characters). **Do not print, paste into chat or commit either.** No production env vars have been set.
+- The server uses `FEEDBACK_SUPABASE_SECRET_KEY` (server-only, elevated privilege; protect and rotate it as a sensitive server secret) and `FEEDBACK_RATE_HMAC_SECRET` (random secret >= 32 characters). **Do not print, paste into chat or commit either.** No production env vars have been set.
 - The RPC URL is pinned to Brand Brain to prevent accidentally using Affiliate Sandbox.
 - Do not enable collection on any public preview unless it uses a separate authorized staging Supabase branch/project. An SSO-protected Vercel preview is not a staging database.
 
