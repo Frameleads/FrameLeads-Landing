@@ -6,6 +6,9 @@
 --   supabase migration new website_private_feedback
 -- and copy the reviewed SQL into the generated migration.
 
+-- Keep the grants, RLS, and function creation in one atomic transaction.
+begin;
+
 create table public.website_feedback (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
@@ -93,6 +96,8 @@ $$;
 
 revoke execute on function public.accept_website_feedback(text,text,text,text,text) from public, anon, authenticated;
 grant execute on function public.accept_website_feedback(text,text,text,text,text) to service_role;
+
+commit;
 
 -- The following cleanup statements MUST be scheduled before public activation.
 -- Do not claim a retention period is enforced until the job is operational:
