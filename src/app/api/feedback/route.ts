@@ -1,4 +1,5 @@
 import { createHmac } from "node:crypto";
+import { isIP } from "node:net";
 import { deriveFeedbackContext, parseFeedbackPayload } from "../../../feedback-validation";
 import { chooseFeedbackDatabase } from "../../../feedback-target";
 
@@ -58,7 +59,11 @@ export async function POST(request: Request): Promise<Response> {
 
   // x-vercel-forwarded-for is supplied by the trusted hosting edge.
   // Do not accept client-supplied x-forwarded-for as a substitute.
-  const edgeIp = request.headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim() || "missing-edge-ip";
+  const edgeIp = request.headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim();
+  if (!edgeIp || !isIP(edgeIp)) {
+    // Fail closed; a shared fallback bucket could block unrelated visitors.
+    return json({ error: "Feedback is temporarily unavailable." }, 503);
+  }
   const fingerprint = createHmac("sha256", hmacSecret)
     .update(`${new Date().toISOString().slice(0, 10)}:${edgeIp}`)
     .digest("hex");
