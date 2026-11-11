@@ -98,4 +98,4 @@ export function CheckoutFeedbackLink({ context }: { context: FeedbackPlanContext
 
 function MessageIcon() { return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.7"><path strokeLinecap="round" strokeLinejoin="round" d="M7 18.2 3.5 20l1-4.1A8.5 8.5 0 1 1 8 19.1L7 18.2Z"/><path strokeLinecap="round" d="M8 10h8M8 13.5h5"/></svg>; }
 function LockIcon() { return <svg aria-hidden="true" viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path strokeLinecap="round" d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>; }
-function ReasonIcon({ index }: { index: number }) { return <span aria-hidden="true" className="font-mono text-[10px]">{["$", "↗", "◇", "?", "…"][index]}</span>; }
+function ReasonIcon({ index }: { index: number }) { return <span aria-hidden="true" className="font-mono text-[10px]">{["$", "↗", "▣", "⇄", "!"][index]}</span>; }
