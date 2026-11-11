@@ -3,9 +3,10 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { FEEDBACK_REASONS, type FeedbackPlanContext, type FeedbackReason } from "../feedback";
+import { FEEDBACK_REASONS, submitFeedback, type FeedbackPlanContext, type FeedbackReason } from "../feedback";
 
-const enabled = process.env.NEXT_PUBLIC_FEEDBACK_PREVIEW === "true";
+const collectionEnabled = process.env.NEXT_PUBLIC_FEEDBACK_COLLECTION_ENABLED === "true";
+const enabled = process.env.NEXT_PUBLIC_FEEDBACK_PREVIEW === "true" || collectionEnabled;
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 
 function subscribeReducedMotion(callback: () => void) {
@@ -24,6 +25,9 @@ export default function FeedbackExperience() {
   const [reason, setReason] = useState<FeedbackReason | "">("");
   const [message, setMessage] = useState("");
   const [notice, setNotice] = useState("");
+  const [planContext, setPlanContext] = useState<FeedbackPlanContext>("general");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLElement>(null);
   const openerRef = useRef<HTMLElement | null>(null);
@@ -49,7 +53,10 @@ export default function FeedbackExperience() {
   function show(context: FeedbackPlanContext = "general", opener?: HTMLElement) {
     openerRef.current = opener ?? triggerRef.current;
     const path = window.location.pathname;
-    setNotice(context === "general" ? "" : `Preview context: ${context.replace("_", "-")} · ${path}`);
+    setPlanContext(context);
+    setSubmitted(false);
+    setIsSubmitting(false);
+    setNotice(collectionEnabled ? "" : context === "general" ? "" : `Preview context: ${context.replace("_", "-")} · ${path}`);
     setReason(""); setMessage(""); setOpen(true);
   }
 
@@ -61,6 +68,20 @@ export default function FeedbackExperience() {
     window.addEventListener("frameleads:open-feedback", onOpen);
     return () => window.removeEventListener("frameleads:open-feedback", onOpen);
   }, []);
+
+  async function handleSubmit() {
+    if (isSubmitting || submitted || (!reason && !message.trim())) return;
+    if (!collectionEnabled) { setNotice("Preview only — feedback is not connected or saved."); return; }
+    setIsSubmitting(true);
+    setNotice("");
+    try {
+      await submitFeedback({ reason: reason || undefined, optional_message: message.trim() || undefined, plan_context: planContext });
+      setSubmitted(true);
+      setNotice("Thank you — your feedback was saved privately.");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Feedback could not be saved. Please try again.");
+    } finally { setIsSubmitting(false); }
+  }
 
   if (!enabled) return null;
   const transition = reduceMotion ? { duration: 0 } : { duration: 0.2, ease: "easeOut" as const };
@@ -76,12 +97,12 @@ export default function FeedbackExperience() {
             <div className="lg:border-r lg:border-white/[0.08] lg:pr-8">
           <div className="flex items-start justify-between gap-4"><div><p className="font-mono text-[9px] uppercase tracking-[.16em] text-[#FF5A1F]">FrameLeads · Private feedback</p><h2 id="feedback-title" className="mt-2 text-xl font-semibold tracking-tight text-white sm:text-2xl lg:text-3xl">What would help you decide?</h2><p id="feedback-description" className="mt-2 text-sm leading-relaxed text-white/60">We&apos;re improving FrameLeads and would value your perspective.</p></div><button type="button" onClick={closePanel} aria-label="Close feedback" className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-white/10 text-xl text-white/60 transition hover:border-white/20 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F] lg:absolute lg:right-7 lg:top-4">×</button></div>
           <p className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/[.08] bg-white/[.025] px-3 py-1.5 text-xs text-white/60"><LockIcon /> Private feedback. Not publicly posted.</p>
-          <p className="mt-2 min-h-4 break-words text-xs text-white/50" aria-live="polite">Preview mode · No feedback is sent or saved.{notice ? ` ${notice}` : ""}</p>
+          <p className="mt-2 min-h-4 break-words text-xs text-white/50" aria-live="polite">{collectionEnabled ? (notice || "Private feedback. No signup needed.") : `Preview mode · No feedback is sent or saved.${notice ? ` ${notice}` : ""}`}</p>
             </div>
             <div className="min-w-0 lg:pt-3">
           <fieldset className="mt-4 lg:mt-0"><legend className="mb-2.5 text-sm font-medium text-white">What&apos;s holding you back?</legend><div role="radiogroup" aria-label="Feedback reason" className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">{FEEDBACK_REASONS.map((item, index) => <button key={item.id} type="button" role="radio" aria-checked={reason === item.id} onKeyDown={event => { if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return; event.preventDefault(); const options = Array.from(event.currentTarget.closest("[role=radiogroup]")?.querySelectorAll<HTMLButtonElement>("[role=radio]") ?? []); const next = (index + (event.key === "ArrowDown" ? 1 : options.length - 1)) % options.length; setReason(FEEDBACK_REASONS[next].id); options[next]?.focus(); }} onClick={() => setReason(item.id)} className={`flex min-h-12 w-full items-center gap-3 rounded-xl border px-3.5 py-3 text-left text-sm transition duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F] lg:min-h-[66px] lg:px-3 lg:py-2.5 ${index === FEEDBACK_REASONS.length - 1 ? "lg:col-span-2" : ""} ${reason === item.id ? "border-[#FF5A1F]/55 bg-[#FF5A1F]/[.08] text-white" : "border-white/[.08] bg-[#242424]/70 text-white/75 hover:border-white/20 hover:bg-white/[.04]"}`}><span aria-hidden="true" className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg ${reason === item.id ? "bg-[#FF5A1F]/15 text-[#FF5A1F]" : "bg-white/[.04] text-white/50"}`}><ReasonIcon index={index} /></span><span className="flex-1 leading-snug">{item.label}</span><span aria-hidden="true" className={`grid h-4 w-4 shrink-0 place-items-center rounded-full border ${reason === item.id ? "border-[#FF5A1F]" : "border-white/25"}`}>{reason === item.id && <span className="h-2 w-2 rounded-full bg-[#FF5A1F]" />}</span></button>)}</div></fieldset>
           <label htmlFor="feedback-message" className="mt-5 block text-sm font-medium text-white lg:mt-4">Anything else you&apos;d like us to know? <span className="font-normal text-white/40">(optional)</span></label><textarea id="feedback-message" value={message} onChange={e => setMessage(e.target.value.slice(0, 1200))} maxLength={1200} rows={2} placeholder="Tell us what's missing or what you'd like us to improve..." className="mt-2 w-full resize-y rounded-xl border border-white/10 bg-[#111111] px-3.5 py-3 text-sm leading-relaxed text-white placeholder:text-white/35 transition focus:border-[#FF5A1F]/60 focus:outline-none focus:ring-2 focus:ring-[#FF5A1F]/20" />
-          <div className="mt-4 flex flex-col-reverse gap-3 sm:flex-row sm:items-center"><button type="button" disabled={!reason && !message.trim()} onClick={() => setNotice("Preview only — feedback is not connected or saved.")} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl bg-[#FF5A1F] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#ff6b35] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F] focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A1A1A]">Send feedback</button><button type="button" onClick={closePanel} className="min-h-11 rounded-xl px-4 text-sm text-white/55 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F]">Cancel</button></div>
+          <div className="mt-4 flex flex-col-reverse gap-3 sm:flex-row sm:items-center"><button type="button" disabled={isSubmitting || submitted || (!reason && !message.trim())} onClick={() => void handleSubmit()} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl bg-[#FF5A1F] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#ff6b35] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F] focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A1A1A]">{isSubmitting ? "Sending…" : submitted ? "Feedback received" : "Send feedback"}</button><button type="button" onClick={closePanel} className="min-h-11 rounded-xl px-4 text-sm text-white/55 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F]">Cancel</button></div>
             </div>
           </div>
         </motion.section>
