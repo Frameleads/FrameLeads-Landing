@@ -48,7 +48,10 @@
 
 **Warning:** Until the schema is applied to a controlled test database and secrets/retention/privacy are approved, this feature is not a functioning collection system. Keep collection flags OFF.
 
-## Cost/branch gate (November 11, 2026)
-- Supabase branch creation in this organization requires an explicit cost confirmation ID. The quoted charge was **$0.01344/hour**. No branch was created while awaiting the owner's cost approval. Do not call `confirm_cost` without that approval.
-- After approval, create a temporary branch of Brand Brain, verify isolated project_ref, apply reviewed DDL to that branch only, verify role/RLS security and rate limiting, and perform POST/readback/cleanup. Do not use Affiliate Sandbox.
-- Vercel Preview collection requires a branch-specific server secret supplied through a secure provider mechanism; if obtaining a staging-only server secret is not supported, stop and document the limitation rather than use a production secret or print keys.
+## Zero-new-cost local validation decision (November 11, 2026)
+- The owner declined **all additional paid staging resources**, including Supabase's quoted $0.01344/hour branch. There is **no cost approval**.
+- Do NOT call `confirm_cost`, create a hosted Supabase staging branch, or touch the Affiliate Sandbox.
+- The accepted alternative is a disposable local PostgreSQL container, as documented in `docs/feedback-zero-cost-local-qa.md`. The runner is `bash scripts/feedback-local-db-qa.sh`, using `tests/feedback-local-security.sql`; it has no network, host ports or persistent volume.
+- The local runner passed a Bash **syntax check**, but the full PostgreSQL test **has not run** in the ChatGPT environment, which lacks Docker/PostgreSQL and cannot download packages. Run it in the owner's already available Codex/Windows workspace only when an existing local Docker runtime is available.
+- This does NOT prove the real Vercel -> Supabase submission/readback. A separately approved production migration and controlled server-side verification will remain necessary before public collection.
+- Collection flags remain OFF; no production DB or hosted staging changes have been made. Do not present Phase 2 as launched.
