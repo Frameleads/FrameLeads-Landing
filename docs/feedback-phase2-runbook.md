@@ -54,6 +54,14 @@
 - Do NOT call `confirm_cost`, create a hosted Supabase staging branch, or touch the Affiliate Sandbox.
 - The accepted alternative is a disposable local PostgreSQL container, as documented in `docs/feedback-zero-cost-local-qa.md`. The runner is `bash scripts/feedback-local-db-qa.sh`, using `tests/feedback-local-security.sql`; it has no network, host ports or persistent volume.
 - The disposable local PostgreSQL runner passed against Docker 28.4.0: grants/RLS, accepted and rejected submissions, private readback, rate limiting and the 10-request concurrency check (exactly four accepted). Its startup probe was corrected to require a successful SQL query instead of `pg_isready` alone.
-- The request validation and destination tests passed (12/12). Full repository tests reported 96 passed and two unrelated existing navigation/pricing assertions failed; the same two failures reproduce on the unmodified QA-base worktree. TypeScript and production build passed. ESLint retains seven existing errors in unrelated app files.
+- The runner additionally checks synthetic feedback at 91/89 days and rate-limit rows at 49/47 hours: expired rows are deleted and recent rows remain. A separate migration contract test checks only the two named feedback Cron jobs and their hourly schedules.
+- Feedback API, retention migration, destination and validation tests passed (18/18), including disabled collection, invalid input, rejected origins, stored acknowledgment, bounded storage errors and HTTP 429. TypeScript and production build passed.
 - This does NOT prove the real Vercel -> Supabase submission/readback. A separately approved production migration and controlled server-side verification will remain necessary before public collection.
 - Collection flags remain OFF; no production DB or hosted staging changes have been made. Do not present Phase 2 as launched.
+
+## Exact approvals and production gates still required
+1. Owner and legal reviewer approve the proposed policy wording, purposes, provider disclosures, rights/contact handling and retention statement. The live `/privacy` page is unchanged.
+2. Security reviewer approves the schema and retention migrations, grants/RLS/function permissions, Cron job names/schedules, and the intended production target. No migration has been applied.
+3. Owner explicitly authorizes a production migration and retention-job activation. This authorization is separate from permission to perform a controlled submission test.
+4. Configure the intended server-only Supabase and HMAC secrets, verify edge-provided address behavior, and obtain explicit approval for one controlled hosted submission plus private readback. Confirm the saved fields and timestamp, then confirm both Cron jobs have successful run history and delete only records beyond their thresholds.
+5. Owner explicitly approves enabling public collection and publishing the policy update only after the previous gates pass. Keep both collection flags OFF until then.

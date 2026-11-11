@@ -13,10 +13,12 @@ trap cleanup EXIT
 docker run --rm -d --name "$CONTAINER" --network none -e POSTGRES_HOST_AUTH_METHOD=trust "$IMAGE" >/dev/null
 ready=0
 for _ in $(seq 1 50); do
-  # pg_isready can succeed against the entrypoint temporary server, which is
-  # stopped before the persistent server starts. Require a working SQL query.
-  if docker exec "$CONTAINER" psql -X -v ON_ERROR_STOP=1 -q -U postgres -d postgres \
-      -c 'select 1' >/dev/null 2>&1; then ready=1; break; fi
+  # The official image starts a temporary server during initialization. Wait
+  # for the second ready event (the persistent server) and a working SQL query.
+  ready_events="$(docker logs "$CONTAINER" 2>&1 | grep -c 'database system is ready to accept connections' || true)"
+  if [[ "${ready_events:-0}" -ge 2 ]] && \
+      docker exec "$CONTAINER" psql -X -v ON_ERROR_STOP=1 -q -U postgres -d postgres \
+        -c 'select 1' >/dev/null 2>&1; then ready=1; break; fi
   sleep 0.3
 done
 if [[ "$ready" -ne 1 ]]; then echo "Local PostgreSQL failed to start" >&2; exit 1; fi
@@ -31,7 +33,9 @@ echo "2. Execute exactly the checked-in review-only schema in LOCAL PostgreSQL"
 db < docs/feedback-phase2-schema-DRAFT.sql
 echo "3. Verify grants, RLS, stored submissions, invalid input, and rate limiting"
 db < tests/feedback-local-security.sql
-echo "4. Test concurrent submissions against a single hourly limit"
+echo "4. Verify retention removes expired rows and keeps recent rows"
+db < tests/feedback-retention-local.sql
+echo "5. Test concurrent submissions against a single hourly limit"
 fingerprint="$(printf "d%.0s" {1..64})"
 for i in $(seq 1 10); do
   {
@@ -42,6 +46,6 @@ done
 wait
 count="$(db -At -c "select count(*) from public.website_feedback where reason = 'price' and source_page = '/' and plan_context = 'core';" | tr -d "[:space:]")"
 if [[ "$count" != "4" ]]; then echo "FAIL: concurrent writes=$count, expected exactly 4" >&2; exit 1; fi
-echo "5. Read back private rows, then dispose the entire test database"
+echo "6. Read back private rows, then dispose the entire test database"
 db -At -c "select count(*) from public.website_feedback;"
 echo "PASS: local PostgreSQL schema, access rules, validation, throttle and concurrency"
