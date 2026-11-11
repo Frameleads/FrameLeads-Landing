@@ -14,7 +14,7 @@
  * Never use an unrelated app-wide legacy service_role JWT.
  */
 import { spawn } from "node:child_process";
-import { randomInt, randomUUID } from "node:crypto";
+import { createHmac, randomInt, randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
 import { setTimeout as delay } from "node:timers/promises";
 import { join } from "node:path";
@@ -43,6 +43,9 @@ if (process.env.FEEDBACK_SMOKE_ALLOW_PRODUCTION_DB !== "YES") {
   const origin = "http://127.0.0.1:" + port;
   const marker = "FRAMELEADS_SYNTHETIC_HTTP_" + randomUUID();
   const testIp = "198.51.100." + randomInt(1, 255);
+  const fingerprint = createHmac("sha256", hmacSecret)
+    .update(new Date().toISOString().slice(0, 10) + ":" + testIp)
+    .digest("hex");
   const child = spawn(process.execPath,
     [join(process.cwd(), "node_modules", "next", "dist", "bin", "next"),
       "start", "--hostname", "127.0.0.1", "--port", String(port)],
@@ -59,6 +62,7 @@ if (process.env.FEEDBACK_SMOKE_ALLOW_PRODUCTION_DB !== "YES") {
       },
     });
   console.log("Synthetic marker for readback and cleanup: " + marker);
+  console.log("Synthetic rate-limit fingerprint for cleanup: " + fingerprint);
   try {
     let ready = false;
     for (let i = 0; i < 45; i++) {
