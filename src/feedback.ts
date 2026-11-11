@@ -25,8 +25,22 @@ export const FEEDBACK_REASONS: { id: FeedbackReason; label: string }[] = [
   { id: "ai_control", label: "I'm not ready to trust AI with important replies." },
 ];
 
-/** Deliberately no network or persistence until the secure Phase 2 endpoint exists. */
-export async function submitFeedbackPreview(submission: FeedbackSubmission): Promise<never> {
-  void submission;
-  throw new Error("Feedback preview is not connected to a submission service.");
+/** Browser sends only visitor input. The server derives source and timestamp. */
+export type FeedbackSubmissionRequest = Pick<FeedbackSubmission, "reason" | "optional_message" | "plan_context">;
+
+export async function submitFeedback(submission: FeedbackSubmissionRequest): Promise<void> {
+  const response = await fetch("/api/feedback", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(submission),
+    cache: "no-store",
+  });
+  const body: unknown = await response.json().catch(() => null);
+  if (!response.ok || !body || typeof body !== "object" || !("saved" in body) || body.saved !== true) {
+    const detail = body && typeof body === "object" && "error" in body && typeof body.error === "string"
+      ? body.error
+      : "Feedback could not be saved. Please try again.";
+    throw new Error(detail);
+  }
 }
