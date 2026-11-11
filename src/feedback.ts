@@ -1,9 +1,9 @@
 export type FeedbackReason =
   | "price"
   | "customer_results"
-  | "product_clarity"
-  | "setup_integrations_security"
-  | "other";
+  | "offer_clarity"
+  | "workflow_fit"
+  | "ai_control";
 
 export type FeedbackPlanContext = "core" | "enterprise" | "micro_pilot" | "general";
 
@@ -18,10 +18,10 @@ export interface FeedbackSubmission {
 
 export const FEEDBACK_REASONS: { id: FeedbackReason; label: string }[] = [
   { id: "price", label: "The pricing feels too high." },
-  { id: "customer_results", label: "I'd like to see real customer results." },
-  { id: "product_clarity", label: "I'm not sure what FrameLeads would do for me." },
-  { id: "setup_integrations_security", label: "I have questions about setup, integrations, or security." },
-  { id: "other", label: "Something else." },
+  { id: "customer_results", label: "I need proof it works with real replies." },
+  { id: "offer_clarity", label: "I'm not sure what I get after paying." },
+  { id: "workflow_fit", label: "I'm unsure it fits my existing outbound workflow." },
+  { id: "ai_control", label: "I'm not ready to trust AI with important replies." },
 ];
 
 /** Deliberately no network or persistence until the secure Phase 2 endpoint exists. */
