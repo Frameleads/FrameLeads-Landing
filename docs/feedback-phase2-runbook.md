@@ -9,7 +9,8 @@
 - Public browser POST: `/api/feedback`. The API is disabled unless `FEEDBACK_COLLECTION_ENABLED=true` (server-only).
 - UI collection mode is separately disabled unless `NEXT_PUBLIC_FEEDBACK_COLLECTION_ENABLED=true` (public build flag). The existing Phase 1 `NEXT_PUBLIC_FEEDBACK_PREVIEW=true` keeps a non-collecting preview visible.
 - The server uses `FEEDBACK_SUPABASE_SECRET_KEY` (server-only, elevated privilege; protect and rotate it as a sensitive server secret) and `FEEDBACK_RATE_HMAC_SECRET` (random secret >= 32 characters). **Do not print, paste into chat or commit either.** No production env vars have been set.
-- The RPC URL is pinned to Brand Brain to prevent accidentally using Affiliate Sandbox.
+- Staging/production RPC destination is selected only by server-side `FEEDBACK_SUPABASE_PROJECT_REF`; never from a visitor-supplied value. A preview rejects the production Brand Brain ref and the Affiliate Sandbox ref; a production environment rejects staging refs and requires `FEEDBACK_PRODUCTION_RELEASE_APPROVED=true` before collection. These flags are additional gates, not substitutes for privacy/security approval.
+- Use ONLY the ref returned by Supabase for an isolated Brand Brain development branch in Preview. Never configure a preview to write to Brand Brain production, even for a test.
 - Do not enable collection on any public preview unless it uses a separate authorized staging Supabase branch/project. An SSO-protected Vercel preview is not a staging database.
 
 ## Submission contract
@@ -34,7 +35,7 @@
 8. Conduct a final owner review and activate collection only after all gates pass. Keep the production website and Whop checkout untouched until then.
 
 ## Test procedure and expected results
-- `npm test` runs the added input/context unit tests.
+- `node --experimental-strip-types --test tests/feedback-validation.test.ts tests/feedback-target.test.ts` runs the input/context and database destination tests.
 - `npx tsc --noEmit` verifies types; `npm run build` verifies Next.js route integration.
 - Server POST when disabled: 503; GET: 405; untrusted Origin: 403; invalid payload: 400; oversize: 413; rate limit: 429 with Retry-After; successful staging insert: 201 `{ "saved": true }`.
 - Database readback in staging: one private row with only reason, optional message, source path, plan context, server timestamp.
@@ -46,3 +47,8 @@
 - No new paid platform, change to prices, checkout/Whop links, advertising or affiliate workflows.
 
 **Warning:** Until the schema is applied to a controlled test database and secrets/retention/privacy are approved, this feature is not a functioning collection system. Keep collection flags OFF.
+
+## Cost/branch gate (November 11, 2026)
+- Supabase branch creation in this organization requires an explicit cost confirmation ID. The quoted charge was **$0.01344/hour**. No branch was created while awaiting the owner's cost approval. Do not call `confirm_cost` without that approval.
+- After approval, create a temporary branch of Brand Brain, verify isolated project_ref, apply reviewed DDL to that branch only, verify role/RLS security and rate limiting, and perform POST/readback/cleanup. Do not use Affiliate Sandbox.
+- Vercel Preview collection requires a branch-specific server secret supplied through a secure provider mechanism; if obtaining a staging-only server secret is not supported, stop and document the limitation rather than use a production secret or print keys.
