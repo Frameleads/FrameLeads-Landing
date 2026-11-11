@@ -1,9 +1,9 @@
 import { createHmac } from "node:crypto";
 import { deriveFeedbackContext, parseFeedbackPayload } from "../../../feedback-validation";
+import { chooseFeedbackDatabase } from "../../../feedback-target";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-const SUPABASE_RPC = "https://campgoqhyvniokwvjvtb.supabase.co/rest/v1/rpc/accept_website_feedback";
 const MAX_BODY_BYTES = 8192;
 
 function json(payload: Record<string, unknown>, status: number, extra: Record<string, string> = {}) {
@@ -18,7 +18,12 @@ export async function POST(request: Request): Promise<Response> {
   }
   const secret = process.env.FEEDBACK_SUPABASE_SECRET_KEY;
   const hmacSecret = process.env.FEEDBACK_RATE_HMAC_SECRET;
-  if (!secret || !hmacSecret || hmacSecret.length < 32) {
+  const supabaseRpc = chooseFeedbackDatabase(
+    process.env.FEEDBACK_SUPABASE_PROJECT_REF,
+    process.env.VERCEL_ENV,
+    process.env.FEEDBACK_PRODUCTION_RELEASE_APPROVED,
+  );
+  if (!supabaseRpc || !secret || !hmacSecret || hmacSecret.length < 32) {
     return json({ error: "Feedback collection is temporarily unavailable." }, 503);
   }
   const origin = request.headers.get("origin");
@@ -59,7 +64,7 @@ export async function POST(request: Request): Promise<Response> {
     .digest("hex");
 
   try {
-    const response = await fetch(SUPABASE_RPC, {
+    const response = await fetch(supabaseRpc, {
       method: "POST",
       headers: {
         apikey: secret,
