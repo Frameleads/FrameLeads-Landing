@@ -14,7 +14,30 @@ The key is highly privileged; even though the route only invokes the feedback RP
 - We have already configured `FEEDBACK_RATE_HMAC_SECRET` (Sensitive), `FEEDBACK_SUPABASE_PROJECT_REF=campgoqhyvniokwvjvtb`, and three explicit `false` public/production collection gates in Production. **Do not turn any of those gates on.**
 - If unable to create an independently revocable named secret key, **STOP**. Do not use another app's secret, an anon key, or a public function without authorization.
 
-## Easier Windows option (recommended)
+## Recommended NO-COPY test (Supabase CLI authenticated session)
+
+**Supersedes the manual PowerShell key-paste steps below.** A dedicated Supabase secret key is already stored as a Vercel Production Sensitive variable. It cannot be read back from Vercel, and a masked placeholder is NOT a valid key.
+
+Use the **Supabase CLI 3.1.0**, which supports the read-only `projects api-keys --remote=... --reveal` command. The code in `scripts/feedback-hosted-no-copy.mjs` captures that response **in local process memory** and selects only the specifically named `frameleads-feedback-ingest` `sb_secret_*` key. It does not print or persist the key; this is not credential creation or mutation.
+
+From the owner's existing Windows checkout of `feat/private-feedback-preview`:
+
+```powershell
+git pull --ff-only
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\run-feedback-hosted-smoke.ps1
+```
+
+The Windows helper now calls the **no-copy** Node runner and never asks for secret key input. It installs a pinned, free Supabase CLI through `npx` if not cached; this does not create any paid Supabase infrastructure. If CLI authentication is missing, the script stops **before the HTTP request** and instructs:
+
+```powershell
+npx.cmd --yes supabase@3.1.0 login
+```
+
+That login is an authenticated user action, not a secret-key paste; after signing in, rerun the same two-line test. A project owner may need the `API Key Secrets` read permission to reveal the dedicated key. The script fails closed if the named key is missing, permission is denied, or the response cannot be parsed. Never run the `--reveal` command by itself in a visible console; it would print keys.
+
+**This is still one private local-to-Supabase test, not proof of a deployed Vercel production HTTP call.** It writes one synthetic row only after all safeguards pass; it prints the synthetic marker and rate fingerprint for authorized readback and exact cleanup. Public feedback collection, production website deployment and PR merge remain OFF.
+
+## Easier Windows option (recommended) (legacy/manual fallback; avoid)
 
 The Codex **cloud** chat cannot accept a secure-key prompt. Use a **Windows PowerShell terminal on your own computer** instead.
 
