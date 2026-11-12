@@ -13,13 +13,21 @@ export default function ConfirmAffiliateEmail() {
     // The fragment never reaches the server and must be cleared promptly
     // so browser history, referrals and analytics do not retain the token.
     window.history.replaceState(null, "", window.location.pathname);
-    if (match) {
-      setToken(match[1]);
-      setState("ready");
-    } else {
-      setState("failed");
-      setMessage("This link is missing or invalid. Return to the affiliate form to request a new one.");
-    }
+    let active = true;
+    // Defer the initial state transition until after the effect. React's
+    // effect should synchronize external browser state, not synchronously
+    // trigger cascading updates during effect execution.
+    queueMicrotask(() => {
+      if (!active) return;
+      if (match) {
+        setToken(match[1]);
+        setState("ready");
+      } else {
+        setState("failed");
+        setMessage("This link is missing or invalid. Return to the affiliate form to request a new one.");
+      }
+    });
+    return () => { active = false; };
   }, []);
 
   async function confirm() {
