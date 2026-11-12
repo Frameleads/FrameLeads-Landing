@@ -11,7 +11,7 @@ type HarnessOptions = { env?: Record<string, string>; fetch?: typeof fetch };
 
 const defaultEnv: Record<string, string> = {
   FEEDBACK_COLLECTION_ENABLED: 'true',
-  FEEDBACK_SUPABASE_SECRET_KEY: 'local-test-secret-key',
+  FEEDBACK_SUPABASE_SECRET_KEY: 'sb_secret_local_only_unit_test_key_12345',
   FEEDBACK_RATE_HMAC_SECRET: 'local-test-hmac-secret-with-32-characters',
   FEEDBACK_SUPABASE_PROJECT_REF: 'abcdefghijklmnopqrst',
   VERCEL_ENV: 'preview',
@@ -146,4 +146,26 @@ test('feedback API rejects absent or invalid edge client IP before calling stora
   assert.equal((await post(request(validFeedback, { 'x-vercel-forwarded-for': '' }))).status, 503);
   assert.equal((await post(request(validFeedback, { 'x-vercel-forwarded-for': 'not-an-ip' }))).status, 503);
   assert.equal(calls, 0);
+});
+
+test('feedback API rejects publishable, legacy JWT, and malformed server keys without storage access', async () => {
+  for (const key of [
+    'sb_publishable_local_only_fake_key_123456789',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.placeholder.sig',
+    'masked-placeholder',
+    '',
+  ]) {
+    let calls = 0;
+    const post = route({
+      env: { FEEDBACK_SUPABASE_SECRET_KEY: key },
+      fetch: async () => {
+        calls++;
+        throw Error('storage must not be called');
+      },
+    });
+    const response = await post(request(validFeedback));
+    assert.equal(response.status, 503);
+    assert.equal(calls, 0);
+    assert.doesNotMatch(await response.text(), /sb_publishable_|eyJ|sb_secret_/);
+  }
 });
