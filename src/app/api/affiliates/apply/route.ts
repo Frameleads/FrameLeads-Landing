@@ -67,7 +67,7 @@ export async function POST(request: Request) {
   if (!verified) return json("VERIFICATION_FAILED", 403);
 
   const token = createEmailConfirmationToken(applicant, config.emailTokenKey, now);
-  const confirmUrl = "https://frameleads.io/affiliates/confirm?token=" + encodeURIComponent(token);
+  const confirmUrl = "https://frameleads.io/affiliates/confirm#token=" + encodeURIComponent(token);
   try {
     const sent = await fetch("https://api.mailersend.com/v1/email", {
       method: "POST", cache: "no-store", redirect: "error", signal: AbortSignal.timeout(10000),
