@@ -101,7 +101,8 @@ type WhopOverride = {
 };
 export type NativeAffiliateLinks = { core: string; enterprise: string };
 export class NativeWhopError extends Error {
-  constructor(public readonly code: string) { super(code); }
+  readonly code: string;
+  constructor(code: string) { super(code); this.code = code; }
 }
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
