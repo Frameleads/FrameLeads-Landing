@@ -14,6 +14,20 @@ The key is highly privileged; even though the route only invokes the feedback RP
 - We have already configured `FEEDBACK_RATE_HMAC_SECRET` (Sensitive), `FEEDBACK_SUPABASE_PROJECT_REF=campgoqhyvniokwvjvtb`, and three explicit `false` public/production collection gates in Production. **Do not turn any of those gates on.**
 - If unable to create an independently revocable named secret key, **STOP**. Do not use another app's secret, an anon key, or a public function without authorization.
 
+## Easier Windows option (recommended)
+
+The Codex **cloud** chat cannot accept a secure-key prompt. Use a **Windows PowerShell terminal on your own computer** instead.
+
+From a local checkout of PR #42 (`feat/private-feedback-preview`), run:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\run-feedback-hosted-smoke.ps1
+```
+
+This helper checks for Node/npm, builds the code with the public form OFF, asks for the key with a no-echo local prompt, runs the one-shot test, and clears its temporary process environment on exit. It never reads Vercel's Sensitive value. The key can be obtained only through a secure owner-controlled channel, such as the authorized Supabase API Keys dashboard/password manager. If the original key is unavailable, do not attempt to extract it from Vercel; stop and handle key replacement safely.
+
+If the source is not on the Windows computer, use an authenticated Git client to create a **fresh, separate checkout** from `https://github.com/Frameleads/FrameLeads-Landing` branch `feat/private-feedback-preview`, then run the same PowerShell helper there. Do not copy secrets into a cloud Codex environment or paste them in chat.
+
 ## Step 2 — Local HTTP smoke without exposing the website
 Run this only in the existing PR #42 worktree after the correct Next.js build. No production deployment or public form is required.
 
