@@ -24,7 +24,7 @@ export async function POST(request: Request): Promise<Response> {
     process.env.VERCEL_ENV,
     process.env.FEEDBACK_PRODUCTION_RELEASE_APPROVED,
   );
-  if (!supabaseRpc || !secret || !hmacSecret || hmacSecret.length < 32) {
+  if (!supabaseRpc || !secret?.startsWith("sb_secret_") || secret.length < 30 || !hmacSecret || hmacSecret.length < 32) {
     return json({ error: "Feedback collection is temporarily unavailable." }, 503);
   }
   const origin = request.headers.get("origin");
