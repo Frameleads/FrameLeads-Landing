@@ -8,6 +8,7 @@
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { createInterface } from "node:readline/promises";
 
 const projectRef = "campgoqhyvniokwvjvtb";
 const keyName = "frameleads-feedback-ingest";
@@ -87,6 +88,27 @@ function findNamedKey(node, depth = 0) {
 
 // Emits ONLY safe metadata; no key prefixes beyond the fixed type "secret",
 // and never stdout or any portion of a credential.
+function findNamedKeyByName(node, name, depth = 0) {
+  if (!node || depth > 8 || typeof node !== "object") return null;
+  if (Array.isArray(node)) {
+    for (const item of node) {
+      const key = findNamedKeyByName(item, name, depth + 1);
+      if (key) return key;
+    }
+    return null;
+  }
+  if (typeof node.name === "string" && node.name.trim().toLowerCase() === name) {
+    const value = node.api_key || node.apiKey || node.value;
+    if (typeof value === "string" && value.startsWith("sb_secret_") && value.length >= 30) return value;
+  }
+  for (const [field, child] of Object.entries(node)) {
+    if (["api_key", "apiKey", "value"].includes(field)) continue;
+    const key = findNamedKeyByName(child, name, depth + 1);
+    if (key) return key;
+  }
+  return null;
+}
+
 function safeKeyInventory(node, depth = 0, entries = []) {
   if (!node || depth > 8 || typeof node !== "object" || entries.length >= 30) return entries;
   if (Array.isArray(node)) {
@@ -160,23 +182,43 @@ async function main() {
       "Check the installed CLI and run: npx.cmd --yes supabase@" + cliVersion + " projects api-keys --help " +
       "(Do NOT run --reveal alone in a visible terminal.)");
   }
-  const key = findNamedKey(parsed);
+  let key = findNamedKey(parsed);
+  let selectedName = keyName;
   if (!key) {
     const inventory = safeKeyInventory(parsed);
-    // Only approved key names and generic type categories are printed.
-    console.log("Supabase key inventory (names/types only; credentials hidden):");
+    // Only allowlisted key names and generic key-format labels are printed.
+    console.log("Supabase key inventory (names and types ONLY; credentials hidden):");
     if (!inventory.length) console.log("  No key entries were returned.");
     for (const item of inventory) console.log("  - " + item.name + " — " + item.status);
     const target = inventory.find(entry => entry.name.toLowerCase() === keyName);
-    parsed = null;
-    throw new Error(
-      target
-        ? "The named key exists but is not revealed as an sb_secret_* value. Check Supabase CLI secret-read permissions; no request sent."
-        : "No Supabase secret key is named " + keyName + " in Brand Brain. The configured Vercel environment variable NAME is not the same as the Supabase API key NAME. Create/rename a dedicated key in the Supabase dashboard; no request sent."
-    );
+    if (target) {
+      parsed = null;
+      throw new Error("The named key exists but was not revealed as an sb_secret_* value. Check the Supabase CLI permissions. No database request sent.");
+    }
+    const eligible = inventory.filter(entry => entry.status === "secret, revealed");
+    const defaultKey = findNamedKeyByName(parsed, "default");
+    if (eligible.length === 1 && eligible[0].name === "default" && defaultKey && process.stdin.isTTY) {
+      console.log("The only revealed secret belongs to THIS Brand Brain project, but it is named default, not " + keyName + ".");
+      console.log("A one-time test with default can verify the database HTTP workflow, but NOT the specific secret configured in Vercel.");
+      console.log("This uses a project-wide privileged key in an isolated local test process; it is not saved or printed.");
+      const rl = createInterface({ input: process.stdin, output: process.stdout });
+      let approval = "";
+      try {
+        approval = await rl.question("Type USE DEFAULT ONCE to authorize one synthetic test, or press Enter to stop: ");
+      } finally { rl.close(); }
+      if (approval.trim() === "USE DEFAULT ONCE") {
+        key = defaultKey;
+        selectedName = "default (one-time user-approved exception)";
+      }
+    }
+    if (!key) {
+      parsed = null;
+      throw new Error("No authorized matching secret available. The Supabase API key NAME must match " + keyName +
+        ", or the one-time default exception must be explicitly confirmed. No database request sent.");
+    }
   }
   parsed = null;
-  console.log("Named secret key obtained in process memory; value never displayed.");
+  console.log("Authorized Supabase secret available in process memory (" + selectedName + "); value never displayed.");
   const runnerEnv = {
     ...process.env,
     FEEDBACK_SUPABASE_SECRET_KEY: key,
