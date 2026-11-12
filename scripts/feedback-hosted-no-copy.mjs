@@ -71,7 +71,9 @@ function findNamedKey(node, depth = 0) {
     }
     return null;
   }
-  if (node.name === keyName && (node.type === "secret" || node.type === undefined)) {
+  // Supabase CLI may report a key "type" using a version-specific label.
+  // The actual sb_secret_ prefix, not the metadata type string, is authoritative.
+  if (typeof node.name === "string" && node.name.trim().toLowerCase() === keyName) {
     const key = node.api_key || node.apiKey || node.value;
     if (typeof key === "string" && key.startsWith("sb_secret_") && key.length >= 30) return key;
   }
@@ -81,6 +83,30 @@ function findNamedKey(node, depth = 0) {
     if (found) return found;
   }
   return null;
+}
+
+// Emits ONLY safe metadata; no key prefixes beyond the fixed type "secret",
+// and never stdout or any portion of a credential.
+function safeKeyInventory(node, depth = 0, entries = []) {
+  if (!node || depth > 8 || typeof node !== "object" || entries.length >= 30) return entries;
+  if (Array.isArray(node)) {
+    for (const item of node) safeKeyInventory(item, depth + 1, entries);
+    return entries;
+  }
+  if (typeof node.name === "string") {
+    const name = /^[a-zA-Z0-9_-]{1,64}$/.test(node.name) ? node.name : "[unrecognized name]";
+    const value = node.api_key || node.apiKey || node.value;
+    const status = typeof value === "string" && value.startsWith("sb_secret_")
+      ? "secret, revealed" : typeof value === "string" && value.startsWith("sb_publishable_")
+      ? "publishable" : typeof value === "string" && value.startsWith("eyJ")
+      ? "legacy JWT" : "not revealed or unknown";
+    entries.push({ name, status });
+  }
+  for (const [field, value] of Object.entries(node)) {
+    if (["api_key", "apiKey", "value"].includes(field)) continue;
+    safeKeyInventory(value, depth + 1, entries);
+  }
+  return entries;
 }
 
 async function main() {
@@ -135,14 +161,21 @@ async function main() {
       "(Do NOT run --reveal alone in a visible terminal.)");
   }
   const key = findNamedKey(parsed);
-  parsed = null;
   if (!key) {
+    const inventory = safeKeyInventory(parsed);
+    // Only approved key names and generic type categories are printed.
+    console.log("Supabase key inventory (names/types only; credentials hidden):");
+    if (!inventory.length) console.log("  No key entries were returned.");
+    for (const item of inventory) console.log("  - " + item.name + " — " + item.status);
+    const target = inventory.find(entry => entry.name.toLowerCase() === keyName);
+    parsed = null;
     throw new Error(
-      "The authorized CLI did not return a revealed secret named " + keyName +
-      ". Confirm the key exists in Brand Brain and your CLI account can reveal it. " +
-      "Do not substitute another service's secret. No database request sent."
+      target
+        ? "The named key exists but is not revealed as an sb_secret_* value. Check Supabase CLI secret-read permissions; no request sent."
+        : "No Supabase secret key is named " + keyName + " in Brand Brain. The configured Vercel environment variable NAME is not the same as the Supabase API key NAME. Create/rename a dedicated key in the Supabase dashboard; no request sent."
     );
   }
+  parsed = null;
   console.log("Named secret key obtained in process memory; value never displayed.");
   const runnerEnv = {
     ...process.env,
