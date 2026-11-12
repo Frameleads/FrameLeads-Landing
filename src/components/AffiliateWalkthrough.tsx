@@ -154,7 +154,7 @@ function LinksMockup() {
                 </div>
                 <span className="hidden text-[10px] text-[#BBB] sm:block">{row.price}</span>
                 <span className="text-[11px] font-semibold tabular-nums text-[#EFEFEF]">30.00%</span>
-                <div className="flex items-center justify-end gap-1">
+                <div className="flex items-center justify-end gap-0">
                   <CopyTargetArrow />
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#FF5A1F]/80 bg-[#FF5A1F]/10 text-[#FFE6DA] shadow-[0_0_16px_rgba(255,90,31,0.18)]">
                     <CopyIcon />
