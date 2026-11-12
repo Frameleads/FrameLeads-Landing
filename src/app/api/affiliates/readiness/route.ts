@@ -28,17 +28,19 @@ export async function POST(request: Request) {
       (site !== null && site !== "same-origin" && site !== "none")) {
     return json({ ok: false, code: "ORIGIN_REJECTED" }, 403);
   }
+  const companyId = env.AFFILIATE_WHOP_COMPANY_ID;
+  const apiKey = env.AFFILIATE_WHOP_API_KEY;
   if (env.WHOP_ENVIRONMENT !== "production" ||
       env.AFFILIATE_CORE_PLAN_ID !== AFFILIATE_PLANS[0].planId ||
       env.AFFILIATE_ENTERPRISE_PLAN_ID !== AFFILIATE_PLANS[1].planId ||
-      !/^biz_[A-Za-z0-9]+$/.test(env.AFFILIATE_WHOP_COMPANY_ID ?? "") ||
-      !env.AFFILIATE_WHOP_API_KEY) {
+      !companyId || !/^biz_[A-Za-z0-9]+$/.test(companyId) ||
+      !apiKey) {
     return json({ ok: false, code: "PROVIDER_CREDENTIALS_OR_PLAN_IDS_NOT_CONFIGURED" }, 503);
   }
 
   const result = await inspectWhopMerchantReadOnly(
-    env.AFFILIATE_WHOP_COMPANY_ID,
-    env.AFFILIATE_WHOP_API_KEY,
+    companyId,
+    apiKey,
   );
   return json({
     ok: result.merchantVerified,
