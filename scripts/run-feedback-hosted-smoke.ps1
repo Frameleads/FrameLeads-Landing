@@ -36,6 +36,47 @@ try {
 
     Push-Location $repo
     try {
+        # Validate the credential BEFORE npm installation/build to avoid wasted time.
+        $secureInput = Read-Host 'Paste the VALUE of the dedicated Supabase secret API key (hidden)' -AsSecureString
+        if (-not $secureInput -or $secureInput.Length -lt 30) {
+            throw 'Missing or too-short key. No request sent. Copy the value from Supabase Settings > API Keys > Secret API keys.'
+        }
+        $ptr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureInput)
+        $plain = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr)
+        # Only normalize copy/paste wrappers. Do not print any part of the key.
+        $plain = $plain.Trim().Trim([char]0xFEFF).Trim([char]0x0022, [char]0x0027)
+        if (-not $plain.StartsWith('sb_secret_', [StringComparison]::Ordinal)) {
+            $kind = 'Unrecognized key format'
+            if ($plain.StartsWith('sb_publishable_', [StringComparison]::Ordinal)) {
+                $kind = 'This is a PUBLISHABLE key, not a Secret API key'
+            } elseif ($plain.StartsWith('eyJ', [StringComparison]::Ordinal)) {
+                $kind = 'This looks like a LEGACY JWT key, not a new Secret API key'
+            } elseif ($plain.StartsWith('sbp_', [StringComparison]::Ordinal)) {
+                $kind = 'This is a Supabase personal access token, not a project Secret API key'
+            } elseif ($plain -match '^[*\u2022]+        & node $runner
+        if ($LASTEXITCODE -ne 0) { throw 'Smoke test failed. Retain the printed marker for exact cleanup.' }
+        Write-Host 'HTTP test completed. Share only the SYNTHETIC marker and rate fingerprint, never the key.' -ForegroundColor Green
+    } finally {
+        Pop-Location
+    }
+} finally {
+    [Environment]::SetEnvironmentVariable('FEEDBACK_SUPABASE_SECRET_KEY',$previousKey,'Process')
+    [Environment]::SetEnvironmentVariable('FEEDBACK_SMOKE_ALLOW_PRODUCTION_DB',$previousOptIn,'Process')
+    [Environment]::SetEnvironmentVariable('FEEDBACK_RATE_HMAC_SECRET',$previousHmac,'Process')
+    [Environment]::SetEnvironmentVariable('NEXT_PUBLIC_FEEDBACK_COLLECTION_ENABLED',$previousUiFlag,'Process')
+    [Environment]::SetEnvironmentVariable('NEXT_PUBLIC_FEEDBACK_PREVIEW',$previousPreviewFlag,'Process')
+    if ($ptr -ne [IntPtr]::Zero) { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr) }
+    $secureInput = $null
+}
+) {
+                $kind = 'You copied a MASKED placeholder rather than the key value'
+            } elseif ($plain -match '^(FEEDBACK_SUPABASE_SECRET_KEY|SUPABASE_SECRET_KEY)\s*=') {
+                $kind = 'You copied an environment variable assignment rather than the key value'
+            }
+            $plain = $null
+            throw "$kind. No request was sent. Open Brand Brain > Settings > API Keys > Publishable and secret API keys, select the named SECRET key, and copy its VALUE. Do not paste it into chat."
+        }
+
         if (-not (Test-Path (Join-Path $repo 'node_modules\next\dist\bin\next'))) {
             Write-Host 'Installing project dependencies using existing lockfile...' -ForegroundColor Cyan
             & npm.cmd ci
@@ -44,17 +85,6 @@ try {
         Write-Host 'Building local application with public collection disabled...' -ForegroundColor Cyan
         & npm.cmd run build
         if ($LASTEXITCODE -ne 0) { throw 'Local build failed. No database request sent.' }
-
-        $secureInput = Read-Host 'Paste the dedicated Supabase sb_secret key (hidden)' -AsSecureString
-        if (-not $secureInput -or $secureInput.Length -lt 30) {
-            throw 'No valid secret was provided. No request sent.'
-        }
-        $ptr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureInput)
-        $plain = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr)
-        if (-not $plain.StartsWith('sb_secret_')) {
-            $plain = $null
-            throw 'Use a dedicated Supabase sb_secret key, not a publishable or legacy key.'
-        }
         [Environment]::SetEnvironmentVariable('FEEDBACK_SUPABASE_SECRET_KEY',$plain,'Process')
         $plain = $null
         [Environment]::SetEnvironmentVariable('FEEDBACK_SMOKE_ALLOW_PRODUCTION_DB','YES','Process')
