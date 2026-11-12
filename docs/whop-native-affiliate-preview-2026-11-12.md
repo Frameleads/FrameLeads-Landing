@@ -4,9 +4,9 @@ Date: 2026-11-12. Status: DRAFT / Preview-only. DO NOT MERGE OR ENABLE PRODUCTIO
 
 ## Approved commercial policy
 
-- Core: $149/month, commission 30% on FIRST qualifying payment only.
-- Enterprise: $499/month, commission 30% on FIRST qualifying payment only.
-- Renewals: no affiliate commission. Micro-Pilot excluded.
+- Core: $149/month, commission 30% on ALL qualifying initial and recurring subscription payments.
+- Enterprise: $499/month, commission 30% on ALL qualifying initial and recurring subscription payments.
+- Renewals: 30% affiliate commission on eligible payments. Micro-Pilot excluded.
 - Possible future $99/$299 pricing and 25% commission is NOT active or automatic. The backend fails closed when price differs from the current approved amounts.
 - Exact current plan IDs from merged Landing checkout policy: Core plan_GQTDPXnvijugf and Enterprise plan_uGDGf5WKW7hlE.
 - No changes to current live prices, existing Whop global affiliate settings, subscriptions, or historic affiliate obligations.
@@ -17,7 +17,7 @@ Date: 2026-11-12. Status: DRAFT / Preview-only. DO NOT MERGE OR ENABLE PRODUCTIO
 2. /api/affiliates/apply — same-origin JSON route. On Vercel Preview validates locally and returns a clearly labeled dry-run status; does NOT persist email, send mail or call Whop.
 3. Gated future production path — Turnstile siteverify, bounded per-instance throttling, 20-minute AES-256-GCM sealed email confirmation token, and transactional email from a separately configured MailerSend sender.
 4. /affiliates/confirm and /api/affiliates/confirm — token in URL fragment (not sent in GET or referrer), explicit confirmation click and POST; only then may a verified email enroll.
-5. Whop API integration — create/find affiliate, read existing per-plan overrides, reject any conflict, create missing 30%-first_payment overrides, independently read back reward scope, return only provider-generated HTTPS checkout links. The individual links go ONLY to the email verified in the double opt-in, never in the public response.
+5. Whop API integration — create/find affiliate, read existing per-plan overrides, reject any conflict, create missing 30%-all_payments overrides, independently read back reward scope, return only provider-generated HTTPS checkout links. The individual links go ONLY to the email verified in the double opt-in, never in the public response.
 6. Automated unit/contract tests cover policy, gating, token expiry, Whop override idempotency and failures.
 
 Whop API references:
@@ -47,10 +47,10 @@ Never paste secrets into chat or GitHub. Do not configure or activate live value
 
 - Preview desktop/mobile UI QA; GitHub Actions build, types and tests; Vercel Preview protection and branch isolation.
 - Independent security review: confirm serverless replay, origin checks, provider identity, idempotency and distributed throttling. Current in-memory per-instance rate limiter is NOT a reliable public abuse barrier, and 20-minute confirmation tokens can be replayed; require reviewed durable protection before public launch.
-- Confirm production merchant ID, exact plan ownership and current amounts; verify Whop API accepts email identifiers for real intended users and returns first_payment overrides and direct links.
+- Confirm production merchant ID, exact plan ownership and current amounts; verify Whop API accepts email identifiers for real intended users and returns all_payments overrides and direct links.
 - Verify transactional mail delivery, Whop API-created invitation behavior, Whop accounts for unregistered emails, and bounce/retry/duplicate handling.
 - Approve partner terms, application privacy disclosure, commission/refund policy, and reconcile existing global recurring affiliate settings.
-- Controlled attributed buyer purchase: proof of first-payment commission, zero renewal commission, and correct SaaS membership/access. No public activation without approval.
+- Controlled attributed buyer purchase: proof of eligible initial and renewal commissions, and correct SaaS membership/access. No public activation without approval.
 - Keep old affiliate PR #19 (Landing), Brand Brain PR #28, Supabase consent/tracking work, and the blocked Issue #17 persistence changes preserved and inactive. This new route has no dependency on those blocked custom-affiliate systems.
 
 No production checkout changes, migrations, Whop invitations, payments, or feature flag activation are authorized by this draft.
