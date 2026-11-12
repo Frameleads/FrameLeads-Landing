@@ -44,7 +44,7 @@ try {
         $ptr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureInput)
         $plain = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr)
         # Only normalize copy/paste wrappers. Do not print any part of the key.
-        $plain = $plain.Trim().Trim([char]0xFEFF).Trim([char]0x0022, [char]0x0027)
+        $plain = $plain.Trim().Trim([char]0xFEFF).Trim([char[]]@([char]0x0022, [char]0x0027))
         if (-not $plain.StartsWith('sb_secret_', [StringComparison]::Ordinal)) {
             $kind = 'Unrecognized key format'
             if ($plain.StartsWith('sb_publishable_', [StringComparison]::Ordinal)) {
