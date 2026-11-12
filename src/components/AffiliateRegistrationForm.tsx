@@ -140,7 +140,7 @@ export default function AffiliateRegistrationForm({ mode }: { mode: Registration
 
     <label className="mt-6 flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-[#191919] p-4 text-xs leading-5 text-[#BDBDBD]">
       <input className="mt-0.5 h-4 w-4 shrink-0 accent-[#FF5A1F]" type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} required />
-      <span>I agree to the <Link className="font-semibold text-white underline decoration-[#FF5A1F]/60 underline-offset-4" href="/terms">terms</Link> and <Link className="font-semibold text-white underline decoration-[#FF5A1F]/60 underline-offset-4" href="/privacy">privacy policy</Link>, and authorize FrameLeads to share my email with Whop to process this affiliate application. I understand commissions are recurring on eligible subscription payments, subject to Whop's affiliate terms.</span>
+      <span>I agree to the <Link className="font-semibold text-white underline decoration-[#FF5A1F]/60 underline-offset-4" href="/terms">terms</Link> and <Link className="font-semibold text-white underline decoration-[#FF5A1F]/60 underline-offset-4" href="/privacy">privacy policy</Link>, and authorize FrameLeads to share my email with Whop to process this affiliate application. I understand commissions are recurring on eligible subscription payments, subject to Whop&apos;s affiliate terms.</span>
     </label>
 
     {mode === "live" && <div className="mt-5" ref={widget} aria-label="Spam protection challenge" />}
