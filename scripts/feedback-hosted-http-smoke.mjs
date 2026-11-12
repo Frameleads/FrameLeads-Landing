@@ -18,6 +18,7 @@ import { createHmac, randomBytes, randomInt, randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
 import { setTimeout as delay } from "node:timers/promises";
 import { join } from "node:path";
+import { request as httpRequest } from "node:http";
 
 const targetRef = "campgoqhyvniokwvjvtb";
 const secret = process.env.FEEDBACK_SUPABASE_SECRET_KEY || "";
@@ -40,7 +41,10 @@ if (process.env.FEEDBACK_SMOKE_ALLOW_PRODUCTION_DB !== "YES") {
   !existsSync(join(process.cwd(), ".next"))) {
   blocked("Build first with public collection disabled: npm ci && npm run build.");
 } else {
-  const origin = "http://127.0.0.1:" + port;
+  const connectOrigin = "http://127.0.0.1:" + port;
+  // Next.js self-hosted may normalize its request.url hostname to localhost.
+  // Keep TCP bound to 127.0.0.1 while sending consistent Host, Origin and Referer. 
+  const browserOrigin = "http://localhost:" + port;
   const marker = "FRAMELEADS_SYNTHETIC_HTTP_" + randomUUID();
   const testIp = "198.51.100." + randomInt(1, 255);
   const fingerprint = createHmac("sha256", hmacSecret)
@@ -69,7 +73,7 @@ if (process.env.FEEDBACK_SMOKE_ALLOW_PRODUCTION_DB !== "YES") {
     for (let i = 0; i < 45; i++) {
       if (child.exitCode !== null) break;
       try {
-        const r = await fetch(origin + "/api/feedback");
+        const r = await fetch(connectOrigin + "/api/feedback");
         if (r.status === 405 && (await r.json().catch(() => null))?.error === "Method not allowed.") {
           ready = true; break;
         }
@@ -77,25 +81,51 @@ if (process.env.FEEDBACK_SMOKE_ALLOW_PRODUCTION_DB !== "YES") {
       await delay(300);
     }
     if (!ready) throw new Error("Local Next.js server not ready.");
-    const res = await fetch(origin + "/api/feedback", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Origin: origin,
-        Referer: origin + "/checkout/core",
-        "Sec-Fetch-Site": "same-origin",
-        "x-vercel-forwarded-for": testIp,
-      },
-      body: JSON.stringify({
-        reason: "offer_clarity",
-        optional_message: marker,
-        plan_context: "core",
-      }),
-      signal: AbortSignal.timeout(10000),
+    const body = JSON.stringify({
+      reason: "offer_clarity",
+      optional_message: marker,
+      plan_context: "core",
     });
-    const data = await res.json().catch(() => null);
-    if (res.status !== 201 || data?.saved !== true) {
-      throw new Error("Expected 201 saved acknowledgment, received HTTP " + res.status + ".");
+    // Node fetch silently overrides caller-supplied Host. Use http.request for
+    // this loopback smoke so Host, Origin and Referer all match "localhost"
+    // while the actual TCP connection remains strictly 127.0.0.1.
+    const { status, data } = await new Promise((resolve, reject) => {
+      const req = httpRequest({
+        hostname: "127.0.0.1",
+        port,
+        path: "/api/feedback",
+        method: "POST",
+        headers: {
+          Host: "localhost:" + port,
+          Origin: browserOrigin,
+          Referer: browserOrigin + "/checkout/core",
+          "Sec-Fetch-Site": "same-origin",
+          "Content-Type": "application/json",
+          "Content-Length": Buffer.byteLength(body, "utf8"),
+          "x-vercel-forwarded-for": testIp,
+        },
+      }, res => {
+        let responseBody = "";
+        res.on("data", part => {
+          responseBody += part.toString("utf8");
+          if (responseBody.length > 4096) req.destroy(new Error("Unexpectedly large response."));
+        });
+        res.on("end", () => {
+          let parsed = null;
+          try { parsed = JSON.parse(responseBody); } catch { /* bounded provider response */ }
+          resolve({ status: res.statusCode, data: parsed });
+        });
+        res.on("error", reject);
+      });
+      req.setTimeout(10000, () => req.destroy(new Error("HTTP smoke request timed out.")));
+      req.on("error", reject);
+      req.end(body);
+    });
+    if (status !== 201 || data?.saved !== true) {
+      const label = status === 403 && data?.error === "Request origin not allowed."
+        ? " Local Origin/Host check rejected the request; no storage was attempted."
+        : "";
+      throw new Error("Expected 201 saved acknowledgment, received HTTP " + status + "." + label);
     }
     console.log("PASS: genuine Next.js HTTP request stored in hosted Brand Brain database.");
     console.log("NEXT: admin readback using the exact marker, then delete that single test row.");
