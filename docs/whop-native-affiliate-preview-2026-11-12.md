@@ -54,3 +54,50 @@ Never paste secrets into chat or GitHub. Do not configure or activate live value
 - Keep old affiliate PR #19 (Landing), Brand Brain PR #28, Supabase consent/tracking work, and the blocked Issue #17 persistence changes preserved and inactive. This new route has no dependency on those blocked custom-affiliate systems.
 
 No production checkout changes, migrations, Whop invitations, payments, or feature flag activation are authorized by this draft.
+
+
+## 2026-11-12 — Real merchant connection check (isolated Preview)
+
+The production merchant cannot be authenticated from the connected Vercel tools because
+its stored Whop key and company ID are **write-only**. The existing real merchant's
+Whop credential remains in Brand Brain production, not Landing. Its value was never
+copied, revealed, printed, or shared with this PR. A short-lived test sandbox was
+closed without sending requests to Whop.
+
+A dedicated **read-only**, branch-scoped endpoint was added:
+- Operator page: \`/affiliates/readiness\`
+- API: \`POST /api/affiliates/readiness\`
+- Hard guards: \`VERCEL_ENV=preview\`, branch \`feat/whop-native-affiliate-preview-20261112\`,
+  and \`AFFILIATE_NATIVE_PROVIDER_READONLY_PROBE_ENABLED=true\`.
+- Vercel Preview has SSO protection enabled; keep it enabled.
+- Checks: credential validity, actual live company ownership, exact Core/Enterprise
+  plan IDs and USD prices, \`affiliate:basic:read\` permissions.
+- No POST to Whop, no write permissions needed, no personal or affiliate records
+  returned, no emails, and no service credentials included in response.
+- This test cannot establish \`affiliate:create\` permission, provider-generated
+  link correctness, invitation delivery, or attributed purchases.
+
+**Vercel branch-scoped, non-secret variables already set** in \`frameleads-landing\`:
+- \`WHOP_ENVIRONMENT=production\`
+- \`AFFILIATE_CORE_PLAN_ID=plan_GQTDPXnvijugf\`
+- \`AFFILIATE_ENTERPRISE_PLAN_ID=plan_uGDGf5WKW7hlE\`
+- \`AFFILIATE_NATIVE_PROVIDER_READONLY_PROBE_ENABLED=true\`
+
+**The only two values to supply via Vercel's secure Environment Variables UI**,
+targeting *Preview → this specific branch only*, are:
+- \`AFFILIATE_WHOP_COMPANY_ID\`: your **real BrandFlow Studio Whop merchant** \`biz_...\`,
+  never the Sandbox business
+- \`AFFILIATE_WHOP_API_KEY\`: an API key belonging to the real merchant,
+  preferably dedicated to this check, with \`plan:basic:read\` and
+  \`affiliate:basic:read\` scopes. Use **Sensitive** type. Never paste it in chat.
+After saving both, redeploy the latest PR branch Preview (not Production), then
+open its protected \`/affiliates/readiness\` page and click
+**Run read-only Whop check**. It must report \`merchantVerified=true\` and
+each plan and affiliate-read check must pass.
+
+**Safety:** Do not set \`AFFILIATE_NATIVE_REGISTRATION_ENABLED=true\` or
+\`AFFILIATE_NATIVE_SECURITY_REVIEW_APPROVED=true\` in production. Even after the
+read-only check passes, live invitations are blocked pending approved anti-abuse
+and replay controls, test email verification, Whop create-affiliate permissions,
+customer-specific links, and actual welcome-email delivery. The old blocked
+persistence work is not part of this checker.
