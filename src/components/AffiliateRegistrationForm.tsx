@@ -119,7 +119,7 @@ export default function AffiliateRegistrationForm({ mode }: { mode: Registration
         <h2 className="mt-2 font-heading text-2xl font-bold tracking-tight text-white">Join FrameLeads</h2>
         <p className="mt-2 text-sm text-[#B7B7B7]">No calls. No complicated onboarding.</p>
       </div>
-      <span className="rounded-full border border-[#FF5A1F]/30 bg-[#FF5A1F]/10 px-3 py-1 font-mono text-[10px] text-[#FFB18C]">30% · one-time</span>
+      <span className="rounded-full border border-[#FF5A1F]/30 bg-[#FF5A1F]/10 px-3 py-1 font-mono text-[10px] text-[#FFB18C]">30% · recurring</span>
     </div>
 
     <div className="grid gap-5 sm:grid-cols-2">
@@ -140,14 +140,14 @@ export default function AffiliateRegistrationForm({ mode }: { mode: Registration
 
     <label className="mt-6 flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-[#191919] p-4 text-xs leading-5 text-[#BDBDBD]">
       <input className="mt-0.5 h-4 w-4 shrink-0 accent-[#FF5A1F]" type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} required />
-      <span>I agree to the <Link className="font-semibold text-white underline decoration-[#FF5A1F]/60 underline-offset-4" href="/terms">terms</Link> and <Link className="font-semibold text-white underline decoration-[#FF5A1F]/60 underline-offset-4" href="/privacy">privacy policy</Link>, and authorize FrameLeads to share my email with Whop to process this affiliate application. I understand commissions apply to the first qualifying payment only.</span>
+      <span>I agree to the <Link className="font-semibold text-white underline decoration-[#FF5A1F]/60 underline-offset-4" href="/terms">terms</Link> and <Link className="font-semibold text-white underline decoration-[#FF5A1F]/60 underline-offset-4" href="/privacy">privacy policy</Link>, and authorize FrameLeads to share my email with Whop to process this affiliate application. I understand commissions are recurring on eligible subscription payments, subject to Whop's affiliate terms.</span>
     </label>
 
     {mode === "live" && <div className="mt-5" ref={widget} aria-label="Spam protection challenge" />}
     {error && <p role="alert" className="mt-5 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">{error}</p>}
 
     <button type="submit" disabled={pending || mode === "disabled" || (mode === "live" && !captcha)} className="fl-cta-pop mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#FF5A1F] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-[#E64B12] disabled:cursor-not-allowed disabled:opacity-50">
-      {pending ? "Checking your application…" : mode === "disabled" ? "Applications opening soon" : "Apply to join"} <span aria-hidden="true">→</span>
+      {pending ? "Checking your application…" : mode === "disabled" ? "Applications opening soon" : "Apply to join"}
     </button>
     <p className="mt-4 text-center text-xs leading-5 text-[#999]">Whop manages affiliate links, attribution and commissions. We never ask for your payment details here.</p>
   </form>;
