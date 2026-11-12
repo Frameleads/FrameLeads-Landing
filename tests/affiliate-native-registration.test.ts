@@ -36,7 +36,7 @@ test("email token is authenticated, has short expiry, and hides the email from c
   assert.deepEqual(readEmailConfirmationToken(token, secret, now + 5_000), applicant);
   assert.equal(token.includes("jane"), false);
   assert.equal(readEmailConfirmationToken(token, "ab".repeat(32), now), null);
-  assert.equal(readEmailConfirmationToken(token.slice(0, -1) + (token.endsWith("x") ? "y" : "x"), secret, now), null);
+  assert.equal(readEmailConfirmationToken((token[0] === "A" ? "B" : "A") + token.slice(1), secret, now), null);
   assert.equal(readEmailConfirmationToken(token, secret, now + 21 * 60_000), null);
 });
 
