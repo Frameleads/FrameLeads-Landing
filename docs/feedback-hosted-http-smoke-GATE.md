@@ -95,3 +95,11 @@ Do not delete other feedback or generic rate-limit rows. On any error, retain th
 - Keep PR #42 draft and unmerged. Keep `FEEDBACK_COLLECTION_ENABLED=false`, `NEXT_PUBLIC_FEEDBACK_COLLECTION_ENABLED=false`, `FEEDBACK_PRODUCTION_RELEASE_APPROVED=false` on Vercel until explicit public launch authorization.
 
 **No new paid database, branch, subscription, or shared credential is required.**
+
+## 2026-11-12 — Loopback 403 diagnosis and fix
+
+- The owner explicitly authorized `USE DEFAULT ONCE`, and the runner selected the one revealed Brand Brain `default` `sb_secret_*` key in memory. The actual local POST returned **HTTP 403**, not HTTP 201. That response came from the Next.js same-origin check and therefore does NOT prove the Supabase RPC or key succeeded or failed.
+- Read-only production DB verification for exact synthetic marker `FRAMELEADS_SYNTHETIC_HTTP_f4950d6e-ace3-45b8-ad1b-5377b675ce52` and fingerprint `aeab7040b524880b5bdf56f98bf1c034d2457f604336e03127c279b1807e0a79` found **zero matching rows**; both feedback tables had zero records. No cleanup was required.
+- Root-cause hypothesis supported by Next.js self-hosting behavior: `request.url` on a local production server can normalize a `127.0.0.1` hostname to `localhost`; the smoke previously sent `Origin: http://127.0.0.1:<port>`. The route correctly rejected the mismatch.
+- Corrected ONLY `scripts/feedback-hosted-http-smoke.mjs`: it now uses Node's `http.request` for a single POST to TCP `127.0.0.1` with consistent `Host`, `Origin`, and `Referer` pointing to `localhost:<port>`. The server remains loopback-only, the production route's origin guard is untouched, and no public deployment or feature flag changed. Node's `fetch` overrides caller-specified `Host`, which is why `http.request` is used instead.
+- This is a **candidate fix requiring an actual retest**. Do not claim HTTP 201, successful hosted storage, or Vercel credential verification until independently observed. The default key exception remains an owner-controlled local-only one-shot and does not prove the Vercel stored secret works.
