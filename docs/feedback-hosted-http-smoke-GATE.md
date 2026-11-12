@@ -35,6 +35,10 @@ npx.cmd --yes supabase@3.1.0 login
 
 That login is an authenticated user action, not a secret-key paste; after signing in, rerun the same two-line test. A project owner may need the `API Key Secrets` read permission to reveal the dedicated key. The script fails closed if the named key is missing, permission is denied, or the response cannot be parsed. Never run the `--reveal` command by itself in a visible console; it would print keys.
 
+**Name-mismatch diagnostic:** If the Supabase CLI authenticates but can't find `frameleads-feedback-ingest`, the runner prints ONLY key names and generic statuses (secret revealed, publishable, legacy JWT, or not revealed). It does not print any secret value or prefix. The key name in Vercel (`FEEDBACK_SUPABASE_SECRET_KEY`) is a **variable name**, not proof that the Supabase secret itself has the expected name.
+
+If and ONLY if the **single** revealed `sb_secret_*` key belongs to this Brand Brain project and is named `default`, the runner can offer a **one-time exception**. It clearly states that this validates the local Next.js-to-hosted-Supabase path, not the secret saved in Vercel. The user must type `USE DEFAULT ONCE` to permit one synthetic submission. This is a privileged shared key; do not use it for public collection, reuse it for regular deployments, or automatically assume it matches Vercel's configured credential. If no single default candidate exists, the test stops without a request.
+
 **This is still one private local-to-Supabase test, not proof of a deployed Vercel production HTTP call.** It writes one synthetic row only after all safeguards pass; it prints the synthetic marker and rate fingerprint for authorized readback and exact cleanup. Public feedback collection, production website deployment and PR merge remain OFF.
 
 ## Easier Windows option (recommended) (legacy/manual fallback; avoid)
