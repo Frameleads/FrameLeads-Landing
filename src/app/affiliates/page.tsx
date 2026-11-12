@@ -2,22 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import AffiliateRegistrationForm from "../../components/AffiliateRegistrationForm";
+import AffiliateWalkthrough from "../../components/AffiliateWalkthrough";
 import { affiliateMode, AFFILIATE_COMMISSION_PERCENT } from "../../affiliate-native.ts";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "FrameLeads Partner Program | Become an Affiliate",
-  description: "Join the FrameLeads partner program. Refer founder-led B2B agencies to reply-decision intelligence and earn a one-time commission on qualifying Core or Enterprise sales.",
+  description: "Join the FrameLeads partner program. Refer founder-led B2B agencies to reply-decision intelligence and earn recurring commission on qualifying Core or Enterprise subscription payments.",
   alternates: { canonical: "https://frameleads.io/affiliates" },
   robots: { index: false, follow: false },
   referrer: "no-referrer",
 };
-
-const steps = [
-  { number: "01", title: "Apply", detail: "Share your name and email. Confirm your address to protect your account." },
-  { number: "02", title: "Get your links", detail: "Receive your individual Whop referral links for Core and Enterprise." },
-  { number: "03", title: "Refer the right teams", detail: "Send founders to the product that fits their outbound workflow. Whop tracks qualifying purchases." },
-];
 
 export default function AffiliatePage() {
   const mode = affiliateMode(process.env);
@@ -40,32 +35,23 @@ export default function AffiliatePage() {
           Get rewarded for the <span className="bg-gradient-to-r from-[#FF5A1F] to-[#FFB181] bg-clip-text text-transparent">right introduction.</span>
         </h1>
         <p className="mt-7 max-w-xl text-base leading-8 text-[#BDBDBD] sm:text-lg">
-          Know a founder-led B2B agency or consultancy running outbound? Introduce them to FrameLeads—the decision layer for what happens after a prospect replies.
+          Know a founder-led B2B agency or consultancy running outbound? Introduce them to FrameLeads, the decision layer for what happens after a prospect replies.
         </p>
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2">
           <div className="rounded-2xl border border-white/[0.12] bg-gradient-to-br from-[#30221E] to-[#242424] p-6">
             <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#B3A09A]">Core · $149/month</p>
             <p className="mt-4 font-heading text-4xl font-bold text-white">{AFFILIATE_COMMISSION_PERCENT}%</p>
-            <p className="mt-2 text-sm font-semibold text-[#FFB18C]">$44.70 per full-price first sale</p>
+            <p className="mt-2 text-sm font-semibold text-[#FFB18C]">$44.70 per qualifying monthly payment</p>
           </div>
           <div className="rounded-2xl border border-white/[0.12] bg-gradient-to-br from-[#30221E] to-[#242424] p-6">
             <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#B3A09A]">Enterprise · $499/month</p>
             <p className="mt-4 font-heading text-4xl font-bold text-white">{AFFILIATE_COMMISSION_PERCENT}%</p>
-            <p className="mt-2 text-sm font-semibold text-[#FFB18C]">$149.70 per full-price first sale</p>
+            <p className="mt-2 text-sm font-semibold text-[#FFB18C]">$149.70 per qualifying monthly payment</p>
           </div>
         </div>
-        <p className="mt-4 max-w-xl text-xs leading-6 text-[#999]">Commission applies only to the first eligible payment on each qualifying purchase, not subscription renewals. Figures are illustrative before taxes, discounts, refunds or provider adjustments.</p>
+        <p className="mt-4 max-w-xl text-xs leading-6 text-[#999]">Affiliates earn 30% on eligible initial and recurring subscription payments while the referred subscription qualifies. Amounts shown assume the full monthly price and may vary with discounts, refunds, taxes, or provider adjustments.</p>
 
-        <div className="mt-12 border-t border-white/[0.12] pt-8">
-          <h2 className="font-heading text-xl font-bold text-white">How the partnership works</h2>
-          <ol className="mt-6 space-y-6">
-            {steps.map(step => <li key={step.number} className="flex gap-4">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#FF5A1F]/30 bg-[#FF5A1F]/10 font-mono text-xs font-bold text-[#FF875D]">{step.number}</span>
-              <div><h3 className="text-sm font-bold text-white">{step.title}</h3><p className="mt-1 max-w-lg text-sm leading-6 text-[#B3B3B3]">{step.detail}</p></div>
-            </li>)}
-          </ol>
-        </div>
       </section>
       <div className="lg:sticky lg:top-10">
         {mode === "preview" && <div className="mb-4 rounded-xl border border-[#FF5A1F]/30 bg-[#FF5A1F]/10 px-4 py-3 text-xs font-semibold leading-5 text-[#FFCAAE]" role="status">
@@ -84,6 +70,7 @@ export default function AffiliatePage() {
         </div>
       </div>
     </div>
+    <AffiliateWalkthrough />
     <footer className="relative z-10 border-t border-white/[0.1] px-5 py-8 text-center text-xs text-[#888]">
       © 2026 FrameLeads · A BrandFlow Studio company
     </footer>
