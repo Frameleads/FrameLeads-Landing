@@ -4,7 +4,7 @@ import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
  * Native Whop affiliate signup. This intentionally does NOT use the older
  * consent/checkout-attribution bridge or its Supabase tables.
  *
- * Commercial policy: 30% on FIRST payment only, Core ($149) and Enterprise
+ * Commercial policy: 30% on ALL qualifying subscription payments, Core ($149) and Enterprise
  * ($499). The possible $99/$299 and 25% future offer is NOT active.
  */
 export const AFFILIATE_COMMISSION_PERCENT = 30;
@@ -119,7 +119,7 @@ function safeWhopLink(input: unknown): string | null {
 function matchesOverride(value: WhopOverride, planId: string): boolean {
   return value.plan_id === planId && value.commission_type === "percentage" &&
     value.commission_value === AFFILIATE_COMMISSION_PERCENT &&
-    value.applies_to_payments === "first_payment";
+    value.applies_to_payments === "all_payments";
 }
 export async function registerVerifiedAffiliate(
   email: string,
@@ -195,7 +195,7 @@ export async function registerVerifiedAffiliate(
       const created = await request("/affiliates/" + encodeURIComponent(affiliateId) + "/overrides", "POST", {
         id: affiliateId, plan_id: plan.planId, override_type: "standard",
         commission_type: "percentage", commission_value: AFFILIATE_COMMISSION_PERCENT,
-        applies_to_payments: "first_payment",
+        applies_to_payments: "all_payments",
       });
       if (!matchesOverride(created as WhopOverride, plan.planId)) throw new NativeWhopError("PROVIDER_REWARD_MISMATCH");
       overrides = await listOverrides();
