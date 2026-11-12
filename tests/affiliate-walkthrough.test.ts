@@ -42,3 +42,11 @@ test("recurring messaging agrees with planned Whop integration; production remai
   assert.ok(backend.includes('AFFILIATE_NATIVE_SECURITY_REVIEW_APPROVED === "true"'));
   assert.ok(backend.includes('if (env.VERCEL_ENV === "preview") return "preview";'));
 });
+
+test("arrow tips are anchored directly to their respective CTA or row copy icons", () => {
+  assert.ok(walkthrough.includes('right-[calc(100%-5px)] top-1/2'), "email arrow must be anchored to CTA wrapper");
+  assert.ok(walkthrough.includes('<CopyTargetArrow />'), "link rows must have their own dedicated arrow");
+  assert.ok(walkthrough.includes('className="flex items-center justify-end gap-0"'), "copy arrow and copy button must touch");
+  assert.ok(walkthrough.includes('grid-cols-[minmax(0,1fr)_58px_80px]'), "reserve enough room for mobile arrow and target");
+  assert.doesNotMatch(walkthrough, /-right-3 -top-8|side="right"/);
+});
