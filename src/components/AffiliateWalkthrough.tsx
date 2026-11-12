@@ -5,20 +5,26 @@ import type { ReactNode } from "react";
  * illustrations; none of the user's real emails, links, usernames, avatars,
  * or private affiliate guidance are embedded in the site.
  */
-function CurvedArrow({ className = "", side = "left" }: {
-  className?: string;
-  side?: "left" | "right";
-}) {
+function CurvedArrow({ className = "" }: { className?: string }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 88 48" fill="none" className={className}>
+      <path d="M3 3C21 42 53 40 80 24" stroke="#FF5A1F" strokeWidth="3" strokeLinecap="round"/>
+      <path d="M65 20L80 24L71 38" stroke="#FF5A1F" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+/** Short pointer whose tip meets the left edge of its neighboring copy icon. */
+function CopyTargetArrow() {
   return (
     <svg
       aria-hidden="true"
-      viewBox="0 0 108 66"
+      viewBox="0 0 38 24"
       fill="none"
-      className={className}
-      style={side === "right" ? { transform: "scaleX(-1)" } : undefined}
+      className="pointer-events-none h-6 w-9 shrink-0"
     >
-      <path d="M5 5C25 54 51 57 94 45" stroke="#FF5A1F" strokeWidth="3.1" strokeLinecap="round"/>
-      <path d="M82 33L97 44L84 57" stroke="#FF5A1F" strokeWidth="3.1" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M2 3C12 3 16 21 34 12" stroke="#FF5A1F" strokeWidth="2.6" strokeLinecap="round"/>
+      <path d="M26 5L34 12L25 19" stroke="#FF5A1F" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   );
 }
@@ -93,11 +99,13 @@ function EmailMockup() {
             <div className="mt-5 flex h-9 w-9 items-center justify-center rounded-lg bg-[#171717] text-lg font-black text-[#FF5A1F]" aria-hidden="true">F</div>
             <h3 className="mt-4 text-[14px] font-bold leading-5 sm:text-[16px]">You&apos;ve been added as an affiliate</h3>
             <p className="mt-2 text-[11px] leading-[1.7] text-[#666]">Welcome to the FrameLeads partner program. Your affiliate dashboard is ready to explore.</p>
-            <div className="relative mt-5 flex justify-center pb-1">
-              <div className="rounded-md bg-[#1C62D7] px-4 py-2.5 text-center text-[11px] font-bold text-white shadow-sm sm:text-xs">
-                Your affiliate dashboard
+            <div className="mt-5 flex justify-center pb-1">
+              <div className="relative inline-flex items-center">
+                <CurvedArrow className="pointer-events-none absolute right-[calc(100%-5px)] top-1/2 h-10 w-14 -translate-y-1/2 sm:h-12 sm:w-20" />
+                <div className="rounded-md bg-[#1C62D7] px-4 py-2.5 text-center text-[11px] font-bold text-white shadow-sm sm:text-xs">
+                  Your affiliate dashboard
+                </div>
               </div>
-              <CurvedArrow className="pointer-events-none absolute -left-1 -top-4 h-14 w-20 rotate-[-8deg] sm:left-5" />
             </div>
             <p className="mt-4 text-center text-[10px] text-[#999]">Open your dashboard to access referral links.</p>
           </div>
@@ -135,22 +143,22 @@ function LinksMockup() {
           </div>
           <h3 className="text-[13px] font-semibold text-white">Your affiliate links</h3>
           <div className="overflow-hidden rounded-lg border border-white/10">
-            <div className="grid grid-cols-[minmax(0,1fr)_58px_52px] gap-2 border-b border-white/10 bg-[#202020] px-3 py-2 text-[9px] uppercase tracking-[0.06em] text-[#888] sm:grid-cols-[minmax(0,1fr)_80px_64px_60px]">
+            <div className="grid grid-cols-[minmax(0,1fr)_58px_80px] gap-2 border-b border-white/10 bg-[#202020] px-3 py-2 text-[9px] uppercase tracking-[0.06em] text-[#888] sm:grid-cols-[minmax(0,1fr)_80px_64px_90px]">
               <span>Product</span><span className="hidden sm:block">Price</span><span>Rate</span><span className="text-right">Link</span>
             </div>
             {rows.map(row => (
-              <div key={row.name} className="grid grid-cols-[minmax(0,1fr)_58px_52px] items-center gap-2 border-b border-white/[0.08] px-3 py-3 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_80px_64px_60px]">
+              <div key={row.name} className="grid grid-cols-[minmax(0,1fr)_58px_80px] items-center gap-2 border-b border-white/[0.08] px-3 py-3 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_80px_64px_90px]">
                 <div className="min-w-0">
                   <span className="mr-2 hidden rounded bg-[#164A86]/70 px-1.5 py-0.5 text-[9px] font-semibold text-[#9FC8FF] sm:inline">Product</span>
                   <span className="text-[10px] font-medium text-white sm:text-[11px]">{row.name}</span>
                 </div>
                 <span className="hidden text-[10px] text-[#BBB] sm:block">{row.price}</span>
                 <span className="text-[11px] font-semibold tabular-nums text-[#EFEFEF]">30.00%</span>
-                <div className="relative flex justify-end">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#FF5A1F]/80 bg-[#FF5A1F]/10 text-[#FFE6DA] shadow-[0_0_16px_rgba(255,90,31,0.18)]">
+                <div className="flex items-center justify-end gap-1">
+                  <CopyTargetArrow />
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#FF5A1F]/80 bg-[#FF5A1F]/10 text-[#FFE6DA] shadow-[0_0_16px_rgba(255,90,31,0.18)]">
                     <CopyIcon />
                   </div>
-                  <CurvedArrow side="right" className="pointer-events-none absolute -right-3 -top-8 h-11 w-14 rotate-[25deg] opacity-95 sm:-right-2" />
                 </div>
               </div>
             ))}
