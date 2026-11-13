@@ -15,6 +15,12 @@ type Result = {
   rewardsWriteTested?: false;
   checks?: Check[];
   catalog?: Catalog;
+  identity?: {
+    status: "MATCHED" | "CONFIGURED_ID_DIFFERS" | "BRANDFLOW_STUDIO_NOT_FOUND" |
+      "MULTIPLE_BRANDFLOW_STUDIO_COMPANIES" | "COMPANY_READ_PERMISSION_MISSING" |
+      "COMPANY_LOOKUP_BAD_REQUEST" | "COMPANY_LOOKUP_UNAVAILABLE";
+    verifiedBusinessId?: string;
+  };
 };
 
 const reasonLabels: Record<string, string> = {
@@ -90,6 +96,25 @@ export default function WhopReadinessControl() {
           </ul>}
         </div>)}
       </div>
+      {result.identity && <div className="mt-5 rounded-xl border border-white/15 bg-[#242424] p-4">
+        <p className="text-sm font-bold text-white">Real Whop merchant identity</p>
+        <p className="mt-2 text-xs leading-6 text-[#BDBDBD]">
+          {result.identity.status === "MATCHED"
+            ? "Verified: the configured business ID matches BrandFlow Studio."
+            : result.identity.status === "CONFIGURED_ID_DIFFERS"
+              ? "The configured business ID differs from the verified BrandFlow Studio merchant. Check the Whop dashboard before correcting the Preview configuration."
+              : result.identity.status === "COMPANY_READ_PERMISSION_MISSING"
+                ? "The key lacks Whop company:basic:read permission. That read-only scope is required for an identity check."
+                : result.identity.status === "BRANDFLOW_STUDIO_NOT_FOUND"
+                  ? "BrandFlow Studio is not among the companies accessible using this API key."
+                  : result.identity.status === "MULTIPLE_BRANDFLOW_STUDIO_COMPANIES"
+                    ? "More than one accessible business matches BrandFlow Studio. Manually confirm the correct business before continuing."
+                    : "Whop did not allow the business identity to be verified."}
+        </p>
+        {result.identity.status === "CONFIGURED_ID_DIFFERS" && result.identity.verifiedBusinessId && <code className="mt-3 block break-all rounded-lg border border-[#FF5A1F]/30 bg-[#191919] p-3 text-xs text-[#FFB18C]">
+          {result.identity.verifiedBusinessId}
+        </code>}
+      </div>}
       {result.catalog && <div className="mt-5 rounded-xl border border-white/15 bg-[#242424] p-4">
         <p className="text-sm font-bold text-white">Real merchant plan discovery</p>
         <p className="mt-2 text-xs leading-6 text-[#BDBDBD]">
@@ -109,7 +134,7 @@ export default function WhopReadinessControl() {
         </div>)}
       </div>}
       {result.connected && !result.merchantVerified && <p className="mt-4 text-xs leading-6 text-[#BDBDBD]">Your API credential can reach Whop. The reasons above show which required plan details differ. Do not alter product prices or affiliate rewards based on this diagnostic alone.</p>}
-      <p className="mt-4 text-xs leading-5 text-[#999]">No write operations performed. No API keys, personal data, raw merchant IDs, or affiliate links are displayed.</p>
+      <p className="mt-4 text-xs leading-5 text-[#999]">No write operations performed. No API keys, personal data, unrelated merchants, or affiliate links are displayed.</p>
     </div>}
   </section>;
 }
