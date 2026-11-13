@@ -1,6 +1,7 @@
 import {
   liveConfig, readEmailConfirmationToken, registerVerifiedAffiliate, NativeWhopError,
 } from "../../../../affiliate-native.ts";
+import { queueAffiliateWelcomeEmail, AffiliateMailError } from "../../../../affiliate-native-email.ts";
 
 export const runtime = "nodejs";
 const reply = (code: string, status: number) =>
@@ -37,38 +38,24 @@ export async function POST(request: Request) {
     return reply("ENROLLMENT_NEEDS_REVIEW", 503);
   }
 
-  // Never send affiliate links to the browser. Only the verified address
-  // receives its two provider-generated links via transactional email.
+  // The Whop affiliate API creates the relationship but does not guarantee
+  // a native email. FrameLeads sends the transactional welcome containing the
+  // two independently verified Whop referral links, exclusively to the email
+  // address already confirmed by the applicant.
+  //
+  // Do not include these links in the JSON response or raw provider logs.
+  // A queued email is not yet proof of inbox delivery.
   try {
-    const message = [
-      "Hi " + applicant.firstName + ",",
-      "",
-      "Your FrameLeads affiliate registration is ready.",
-      "Your Whop-generated links:",
-      "",
-      "Core ($149/month) — 30% recurring on eligible payments:",
-      links.core,
-      "",
-      "Enterprise ($499/month) — 30% recurring on eligible payments:",
-      links.enterprise,
-      "",
-      "Recurring commission applies to eligible subscription renewals while the referral qualifies.",
-      "You can manage referrals in your Whop affiliate dashboard.",
-      "",
-      "FrameLeads",
-    ].join("\n");
-    const sent = await fetch("https://api.mailersend.com/v1/email", {
-      method: "POST", cache: "no-store", redirect: "error", signal: AbortSignal.timeout(10000),
-      headers: { Authorization: "Bearer " + config.emailKey, "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
-      body: JSON.stringify({
-        from: { email: config.emailFrom, name: "FrameLeads" },
-        to: [{ email: applicant.email, name: applicant.firstName + " " + applicant.lastName }],
-        subject: "Your FrameLeads affiliate links",
-        text: message,
-      }),
-    });
-    if (!sent.ok) return reply("ENROLLED_EMAIL_DELIVERY_PENDING", 503);
-  } catch { return reply("ENROLLED_EMAIL_DELIVERY_PENDING", 503); }
+    await queueAffiliateWelcomeEmail(
+      applicant,
+      links,
+      { apiKey: config.emailKey, fromEmail: config.emailFrom },
+    );
+  } catch (error) {
+    const code = error instanceof AffiliateMailError ? error.code : "MAIL_PROVIDER_UNAVAILABLE";
+    console.error(JSON.stringify({ event: "affiliate_welcome_email_queue_failed", code }));
+    return reply("ENROLLED_EMAIL_DELIVERY_PENDING", 503);
+  }
 
   return Response.json({ ok: true, code: "AFFILIATE_ENROLLED" }, {
     status: 200,
