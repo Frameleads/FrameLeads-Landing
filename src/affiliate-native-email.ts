@@ -1,12 +1,12 @@
 import type { AffiliateApplicant, NativeAffiliateLinks } from "./affiliate-native.ts";
 
 /**
- * Transactional messages are sent by FrameLeads, not Whop. Whop's Create
- * affiliate API creates the relationship but does not promise an email.
+ * Transactional email transport: Resend.
  *
- * MailerSend POST /v1/email returns 202 for QUEUED, not DELIVERED.
- * Require its x-message-id to reject fully suppressed recipients.
- * Never log addresses, confirmation tokens, referral links, or provider bodies.
+ * Whop creates the affiliate relationship but does not guarantee email.
+ * Resend POST /emails returns an accepted email ID, NOT delivery evidence.
+ * Never log applicant addresses, verification tokens, referral links,
+ * Resend API credentials, raw provider responses, or provider message IDs.
  */
 export class AffiliateMailError extends Error {
   readonly code: string;
@@ -45,7 +45,7 @@ async function queueAffiliateEmail(
   }
   let response: Response;
   try {
-    response = await send("https://api.mailersend.com/v1/email", {
+    response = await send("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         Authorization: "Bearer " + config.apiKey,
@@ -53,12 +53,11 @@ async function queueAffiliateEmail(
         Accept: "application/json",
       },
       body: JSON.stringify({
-        from: { email: config.fromEmail, name: "FrameLeads" },
-        to: [{ email: applicant.email, name: applicant.firstName + " " + applicant.lastName }],
+        from: "FrameLeads <" + config.fromEmail + ">",
+        to: [applicant.email],
         subject,
         text,
         html,
-        settings: { track_clicks: false, track_opens: false, track_content: false },
       }),
       cache: "no-store",
       redirect: "error",
@@ -67,20 +66,27 @@ async function queueAffiliateEmail(
   } catch {
     throw new AffiliateMailError("MAIL_PROVIDER_UNAVAILABLE");
   }
-  if (response.status !== 202) {
-    throw new AffiliateMailError(response.status === 422
+  if (response.status !== 200 && response.status !== 201) {
+    throw new AffiliateMailError(response.status === 422 || response.status === 400
       ? "MAIL_SENDER_OR_RECIPIENT_INVALID"
       : response.status === 401 || response.status === 403
         ? "MAIL_PROVIDER_UNAUTHORIZED"
-        : "MAIL_PROVIDER_REJECTED");
+        : response.status === 429
+          ? "MAIL_PROVIDER_RATE_LIMITED"
+          : "MAIL_PROVIDER_REJECTED");
   }
-  const messageId = response.headers.get("x-message-id");
-  if (!messageId || !/^[a-zA-Z0-9_-]{10,128}$/.test(messageId)) {
-    // A 202 without a message ID may mean ALL recipients were suppressed.
-    throw new AffiliateMailError("MAIL_NOT_QUEUED");
+  let result: unknown;
+  try { result = await response.json(); } catch {
+    throw new AffiliateMailError("MAIL_NOT_ACCEPTED");
   }
-  // Queued is not delivered; real delivery requires MailerSend activity
-  // verification or a confirmed receiving mailbox.
+  const messageId = result && typeof result === "object" && !Array.isArray(result)
+    && "id" in result ? result.id : null;
+  if (typeof messageId !== "string" ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(messageId)) {
+    throw new AffiliateMailError("MAIL_NOT_ACCEPTED");
+  }
+  // Accepted by Resend, not necessarily delivered. Verify through Resend
+  // Emails / events or the recipient inbox before calling delivery complete.
   return { queued: true, providerMessageId: messageId };
 }
 
