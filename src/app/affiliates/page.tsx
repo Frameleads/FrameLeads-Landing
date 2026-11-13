@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import AffiliateRegistrationForm from "../../components/AffiliateRegistrationForm";
 import AffiliateWalkthrough from "../../components/AffiliateWalkthrough";
+import AffiliateProofKit from "../../components/AffiliateProofKit";
 import { affiliateMode, AFFILIATE_COMMISSION_PERCENT } from "../../affiliate-native.ts";
 
 export const dynamic = "force-dynamic";
@@ -71,6 +72,7 @@ export default function AffiliatePage() {
       </div>
     </div>
     <AffiliateWalkthrough />
+    <AffiliateProofKit />
     <footer className="relative z-10 border-t border-white/[0.1] px-5 py-8 text-center text-xs text-[#888]">
       © 2026 FrameLeads · A BrandFlow Studio company
     </footer>
