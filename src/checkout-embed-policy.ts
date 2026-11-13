@@ -126,6 +126,26 @@ export function embeddedCheckoutPolicy(tier: CheckoutTier, values: Record<string
 
   if (values.VERCEL_ENV === "preview") {
     const returnUrl = safeSandboxReturnUrl(values[WHOP_SANDBOX_RETURN_URL_ENV]);
+    // Isolated PR #45 acceptance test only: allow the approved $5 Core
+    // Sandbox plan without silently enabling unverified Micro/Enterprise.
+    // This gate is opt-in, branch-scoped, and never reachable in production.
+    if (values.FRAMELEADS_WHOP_SANDBOX_CORE_ONLY_TEST_ENABLED === "true") {
+      if (tier !== "core") return { available: false, reason: "sandbox_unconfigured", environment: "sandbox" };
+      const planId = values.WHOP_CORE_SANDBOX_PLAN_ID;
+      const hostedFallback = safeSandboxCheckoutUrl(values.WHOP_CORE_SANDBOX_CHECKOUT_URL, planId);
+      const configured = values.WHOP_ENVIRONMENT === "sandbox" &&
+        values.WHOP_SANDBOX_COMPANY_ID === "biz_6YudF3G7nc8Wdw" &&
+        planId === "plan_kgrX8LpuAH2Ba" &&
+        hostedFallback === "https://sandbox.whop.com/checkout/plan_kgrX8LpuAH2Ba" &&
+        Boolean(returnUrl && returnUrl.startsWith("https://frameleads-landing-") &&
+          returnUrl.includes("-frameleads.vercel.app/login?source=whop-checkout"));
+      if (!configured) return { available: false, reason: "sandbox_unconfigured", environment: "sandbox" };
+      if (values.FRAMELEADS_WHOP_SANDBOX_PLAN_TERMS_VERIFIED !== "true")
+        return { available: false, reason: "sandbox_terms_unverified", environment: "sandbox", returnUrl };
+      if (values.FRAMELEADS_WHOP_SANDBOX_CHECKOUT_ENABLED !== "true")
+        return { available: false, reason: "disabled", environment: "sandbox", returnUrl, hostedFallback };
+      return { available: true, environment: "sandbox", planId, returnUrl, hostedFallback };
+    }
     const planId = values[information.sandboxPlanEnvironmentVariable];
     const sandboxTiers = Object.values(tiers).map(item => {
       const sandboxPlanId = values[item.sandboxPlanEnvironmentVariable];
