@@ -136,7 +136,26 @@ export async function inspectWhopMerchantReadOnly(
         // Do not surface provider response bodies: they can contain request
         // metadata or account information. HTTP category is sufficient to
         // diagnose whether this is a client, permission, or provider failure.
-        const code = response.status === 400 ? "PROVIDER_BAD_REQUEST_400"
+        let badRequestCode = "PROVIDER_BAD_REQUEST_400";
+        if (response.status === 400 && path.startsWith("/plans?")) {
+          // Read only two allowlisted validation fields. Never expose provider
+          // error messages or arbitrary text from a merchant-scoped response.
+          try {
+            const responseData: unknown = await response.json();
+            if (responseData && typeof responseData === "object" &&
+                !Array.isArray(responseData) && "error" in responseData) {
+              const rawError = (responseData as Record<string, unknown>).error;
+              if (rawError && typeof rawError === "object" && !Array.isArray(rawError)) {
+                const error = rawError as Record<string, unknown>;
+                if (error.param === "company_id") badRequestCode = "PROVIDER_REJECTED_COMPANY_ID";
+                else if (error.param === "account_id") badRequestCode = "PROVIDER_REQUIRES_ACCOUNT_ID";
+                else if (error.code === "parameter_missing") badRequestCode = "PROVIDER_MISSING_REQUIRED_PARAMETER";
+                else if (error.code === "parameter_invalid") badRequestCode = "PROVIDER_INVALID_QUERY_PARAMETER";
+              }
+            }
+          } catch { /* Sanitized generic HTTP status is sufficient. */ }
+        }
+        const code = response.status === 400 ? badRequestCode
           : response.status === 401 ? "INVALID_CREDENTIAL"
           : response.status === 403 ? "INSUFFICIENT_PERMISSIONS"
           : response.status === 404 ? "NOT_FOUND"
