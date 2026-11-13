@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - test/whop-core-sandbox-pr45-20261113
+  pull_request:
+    branches:
+      - fix/nextjs-16-4-6-security
 
 permissions:
   contents: read
