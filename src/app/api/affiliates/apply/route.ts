@@ -2,6 +2,7 @@ import { createHmac } from "node:crypto";
 import {
   affiliateMode, createEmailConfirmationToken, liveConfig, validateApplicant,
 } from "../../../../affiliate-native.ts";
+import { queueAffiliateVerificationEmail, AffiliateMailError } from "../../../../affiliate-native-email.ts";
 
 export const runtime = "nodejs";
 const buckets = new Map<string, { startedAt: number; count: number }>();
@@ -69,21 +70,20 @@ export async function POST(request: Request) {
   const token = createEmailConfirmationToken(applicant, config.emailTokenKey, now);
   const confirmUrl = "https://frameleads.io/affiliates/confirm#token=" + encodeURIComponent(token);
   try {
-    const sent = await fetch("https://api.mailersend.com/v1/email", {
-      method: "POST", cache: "no-store", redirect: "error", signal: AbortSignal.timeout(10000),
-      headers: { Authorization: "Bearer " + config.emailKey, "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
-      body: JSON.stringify({
-        from: { email: config.emailFrom, name: "FrameLeads" },
-        to: [{ email: applicant.email, name: applicant.firstName + " " + applicant.lastName }],
-        subject: "Confirm your FrameLeads affiliate application",
-        text: "Hi " + applicant.firstName + ",\n\nConfirm your email to join the FrameLeads partner program:\n" +
-          confirmUrl + "\n\nThis link expires in 20 minutes. If you did not request this, ignore this email.\n\nFrameLeads",
-      }),
+    const queued = await queueAffiliateVerificationEmail(
+      applicant,
+      confirmUrl,
+      { apiKey: config.emailKey, fromEmail: config.emailFrom },
+    );
+    // Provider queue acceptance is NOT proof of delivery. MailerSend's
+    // x-message-id should be checked using its delivery activity endpoint.
+    if (!queued.queued) return json("EMAIL_DELIVERY_UNAVAILABLE", 503);
+    return Response.json({ ok: true, mode: "verification_sent" }, {
+      status: 202, headers: { "Cache-Control": "no-store" },
     });
-    if (!sent.ok) return json("EMAIL_DELIVERY_UNAVAILABLE", 503);
-    return Response.json({ ok: true, mode: "verification_sent" }, { status: 202, headers: { "Cache-Control": "no-store" } });
-  } catch {
-    console.error(JSON.stringify({ event: "affiliate_confirmation_email_error", category: "provider_unavailable" }));
+  } catch (error) {
+    const code = error instanceof AffiliateMailError ? error.code : "MAIL_PROVIDER_UNAVAILABLE";
+    console.error(JSON.stringify({ event: "affiliate_confirmation_email_error", code }));
     return json("EMAIL_DELIVERY_UNAVAILABLE", 503);
   }
 }
