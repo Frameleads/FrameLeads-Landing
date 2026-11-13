@@ -8,6 +8,7 @@ function whopFixture(options: { unauthorized?: boolean; wrongCompany?: boolean; 
   const calls: { url: string; method: string }[] = [];
   const mock = async (value: string | URL | Request, init?: RequestInit) => {
     const url = new URL(value.toString());
+    assert.equal(new Headers(init?.headers).get("Api-Version-Date"), "2025-01-01", "read probes must pin the documented stable Whop contract");
     calls.push({ url: url.pathname + url.search, method: init?.method ?? "GET" });
     const respond = (value: object, status = 200) => new Response(JSON.stringify(value), {
       status, headers: { "Content-Type": "application/json" },
