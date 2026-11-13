@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 import {
-  affiliateMode, createEmailConfirmationToken, liveConfig, validateApplicant,
+  affiliateMode, createEmailConfirmationToken, liveConfig, previewAllowedEmail, validateApplicant,
 } from "../../../../affiliate-native.ts";
 import { queueAffiliateVerificationEmail, AffiliateMailError } from "../../../../affiliate-native-email.ts";
 
@@ -41,7 +41,16 @@ export async function POST(request: Request) {
 
   const config = liveConfig(process.env);
   if (!config) return json("NOT_LIVE", 503);
-  if (typeof input.turnstileToken !== "string" || input.turnstileToken.length < 10 || input.turnstileToken.length > 3000) {
+  if (config.mode === "preview_e2e") {
+    const url = new URL(request.url);
+    // Vercel Authentication protects non-production .vercel.app hosts.
+    // Reject custom domains, generated hosts outside this project, and
+    // emails other than the explicitly owner-approved test recipient.
+    if (url.protocol !== "https:" ||
+        !/^frameleads-landing-[a-z0-9-]+\.vercel\.app$/.test(url.hostname) ||
+        !previewAllowedEmail(applicant.email, process.env)) return json("TEST_ACCESS_DENIED", 403);
+  }
+  if (config.mode === "live" && (typeof input.turnstileToken !== "string" || input.turnstileToken.length < 10 || input.turnstileToken.length > 3000)) {
     return json("VERIFICATION_REQUIRED", 400);
   }
 
@@ -54,21 +63,26 @@ export async function POST(request: Request) {
   if (!bucket || now - bucket.startedAt >= 60_000) {
     if (buckets.size > 1000) buckets.clear();
     buckets.set(rateKey, { startedAt: now, count: 1 });
-  } else if (++bucket.count > 3) return json("RATE_LIMITED", 429);
+  } else if (++bucket.count > (config.mode === "preview_e2e" ? 1 : 3)) return json("RATE_LIMITED", 429);
 
-  let verified = false;
-  try {
-    const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
-      method: "POST", cache: "no-store", redirect: "error", signal: AbortSignal.timeout(9000),
-      body: new URLSearchParams({ secret: config.turnstileSecret, response: input.turnstileToken }),
-    });
-    const result: unknown = await response.json();
-    verified = response.ok && Boolean(result && typeof result === "object" && "success" in result && result.success === true);
-  } catch { return json("VERIFICATION_UNAVAILABLE", 503); }
-  if (!verified) return json("VERIFICATION_FAILED", 403);
+  if (config.mode === "live") {
+    let verified = false;
+    try {
+      const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+        method: "POST", cache: "no-store", redirect: "error", signal: AbortSignal.timeout(9000),
+        body: new URLSearchParams({ secret: config.turnstileSecret, response: String(input.turnstileToken) }),
+      });
+      const result: unknown = await response.json();
+      verified = response.ok && Boolean(result && typeof result === "object" && "success" in result && result.success === true);
+    } catch { return json("VERIFICATION_UNAVAILABLE", 503); }
+    if (!verified) return json("VERIFICATION_FAILED", 403);
+  }
+  // Preview is protected by Vercel Authentication and a server-only email
+  // allowlist. The live production route still requires Cloudflare Turnstile.
 
-  const token = createEmailConfirmationToken(applicant, config.emailTokenKey, now);
-  const confirmUrl = "https://frameleads.io/affiliates/confirm#token=" + encodeURIComponent(token);
+  const token = createEmailConfirmationToken(applicant, config.emailTokenKey, now, config.mode);
+  const origin = config.mode === "preview_e2e" ? new URL(request.url).origin : "https://frameleads.io";
+  const confirmUrl = origin + "/affiliates/confirm#token=" + encodeURIComponent(token);
   try {
     const queued = await queueAffiliateVerificationEmail(
       applicant,
