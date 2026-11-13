@@ -262,7 +262,10 @@ test("Whop Elements initialization happens only in the browser after hydration",
   assert.doesNotMatch(component, /const whopElements = loadWhop\(\)/);
   assert.match(component, /useEffect\(\(\) => \{/);
   assert.match(component, /if \(!embedEnabled \|\| !hostedFallback \|\| referralHintPresent\) return/);
-  assert.match(component, /setWhopElements\(loadWhop\(\)\)/);
+  assert.match(component, /initializeWhopCheckout\(/);
+  assert.match(component, /\(\) => import\("@whop\/elements"\)/);
+  assert.match(component, /return \(\) => \{ active = false; \}/);
+  assert.doesNotMatch(component, /setWhopElements\(loadWhop\(\)\)/);
   assert.match(component, /if \(!whopElements\)/);
   assert.match(component, /setElementsUnavailable\(true\)/);
   assert.doesNotMatch(component, /onComplete[\s\S]*?grantEntitlement/);

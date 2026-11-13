@@ -11,7 +11,7 @@ test("desktop header centers navigation independently of actions", () => {
   assert.ok(nav.includes("justify-center gap-5 lg:flex xl:gap-7"));
   assert.ok(nav.includes("hidden items-center justify-end gap-5 lg:flex"));
   const desktopActions = nav.slice(nav.indexOf('className="hidden items-center justify-end gap-5 lg:flex"'), nav.indexOf('className="ml-auto inline-flex h-10'));
-  assert.ok(desktopActions.indexOf(">Log In</Link>") < desktopActions.indexOf("Try it Risk-Free"));
+  assert.ok(desktopActions.indexOf(">Log In</Link>") < desktopActions.indexOf("Try the $10 Micro-Pilot"));
   assert.ok(desktopActions.includes('href={loginHref}'));
   assert.ok(!desktopActions.includes("border border-white px-4"));
   assert.ok(nav.includes("lg:hidden")); // Responsive mobile navigation preserved
