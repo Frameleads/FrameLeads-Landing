@@ -120,3 +120,18 @@ git pull --ff-only
 node .\\scripts\\transfer-feedback-secret-to-vercel.mjs
 ```
 The previous `vercel@59.6.0` pin was not published on npm and produced `ETARGET`; the helper is now pinned to the published `65.12.1` release (npm package history published Nov 6, 2026). If Vercel CLI needs authentication, run `npx.cmd --yes vercel@65.12.1 login` from PowerShell, finish browser auth, and rerun the helper. This command does not ask for any API key or show one. **Do not run transfer commands from `C:\\Users\\akram` without first switching to the nested Git repository.**
+
+## 2026-11-13 — Windows EPERM when cleaning temporary Vercel link
+
+Owner reproduced a Windows `EPERM` while deleting a temporary `frameleads-vercel-credential-*` folder after the helper printed `Checking Vercel CLI access...`. This is a local cleanup error, not proof that a credential was updated or that the Vercel CLI authenticated. The cleanup `finally` previously could hide the real underlying CLI failure.
+
+Fix: `scripts/transfer-feedback-secret-to-vercel.mjs` retries temporary folder deletion and, if still locked by a Windows process, prints only a nonsecret cleanup notice. It preserves the actual authentication or update result. The temporary directory contains **only** a public Vercel org/project-ID link file and never any Supabase API key or environment values. Also allow Supabase CLI version-specific key type metadata while requiring the **exact name** `frameleads_feedback_server_v1` and verified `sb_secret_*` prefix; never use the identically named publishable key.
+
+**Retry from already checked-out repository**:
+```powershell
+Set-Location 'C:\\Users\\akram\\FrameLeads-Feedback-Test\\FrameLeads-Feedback-Test'
+git pull --ff-only
+node .\\scripts\\transfer-feedback-secret-to-vercel.mjs
+```
+
+If it reports the Vercel CLI is unauthenticated, execute exactly `npx.cmd --yes vercel@65.12.1 login` once, authenticate in browser, then run only the Node helper again. No secrets or files need to be copied. If there is a different `STOP:` reason, **do not retry blindly**; inspect that message and diagnose it first. No public flags or deployments are changed.
