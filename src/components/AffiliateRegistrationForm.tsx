@@ -105,7 +105,7 @@ export default function AffiliateRegistrationForm({ mode }: { mode: Registration
       <p className="mt-4 text-sm leading-7 text-[#BDBDBD]">
         {result === "preview"
           ? "This is an isolated demonstration. No affiliate was registered, no invitation email was sent, and no submitted details were stored."
-          : "We sent a confirmation link to the email address provided. Once confirmed, your eligible affiliate rewards will be set up in Whop. Check spam if it doesn't appear."}
+          : "We queued a FrameLeads confirmation email to the address you provided. Confirm it to activate your affiliate rewards in Whop. Check spam if it doesn't arrive."}
       </p>
       <button type="button" className="mt-8 w-fit rounded-xl border border-white/20 px-5 py-3 text-sm font-semibold text-white hover:border-white/40" onClick={() => setResult(null)}>Back to form</button>
     </section>;
