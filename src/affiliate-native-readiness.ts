@@ -281,13 +281,19 @@ export async function inspectWhopMerchantReadOnly(
     };
   }
 
-  // A plan can fail the configured-ID checks even when a suitable replacement
-  // is found. Never convert discovery alone into merchantVerified=true.
-  const identity = await inspectMerchantIdentity(companyId, apiKey, send);
+  // The two approved FrameLeads subscription plans plus a successful
+  // merchant-scoped affiliate read are stronger identity proof than a generic
+  // company-list endpoint. Avoid unnecessary calls (some company-scoped keys
+  // do not support GET /companies). Only attempt that optional lookup if
+  // the plan-and-affiliate evidence has not already verified this merchant.
+  const merchantVerified = owned && checks.length === AFFILIATE_PLANS.length + 1 &&
+    checks.every(check => check.ok);
+  const identity: WhopMerchantIdentity = merchantVerified
+    ? { status: "MATCHED" }
+    : await inspectMerchantIdentity(companyId, apiKey, send);
   return {
     connected: authorized,
-    merchantVerified: owned && checks.length === AFFILIATE_PLANS.length + 1 &&
-      checks.every(check => check.ok),
+    merchantVerified,
     rewardsWriteTested: false,
     checks,
     catalog,
