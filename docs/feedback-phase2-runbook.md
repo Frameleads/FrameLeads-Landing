@@ -96,3 +96,19 @@
 **Independent security blocker:** GitHub issue #44 tracks upgrading `next` and `eslint-config-next` from pinned `16.2.10` to a vetted patched stable release (`16.4.6` as of Nov 12), regenerating the lockfile and doing full regression/security QA. This is not proof that any specific CVE is exploitable in this app; vendor advisories identify the package versions as affected. Do not run a production deployment or enable public feedback before this review is resolved or explicitly risk-accepted.
 
 **Privacy approval:** Feedback disclosure is staged in `src/app/privacy/page.tsx` on this branch only; do not publish until owner/legal approves wording and effective date. No new paid database, branch, subscription or vendor needed.
+
+
+## 2026-11-13 — No-clipboard transfer after Work browser limitation
+
+**New observed state:** The owner authorized creation of a new Supabase **Secret API key** named \`frameleads_feedback_server_v1\` under Brand Brain \`campgoqhyvniokwvjvtb\`. Work reported verifying its \`sb_secret_\` prefix. A publishable key with the same name already exists and was not changed. Work Cloud Browser's clipboard could not transfer the secret into Vercel, so Vercel's existing Production-only Secret variable **is NOT yet updated**.
+
+**Safe no-clipboard transfer prepared:** \`scripts/transfer-feedback-secret-to-vercel.mjs\` connects only to the preselected project and existing variable, using the authenticated Supabase CLI (3.1.0) to select the \`sb_secret_*\` key with the **exact name and prefix** and the authenticated Vercel CLI (59.6.0) to update the Production-only Secret by streaming the value over standard input. No browser clipboard, chat, env file, shell arguments, logs or git source contains the key. The helper creates a temporary Vercel CLI project link containing only fixed public project IDs, removes it on exit, and does not deploy or toggle any feedback features.
+
+To run from the owner's EXISTING authenticated local Windows project checkout:
+\`\`\`powershell
+git pull --ff-only
+node .\scripts\transfer-feedback-secret-to-vercel.mjs
+\`\`\`
+If Vercel CLI is not authenticated, the helper safely stops before reading the Supabase secret. Sign in one time using \`npx.cmd --yes vercel@59.6.0 login\` and then rerun the helper. The owner already successfully authenticated Supabase CLI during the hosted HTTP smoke. The helper must never print keys; it reports only a successful update or a generic stop.
+
+**Not completed as of this note:** No evidence that the new Vercel secret has been saved or that a new Vercel deployment has consumed the updated credential. The helper is a reviewable transfer mechanism, **not evidence of completed transfer**. After success, independently check variable type, production-only scope, the unchanged three \`false\` feedback gates, and project database health using connected tools. Updating Vercel env settings alone does **not** change existing live deployments. Do not merge PR #42, enable public collection, or deploy without separate approval.
