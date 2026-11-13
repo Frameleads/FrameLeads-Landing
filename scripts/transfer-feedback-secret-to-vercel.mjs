@@ -159,7 +159,7 @@ async function main() {
     const updated = await runSuppressed(vercel([
       "env", "update", EXPECTED.vercelVariable, EXPECTED.target,
       "--yes", "--type", "secret", "--no-color",
-    ]), { cwd: tmp, input: secret + "\n" });
+    ]), { cwd: tmp, input: secret });
     secret = "";
     if (updated.status !== 0) {
       throw new Error("Vercel CLI did not confirm the update. No success claim. " +
