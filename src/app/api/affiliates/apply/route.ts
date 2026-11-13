@@ -75,8 +75,8 @@ export async function POST(request: Request) {
       confirmUrl,
       { apiKey: config.emailKey, fromEmail: config.emailFrom },
     );
-    // Provider queue acceptance is NOT proof of delivery. MailerSend's
-    // x-message-id should be checked using its delivery activity endpoint.
+    // Resend's returned email ID proves acceptance only. Actual delivery
+    // must be checked through Resend Events or the recipient inbox.
     if (!queued.queued) return json("EMAIL_DELIVERY_UNAVAILABLE", 503);
     return Response.json({ ok: true, mode: "verification_sent" }, {
       status: 202, headers: { "Cache-Control": "no-store" },
