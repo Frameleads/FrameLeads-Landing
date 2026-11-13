@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Generated from the four approved public How It Works screenshots
+/public/resources/frameleads-affiliate-product-proof.zip
