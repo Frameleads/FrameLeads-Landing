@@ -1,6 +1,6 @@
 import { AFFILIATE_PLANS } from "./affiliate-native.ts";
 
-type ProviderCheck = { label: string; ok: boolean; code: string };
+type ProviderCheck = { label: string; ok: boolean; code: string; reasons?: string[] };
 export type WhopReadiness = { connected: boolean; merchantVerified: boolean; rewardsWriteTested: false; checks: ProviderCheck[] };
 
 function merchantIdValid(value: string): boolean {
@@ -61,11 +61,28 @@ export async function inspectWhopMerchantReadOnly(
     const company = object.company;
     const owner = company && typeof company === "object" && !Array.isArray(company)
       ? (company as Record<string, unknown>).id : null;
-    const valid = object.id === plan.planId && owner === companyId &&
-      object.plan_type === "renewal" && object.currency === "usd" &&
-      object.renewal_price === plan.price && object.initial_price === 0 &&
-      object.visibility !== "archived" && object.release_method === "buy_now";
-    checks.push({ label: plan.key, ok: valid, code: valid ? "VERIFIED" : "MERCHANT_OR_PLAN_MISMATCH" });
+    // Report only which checks failed, never the raw merchant ID, actual
+    // prices, product metadata, affiliate data, or provider response.
+    // Whop specifies initial_price is added to the first renewal charge:
+    // any nonzero upfront fee must be reviewed against the advertised offer.
+    const reasons = [
+      ...(object.id === plan.planId ? [] : ["PLAN_ID_MISMATCH"]),
+      ...(owner === companyId ? [] : ["COMPANY_MISMATCH"]),
+      ...(object.plan_type === "renewal" ? [] : ["NOT_RECURRING"]),
+      ...(object.currency === "usd" ? [] : ["CURRENCY_MISMATCH"]),
+      ...(object.renewal_price === plan.price ? [] : ["RENEWAL_PRICE_MISMATCH"]),
+      ...(object.initial_price === 0 ? [] : ["UPFRONT_FEE_MISMATCH"]),
+      ...(["visible", "hidden", "quick_link"].includes(String(object.visibility))
+        ? [] : ["PLAN_VISIBILITY_INVALID"]),
+      ...(object.release_method === "buy_now" ? [] : ["NOT_DIRECT_PURCHASE"]),
+    ];
+    const valid = reasons.length === 0;
+    checks.push({
+      label: plan.key,
+      ok: valid,
+      code: valid ? "VERIFIED" : "PLAN_POLICY_MISMATCH",
+      ...(valid ? {} : { reasons }),
+    });
     if (!valid) owned = false;
   }
 
