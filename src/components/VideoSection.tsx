@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { isNativeMobilePlaybackDevice } from "../vsl-device";
 import { observeMeasurement } from "../measurement";
 import { playbackProgress } from "../vsl-engagement";
 
@@ -16,6 +17,21 @@ type YouTubePlayer = {
   playVideo: () => void;
   mute: () => void;
 };
+
+
+// The device class is static during a browser session; no event subscription
+// is needed. useSyncExternalStore preserves the server poster during hydration
+// then selects native mobile playback without a synchronous effect setState.
+function subscribeDeviceClassification() {
+  return () => {};
+}
+function getClientDeviceClassification() {
+  return typeof navigator !== "undefined" &&
+    isNativeMobilePlaybackDevice(navigator.userAgent, navigator.maxTouchPoints);
+}
+function getServerDeviceClassification() {
+  return false;
+}
 
 function PosterArtwork() {
   return (
@@ -35,16 +51,14 @@ function PosterArtwork() {
 
 export default function VideoSection() {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [nativeMobilePlayer, setNativeMobilePlayer] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
-
-  useEffect(() => {
-    // iOS Safari/Instagram and Android may refuse a scripted cross-origin playVideo().
-    // Let the first tap reach YouTube's own play control through the visual orange overlay.
-    const ua = navigator.userAgent;
-    setNativeMobilePlayer(/iPhone|iPad|iPod|Android/i.test(ua) ||
-      (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1));
-  }, []);
+  // iOS/Android and desktop-UA iPadOS require the first tap to go directly to
+  // YouTube's native iframe play control, not scripted cross-origin autoplay.
+  const nativeMobilePlayer = useSyncExternalStore(
+    subscribeDeviceClassification,
+    getClientDeviceClassification,
+    getServerDeviceClassification,
+  );
 
   const playerMounted = isLoaded || nativeMobilePlayer;
 
