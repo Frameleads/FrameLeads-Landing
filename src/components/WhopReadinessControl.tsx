@@ -100,7 +100,7 @@ export default function WhopReadinessControl() {
         <p className="text-sm font-bold text-white">Real Whop merchant identity</p>
         <p className="mt-2 text-xs leading-6 text-[#BDBDBD]">
           {result.identity.status === "MATCHED"
-            ? "Verified: the configured business ID matches BrandFlow Studio."
+            ? "Verified: both approved FrameLeads subscription plans belong to the configured merchant. An additional company-list request is unnecessary."
             : result.identity.status === "CONFIGURED_ID_DIFFERS"
               ? "The configured business ID differs from the verified BrandFlow Studio merchant. Check the Whop dashboard before correcting the Preview configuration."
               : result.identity.status === "COMPANY_READ_PERMISSION_MISSING"
