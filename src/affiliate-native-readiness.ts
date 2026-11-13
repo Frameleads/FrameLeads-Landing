@@ -7,16 +7,104 @@ export type WhopPlanCatalog = {
   // when exactly one eligible plan matches merchant, brand, price and type.
   candidates: { core: string | null; enterprise: string | null };
 };
+export type WhopMerchantIdentity = {
+  status:
+    | "MATCHED"
+    | "CONFIGURED_ID_DIFFERS"
+    | "BRANDFLOW_STUDIO_NOT_FOUND"
+    | "MULTIPLE_BRANDFLOW_STUDIO_COMPANIES"
+    | "COMPANY_READ_PERMISSION_MISSING"
+    | "COMPANY_LOOKUP_BAD_REQUEST"
+    | "COMPANY_LOOKUP_UNAVAILABLE";
+  // Whop company IDs are public resource identifiers, never API secrets.
+  // Display a candidate ONLY when exactly one accessible BrandFlow Studio
+  // merchant is confirmed by its exact route or title.
+  verifiedBusinessId?: string;
+};
 export type WhopReadiness = {
   connected: boolean;
   merchantVerified: boolean;
   rewardsWriteTested: false;
   checks: ProviderCheck[];
   catalog?: WhopPlanCatalog;
+  identity?: WhopMerchantIdentity;
 };
 
 function merchantIdValid(value: string): boolean {
   return /^biz_[A-Za-z0-9]+$/.test(value);
+}
+
+/**
+ * Optional, strictly read-only cross-check of the Whop business identity.
+ * Uses the credential's own company access, without accepting another
+ * company ID from the browser or exposing users/other businesses.
+ */
+async function inspectMerchantIdentity(
+  companyId: string,
+  apiKey: string,
+  send: typeof fetch,
+): Promise<WhopMerchantIdentity> {
+  const matches = new Set<string>();
+  let after: string | undefined;
+  let complete = false;
+  for (let page = 0; page < 6; page++) {
+    const params = after ? "?after=" + encodeURIComponent(after) : "";
+    let response: Response;
+    try {
+      response = await send("https://api.whop.com/api/v1/companies" + params, {
+        method: "GET",
+        headers: { Authorization: "Bearer " + apiKey, Accept: "application/json" },
+        cache: "no-store",
+        redirect: "error",
+        signal: AbortSignal.timeout(9000),
+      });
+    } catch {
+      return { status: "COMPANY_LOOKUP_UNAVAILABLE" };
+    }
+    if (response.status === 403) return { status: "COMPANY_READ_PERMISSION_MISSING" };
+    if (response.status === 400) return { status: "COMPANY_LOOKUP_BAD_REQUEST" };
+    if (!response.ok) return { status: "COMPANY_LOOKUP_UNAVAILABLE" };
+    let payload: unknown;
+    try { payload = await response.json(); } catch {
+      return { status: "COMPANY_LOOKUP_UNAVAILABLE" };
+    }
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+      return { status: "COMPANY_LOOKUP_UNAVAILABLE" };
+    }
+    const pageData = payload as Record<string, unknown>;
+    if (!Array.isArray(pageData.data) || !pageData.page_info ||
+        typeof pageData.page_info !== "object" ||
+        Array.isArray(pageData.page_info)) {
+      return { status: "COMPANY_LOOKUP_UNAVAILABLE" };
+    }
+    for (const item of pageData.data) {
+      if (!item || typeof item !== "object" || Array.isArray(item)) continue;
+      const company = item as Record<string, unknown>;
+      const route = typeof company.route === "string" ? company.route.toLowerCase() : "";
+      const title = typeof company.title === "string" ? company.title.toLowerCase() : "";
+      if ((route === "brandflowstudio" || title === "brandflow studio") &&
+          typeof company.id === "string" && merchantIdValid(company.id)) {
+        matches.add(company.id);
+      }
+    }
+    const info = pageData.page_info as Record<string, unknown>;
+    if (info.has_next_page === false) {
+      complete = true;
+      break;
+    }
+    const next = info.end_cursor;
+    if (info.has_next_page !== true || typeof next !== "string" ||
+        !next || next === after) break;
+    after = next;
+  }
+  // Never claim no match or return a candidate if pages are incomplete.
+  if (!complete) return { status: "COMPANY_LOOKUP_UNAVAILABLE" };
+  if (matches.size > 1) return { status: "MULTIPLE_BRANDFLOW_STUDIO_COMPANIES" };
+  if (matches.size === 0) return { status: "BRANDFLOW_STUDIO_NOT_FOUND" };
+  const verifiedBusinessId = [...matches][0];
+  return verifiedBusinessId === companyId
+    ? { status: "MATCHED" }
+    : { status: "CONFIGURED_ID_DIFFERS", verifiedBusinessId };
 }
 
 /** A credentialed PREVIEW read-only probe. No users, affiliates, or rewards are created. */
@@ -176,6 +264,7 @@ export async function inspectWhopMerchantReadOnly(
 
   // A plan can fail the configured-ID checks even when a suitable replacement
   // is found. Never convert discovery alone into merchantVerified=true.
+  const identity = await inspectMerchantIdentity(companyId, apiKey, send);
   return {
     connected: authorized,
     merchantVerified: owned && checks.length === AFFILIATE_PLANS.length + 1 &&
@@ -183,5 +272,6 @@ export async function inspectWhopMerchantReadOnly(
     rewardsWriteTested: false,
     checks,
     catalog,
+    identity,
   };
 }
