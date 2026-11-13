@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { shouldUseNativeYouTubePlayer } from "../vsl-device";
 import { observeMeasurement } from "../measurement";
 import { playbackProgress } from "../vsl-engagement";
 
@@ -9,6 +10,15 @@ const watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
 // Desktop keeps its existing click-to-load autoplay; mobile uses a native YouTube tap.
 const embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&playsinline=1&enablejsapi=1&origin=https%3A%2F%2Fframeleads.io`;
 const nativeEmbedUrl = embedUrl.replace("autoplay=1", "autoplay=0");
+
+// The user agent is stable throughout the page. React receives an SSR-safe
+// false snapshot and rechecks the native-mobile choice after hydration.
+const subscribeToDevice = () => () => {};
+const getServerDevice = () => false;
+function getClientDevice() {
+  return typeof navigator !== "undefined" &&
+    shouldUseNativeYouTubePlayer(navigator.userAgent, navigator.maxTouchPoints);
+}
 
 type YouTubePlayer = {
   getCurrentTime: () => number;
@@ -35,16 +45,8 @@ function PosterArtwork() {
 
 export default function VideoSection() {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [nativeMobilePlayer, setNativeMobilePlayer] = useState(false);
+  const nativeMobilePlayer = useSyncExternalStore(subscribeToDevice, getClientDevice, getServerDevice);
   const [hasStarted, setHasStarted] = useState(false);
-
-  useEffect(() => {
-    // iOS Safari/Instagram and Android may refuse a scripted cross-origin playVideo().
-    // Let the first tap reach YouTube's own play control through the visual orange overlay.
-    const ua = navigator.userAgent;
-    setNativeMobilePlayer(/iPhone|iPad|iPod|Android/i.test(ua) ||
-      (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1));
-  }, []);
 
   const playerMounted = isLoaded || nativeMobilePlayer;
 
