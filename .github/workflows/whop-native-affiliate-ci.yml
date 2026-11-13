@@ -19,6 +19,7 @@ on:
       - "tests/affiliate-walkthrough.test.ts"
       - "tests/affiliate-native-readiness.test.ts"
       - "tests/affiliate-native-email.test.ts"
+      - "tests/affiliate-preview-e2e.test.ts"
       - "tests/affiliate-asset-pack.test.ts"
       - ".github/workflows/whop-native-affiliate-ci.yml"
   workflow_dispatch:
@@ -41,11 +42,11 @@ jobs:
       - name: Install pinned dependencies without scripts
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Run affiliate policy and provider-mock contracts
-        run: node --experimental-strip-types --test tests/affiliate-native-registration.test.ts tests/affiliate-walkthrough.test.ts tests/affiliate-native-readiness.test.ts tests/affiliate-native-email.test.ts tests/affiliate-asset-pack.test.ts
+        run: node --experimental-strip-types --test tests/affiliate-native-registration.test.ts tests/affiliate-walkthrough.test.ts tests/affiliate-native-readiness.test.ts tests/affiliate-native-email.test.ts tests/affiliate-preview-e2e.test.ts tests/affiliate-asset-pack.test.ts
       - name: Typecheck all application code
         run: npx --no-install tsc --noEmit
       - name: Lint affiliate implementation
-        run: npx --no-install eslint src/affiliate-native.ts src/affiliate-native-email.ts src/app/api/affiliates/apply/route.ts src/app/api/affiliates/confirm/route.ts src/app/affiliates/page.tsx src/app/affiliates/confirm/page.tsx src/components/AffiliateRegistrationForm.tsx src/components/ConfirmAffiliateEmail.tsx src/components/AffiliateWalkthrough.tsx src/components/AffiliateProofKit.tsx src/components/WhopReadinessControl.tsx src/affiliate-native-readiness.ts tests/affiliate-native-registration.test.ts tests/affiliate-walkthrough.test.ts tests/affiliate-native-readiness.test.ts tests/affiliate-native-email.test.ts
+        run: npx --no-install eslint src/affiliate-native.ts src/affiliate-native-email.ts src/app/api/affiliates/apply/route.ts src/app/api/affiliates/confirm/route.ts src/app/affiliates/page.tsx src/app/affiliates/confirm/page.tsx src/components/AffiliateRegistrationForm.tsx src/components/ConfirmAffiliateEmail.tsx src/components/AffiliateWalkthrough.tsx src/components/AffiliateProofKit.tsx src/components/WhopReadinessControl.tsx src/affiliate-native-readiness.ts tests/affiliate-native-registration.test.ts tests/affiliate-walkthrough.test.ts tests/affiliate-native-readiness.test.ts tests/affiliate-native-email.test.ts tests/affiliate-preview-e2e.test.ts
       - name: Verify isolated Next.js build (no Whop keys)
         env:
           NEXT_TELEMETRY_DISABLED: "1"
