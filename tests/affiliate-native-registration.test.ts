@@ -4,12 +4,19 @@ import fs from "node:fs";
 import {
   AFFILIATE_COMMISSION_PERCENT, AFFILIATE_PLANS, affiliateMode, liveConfig,
   createEmailConfirmationToken, readEmailConfirmationToken, validateApplicant,
-  registerVerifiedAffiliate, NativeWhopError,
+  registerVerifiedAffiliate, NativeWhopError, WHOP_API_VERSION,
 } from "../src/affiliate-native.ts";
 
 const companyId = "biz_TestCompany123";
 const secret = "12".repeat(32);
 const applicant = { firstName: "Jane", lastName: "Doe", email: "jane@example.com" };
+
+test("Whop API contract is pinned, and temporary credentialed build probe is removed", () => {
+  assert.equal(WHOP_API_VERSION, "2025-01-01");
+  const pack = JSON.parse(fs.readFileSync("package.json", "utf8")) as { scripts: Record<string, string> };
+  assert.equal(pack.scripts.prebuild, undefined);
+  assert.equal(fs.existsSync("scripts/verify-whop-affiliate-preview.ts"), false);
+});
 
 test("30% recurring-payment policy is fixed to current Core and Enterprise plans", () => {
   assert.equal(AFFILIATE_COMMISSION_PERCENT, 30);
