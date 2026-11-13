@@ -1,4 +1,4 @@
-import { AFFILIATE_PLANS } from "./affiliate-native.ts";
+import { AFFILIATE_PLANS, WHOP_API_VERSION } from "./affiliate-native.ts";
 
 type ProviderCheck = { label: string; ok: boolean; code: string; reasons?: string[] };
 export type WhopPlanCatalog = {
@@ -53,7 +53,7 @@ async function inspectMerchantIdentity(
     try {
       response = await send("https://api.whop.com/api/v1/companies" + params, {
         method: "GET",
-        headers: { Authorization: "Bearer " + apiKey, Accept: "application/json" },
+        headers: { Authorization: "Bearer " + apiKey, "Api-Version-Date": WHOP_API_VERSION, Accept: "application/json" },
         cache: "no-store",
         redirect: "error",
         signal: AbortSignal.timeout(9000),
@@ -127,7 +127,7 @@ export async function inspectWhopMerchantReadOnly(
     try {
       const response = await send(base + path, {
         method: "GET",
-        headers: { Authorization: "Bearer " + apiKey, Accept: "application/json" },
+        headers: { Authorization: "Bearer " + apiKey, "Api-Version-Date": WHOP_API_VERSION, Accept: "application/json" },
         redirect: "error",
         cache: "no-store",
         signal: AbortSignal.timeout(9000),
