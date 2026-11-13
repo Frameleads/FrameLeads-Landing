@@ -101,3 +101,21 @@ read-only check passes, live invitations are blocked pending approved anti-abuse
 and replay controls, test email verification, Whop create-affiliate permissions,
 customer-specific links, and actual welcome-email delivery. The old blocked
 persistence work is not part of this checker.
+
+## 2026-11-13 — ROOT CAUSE CONFIRMED AND CORRECTED
+
+Whop changed its Plans API on 2026-06-09, replacing company_id with account_id in request parameters and plan.company with plan.account in responses. New API keys default to newer dated schemas; earlier FrameLeads code omitted the version header and therefore incorrectly interpreted the provider response.
+
+FIX: src/affiliate-native.ts exports WHOP_API_VERSION = 2025-01-01 and all native Whop enrollment and read-only readiness requests now send Api-Version-Date with that value. Whop explicitly documents the original version and overriding an API key's default pin: https://docs.whop.com/developer/api/versioning.
+
+**Provider-backed evidence (NOT mocks):** A one-time protected Preview build-time check with the user's existing branch-specific credentials returned sanitized values: contract 2025-01-01; connected true; merchantVerified true; core VERIFIED; enterprise VERIFIED; affiliate_read VERIFIED; catalog MATCH_FOUND; writes 0.
+
+The two configured plans therefore passed ID, company ownership, USD monthly renewal price, renewal billing, zero extra upfront fee, visibility and buy-now requirements. The previous COMPANY_MISMATCH and NOT_RECURRING outputs were API-version contract artifacts. No Whop merchant products or settings were altered.
+
+The optional company-list endpoint returned 400 even though specific plan ownership and merchant-scoped affiliate read were already verified. The checker now skips that unnecessary request once merchant ownership checks pass.
+
+The temporary credentialed build-time probe and its prebuild hook were removed immediately after successful verification, to avoid persistent use of production API credentials during Preview builds. No credentials were committed or logged. The protected /affiliates/readiness endpoint remains available.
+
+**Still NOT verified:** actual affiliate creation, 30% all_payments override writes/read-back, invitation email, affiliate clicks and purchases, renewal payout, delivery retries, replay/abuse protections, and production security approval. PR remains draft, Production gates remain OFF. Do not claim automatic email delivery is verified until tested.
+
+Docs: https://docs.whop.com/developer/api/versioning
