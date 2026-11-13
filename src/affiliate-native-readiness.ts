@@ -1,7 +1,19 @@
 import { AFFILIATE_PLANS } from "./affiliate-native.ts";
 
 type ProviderCheck = { label: string; ok: boolean; code: string; reasons?: string[] };
-export type WhopReadiness = { connected: boolean; merchantVerified: boolean; rewardsWriteTested: false; checks: ProviderCheck[] };
+export type WhopPlanCatalog = {
+  status: "MATCH_FOUND" | "NO_MATCH" | "AMBIGUOUS" | "READ_UNAVAILABLE";
+  // Plan IDs are public identifiers, not access credentials. Only emit an ID
+  // when exactly one eligible plan matches merchant, brand, price and type.
+  candidates: { core: string | null; enterprise: string | null };
+};
+export type WhopReadiness = {
+  connected: boolean;
+  merchantVerified: boolean;
+  rewardsWriteTested: false;
+  checks: ProviderCheck[];
+  catalog?: WhopPlanCatalog;
+};
 
 function merchantIdValid(value: string): boolean {
   return /^biz_[A-Za-z0-9]+$/.test(value);
@@ -36,7 +48,7 @@ export async function inspectWhopMerchantReadOnly(
         const code = response.status === 401 ? "INVALID_CREDENTIAL" : response.status === 403
           ? "INSUFFICIENT_PERMISSIONS" : response.status === 404 ? "NOT_FOUND"
           : response.status === 429 ? "PROVIDER_RATE_LIMIT" : "PROVIDER_ERROR";
-        checks.push({ label: path.includes("/plans/") ? "plan" : "affiliate_read", ok: false, code });
+        checks.push({ label: path.startsWith("/plans") ? "plan_catalog" : "affiliate_read", ok: false, code });
         owned = false;
         return null;
       }
@@ -93,11 +105,72 @@ export async function inspectWhopMerchantReadOnly(
   checks.push({ label: "affiliate_read", ok: affiliateRead, code: affiliateRead ? "VERIFIED" : "UNVERIFIED" });
   if (!affiliateRead) owned = false;
 
+  // Read the connected merchant's own plan catalog to determine whether
+  // checkout-policy IDs are outdated. This is an optional diagnostic and
+  // NEVER changes commissions, subscriptions, plan IDs, or live configuration.
+  let catalog: WhopPlanCatalog = {
+    status: "READ_UNAVAILABLE",
+    candidates: { core: null, enterprise: null },
+  };
+  const companyPlans: Record<string, unknown>[] = [];
+  let cursor: string | undefined;
+  let catalogComplete = false;
+  for (let page = 0; page < 6; page++) {
+    const params = new URLSearchParams({ company_id: companyId, first: "50" });
+    if (cursor) params.set("after", cursor);
+    const listResult = await read("/plans?" + params.toString());
+    if (!listResult || !Array.isArray(listResult.data) ||
+        !listResult.page_info || typeof listResult.page_info !== "object") break;
+    if (listResult.data.some(item => !item || typeof item !== "object" || Array.isArray(item))) break;
+    companyPlans.push(...listResult.data as Record<string, unknown>[]);
+    const pageInfo = listResult.page_info as Record<string, unknown>;
+    if (pageInfo.has_next_page === false) {
+      catalogComplete = true;
+      break;
+    }
+    const next = pageInfo.end_cursor;
+    if (pageInfo.has_next_page !== true || typeof next !== "string" ||
+        !next || next === cursor) break;
+    cursor = next;
+  }
+  if (catalogComplete) {
+    const candidates = { core: null as string | null, enterprise: null as string | null };
+    let ambiguous = false;
+    for (const plan of AFFILIATE_PLANS) {
+      const possible = companyPlans.filter(value => {
+        const company = value.company;
+        const product = value.product;
+        if (!company || typeof company !== "object" || Array.isArray(company) ||
+            (company as Record<string, unknown>).id !== companyId ||
+            !product || typeof product !== "object" || Array.isArray(product)) return false;
+        const productTitle = (product as Record<string, unknown>).title;
+        if (typeof productTitle !== "string") return false;
+        const title = productTitle.toLowerCase();
+        return title.includes("frameleads") && title.includes(plan.key) &&
+          value.plan_type === "renewal" &&
+          value.currency === "usd" && value.renewal_price === plan.price &&
+          value.initial_price === 0 && value.release_method === "buy_now" &&
+          value.visibility !== "archived" &&
+          typeof value.id === "string" && /^plan_[a-zA-Z0-9]+$/.test(value.id);
+      });
+      if (possible.length > 1) ambiguous = true;
+      if (possible.length === 1) candidates[plan.key] = possible[0].id as string;
+    }
+    catalog = {
+      status: ambiguous ? "AMBIGUOUS" :
+        candidates.core || candidates.enterprise ? "MATCH_FOUND" : "NO_MATCH",
+      candidates,
+    };
+  }
+
+  // A plan can fail the configured-ID checks even when a suitable replacement
+  // is found. Never convert discovery alone into merchantVerified=true.
   return {
     connected: authorized,
     merchantVerified: owned && checks.length === AFFILIATE_PLANS.length + 1 &&
       checks.every(check => check.ok),
     rewardsWriteTested: false,
     checks,
+    catalog,
   };
 }
