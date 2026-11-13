@@ -67,12 +67,13 @@ test("read-only probe validates real plan IDs, ownership and affiliate read scop
   assert.equal(result.merchantVerified, true);
   assert.equal(result.rewardsWriteTested, false);
   assert.deepEqual(result.identity, { status: "MATCHED" });
+  assert.equal(fixture.calls.some(x => x.url.startsWith("/api/v1/companies")), false, "skip optional account enumeration after merchant ownership already verified");
   assert.deepEqual(result.checks.map(x => x.ok), [true, true, true]);
   assert.deepEqual(result.catalog, {
     status: "MATCH_FOUND",
     candidates: { core: "plan_GQTDPXnvijugf", enterprise: "plan_uGDGf5WKW7hlE" },
   });
-  assert.equal(fixture.calls.length, 5);
+  assert.equal(fixture.calls.length, 4);
   assert.equal(fixture.calls.every(x => x.method === "GET"), true);
   assert.equal(JSON.stringify(result).includes("PRIVATE_NEVER_RENDER"), false);
   assert.equal(JSON.stringify(result).includes("fake-api-key"), false);
@@ -93,7 +94,7 @@ test("Whop 400 plan errors expose only allowlisted parameter categories", async 
 });
 
 test("company identity diagnostic recognizes the exact real merchant without exposing other companies", async () => {
-  const mismatch = whopFixture({ companyIdentityDiff: true });
+  const mismatch = whopFixture({ wrongCompany: true, companyIdentityDiff: true });
   const result = await inspectWhopMerchantReadOnly(companyId, "secret", mismatch.mock);
   assert.deepEqual(result.identity, {
     status: "CONFIGURED_ID_DIFFERS",
@@ -104,11 +105,11 @@ test("company identity diagnostic recognizes the exact real merchant without exp
   assert.equal(JSON.stringify(result).includes("secret"), false);
 });
 
-test("company identity lookup reports missing read-only permission without declaring plan failure", async () => {
-  const fixture = whopFixture({ companyReadDenied: true });
+test("company identity lookup reports missing read-only permission if plan verification fails", async () => {
+  const fixture = whopFixture({ wrongCompany: true, companyReadDenied: true });
   const result = await inspectWhopMerchantReadOnly(companyId, "key", fixture.mock);
   assert.deepEqual(result.identity, { status: "COMPANY_READ_PERMISSION_MISSING" });
-  assert.equal(result.merchantVerified, true, "identity lookup is an optional diagnostic");
+  assert.equal(result.merchantVerified, false, "plan owner mismatch remains a hard blocker");
   assert.equal(fixture.calls.every(call => call.method === "GET"), true);
 });
 
