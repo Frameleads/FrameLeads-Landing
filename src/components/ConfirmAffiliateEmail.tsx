@@ -47,7 +47,7 @@ export default function ConfirmAffiliateEmail() {
       } else {
         setState("failed");
         setMessage(payload.code === "ENROLLED_EMAIL_DELIVERY_PENDING"
-          ? "Whop registration may have succeeded, but we could not confirm email delivery. Contact akram@frameleads.io before trying again."
+          ? "Your Whop registration may be complete, but the welcome email could not be queued. Please contact akram@frameleads.io before submitting another application."
           : payload.code === "EXPIRED_OR_INVALID_TOKEN"
             ? "Your link is invalid or expired. Return to the application to request a new one."
             : "We could not safely complete the signup. Contact akram@frameleads.io.");
@@ -66,9 +66,9 @@ export default function ConfirmAffiliateEmail() {
     </h1>
     <p className="mt-4 text-sm leading-7 text-[#BDBDBD]">
       {state === "complete"
-        ? "Your registration was confirmed. We sent your individual Core and Enterprise referral links to your verified address. Check your inbox and spam folder."
+        ? "Your registration is confirmed. We queued a FrameLeads welcome email containing your individual Whop Core and Enterprise links. Check your inbox and spam folder."
         : state === "checking" ? "Checking your link…" :
-          state === "ready" || state === "submitting" ? "Confirming will securely register your Whop affiliate account and request your two first-payment-only referral links." : message}
+          state === "ready" || state === "submitting" ? "Confirming will securely register your Whop affiliate account and request your two 30% recurring referral links." : message}
     </p>
     {state === "ready" && <button type="button" onClick={confirm} className="mt-7 min-h-12 w-full rounded-xl bg-[#FF5A1F] px-6 font-semibold text-white hover:bg-[#E64B12]">Confirm and join</button>}
     {state === "submitting" && <p role="status" className="mt-6 text-sm text-[#FFB18C]">Completing your registration…</p>}
