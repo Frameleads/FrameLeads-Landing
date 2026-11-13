@@ -20,11 +20,13 @@ export default function PrivacyPage() {
       <p><strong className="text-white">Website and device information.</strong> When you visit, our website and hosting providers may process technical information needed to deliver and protect the site, such as your IP address, browser and device details, requested pages, referring page, and request time. If you allow optional measurement, we may also use page activity, campaign information, and advertising or device identifiers.</p>
       <p><strong className="text-white">Reply Workflow Audit.</strong> The Audit uses your answers about your outbound workflow to prepare a diagnosis. You can view the diagnosis without giving us contact details. If you request a personalized workflow map, we also collect the work email and company website you provide, an optional first name, your Audit answers, and the resulting diagnosis so we can prepare and deliver that request.</p>
       <p><strong className="text-white">Email and support requests.</strong> If you request a resource or subscribe through a FrameLeads form, we use the email address you provide to send the requested material and related communications. If you contact support, we use your message and contact details to respond. Email distribution is supported by MailerLite.</p>
+      <p><strong className="text-white">Private website feedback.</strong> When you choose to submit the optional feedback form, we collect the purchase concern you select, any additional comments you provide (up to 1,200 characters), the page path, relevant pricing or checkout context, and the submission time. The page path does not include its query string. We do not ask for a name or email address in this form, but your comments may include information you voluntarily provide. Please avoid submitting confidential client or prospect information. To help prevent abuse, our server derives a daily-changing pseudonymous rate-limit identifier from your network address; the feedback database does not store the raw address.</p>
       <p><strong className="text-white">Accounts and purchases.</strong> If you use an account-enabled feature, we may process account, configuration, and usage information needed to provide it. Whop processes checkout and payment information, including payment credentials. The seller may receive purchase and subscription details needed to provide access, administer your order, and support you.</p>
     </LegalSection>
 
     <LegalSection title="3. How we use information">
       <p>We use information to operate and secure the website and services; provide the Audit diagnosis and any workflow map you request; respond to messages; deliver requested resources; manage accounts, purchases, and subscriptions; understand service performance when you allow analytics; measure advertising when you allow advertising measurement; prevent misuse; and meet legal obligations.</p>
+      <p>We also use optional private feedback to understand prospective customers&apos; concerns and improve our product, offer explanations, onboarding, and support. Private feedback is not published as a review or testimonial or shared publicly without separate permission.</p>
       <p>We do not require optional analytics or advertising consent to complete the Reply Workflow Audit or view its diagnosis. You choose whether to provide contact details for a separate workflow-map request.</p>
     </LegalSection>
 
@@ -35,13 +37,14 @@ export default function PrivacyPage() {
     </LegalSection>
 
     <LegalSection title="5. Service providers and sharing">
-      <p>We use service providers to host and operate the website, deliver email, process checkout, provide requested Audit services, and support analytics and advertising measurement. These providers receive information needed for their services. They include Vercel for website hosting, MailerLite for email distribution, Whop for checkout and payment processing, and—when enabled—Meta and TikTok for advertising measurement. YouTube processes information when you choose to play its embedded video.</p>
+      <p>We use service providers to host and operate the website, deliver email, process checkout, provide requested Audit services, and support analytics and advertising measurement. These providers receive information needed for their services. They include Vercel for website hosting, Supabase for restricted storage of private website feedback, MailerLite for email distribution, Whop for checkout and payment processing, and—when enabled—Meta and TikTok for advertising measurement. YouTube processes information when you choose to play its embedded video.</p>
       <p>Information provided for a personalized workflow map is shared with the service provider that prepares and delivers that request. We may also disclose information when required by law, to protect the rights or safety of people or services, or as part of a business transfer, subject to applicable law.</p>
       <p>Whop has its own <a className={providerLink} href="https://whop.com/privacy/" target="_blank" rel="noopener noreferrer">Privacy Policy</a>. Meta, TikTok, YouTube, and other providers describe their own data practices in their respective privacy notices.</p>
     </LegalSection>
 
     <LegalSection title="6. Retention and security">
       <p>We keep information for as long as reasonably needed to provide the service or resource requested, administer accounts and purchases, respond to you, protect our services, and meet legal obligations. Retention periods depend on the type of information and the reason it was collected. Providers may retain information under their own policies and legal requirements.</p>
+      <p>Private website feedback is scheduled for deletion after it is more than 90 days old. Pseudonymous feedback rate-limit records are scheduled for deletion once more than 48 hours old. These cleanup checks run hourly, so deletion may occur on the next scheduled run after each threshold.</p>
       <p>We use reasonable safeguards designed to protect information. No method of transmission or storage is completely secure. If you have a privacy or security concern, please contact us promptly.</p>
     </LegalSection>
 
@@ -51,6 +54,7 @@ export default function PrivacyPage() {
 
     <LegalSection title="8. Your choices and rights">
       <p>Depending on your location and applicable law, you may have the right to request access to, correction of, or deletion of personal information; object to or restrict certain processing; receive a copy of information; withdraw consent; or opt out of certain advertising or sharing. The rights available and any exceptions depend on the law that applies.</p>
+      <p>Because the private feedback form does not ask for a name, email address or account, we may not be able to locate an individual anonymous submission for a privacy request without enough information to identify it.</p>
       <p>Use Privacy settings to change optional measurement choices. To make another privacy request, email <a className={providerLink} href="mailto:akram@frameleads.io">akram@frameleads.io</a>. Please tell us what request you are making; we may ask for reasonable information to verify it. You can unsubscribe from email communications using the link or instructions in the message.</p>
     </LegalSection>
 

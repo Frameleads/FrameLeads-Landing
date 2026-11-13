@@ -1,0 +1,42 @@
+name: Feedback validation tests
+
+on:
+  pull_request:
+    paths:
+      - 'src/feedback.ts'
+      - 'src/feedback-validation.ts'
+      - 'src/feedback-target.ts'
+      - 'src/app/api/feedback/route.ts'
+      - 'scripts/feedback-hosted-http-smoke.mjs'
+      - 'scripts/feedback-hosted-no-copy.mjs'
+      - 'scripts/run-feedback-hosted-smoke.ps1'
+      - 'scripts/transfer-feedback-secret-to-vercel.mjs'
+      - 'tests/feedback-api.test.ts'
+      - 'src/components/FeedbackExperience.tsx'
+      - 'src/app/privacy/page.tsx'
+      - 'supabase/migrations/**_website_feedback_retention.sql'
+      - 'tests/feedback-validation.test.ts'
+      - 'tests/feedback-target.test.ts'
+      - 'tests/feedback-retention-migration.test.ts'
+      - '.github/workflows/feedback-validation.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  feedback-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Set up Node 24
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - name: Check controlled hosted HTTP smoke runner syntax
+        run: node --check scripts/feedback-hosted-http-smoke.mjs && node --check scripts/feedback-hosted-no-copy.mjs && node --check scripts/transfer-feedback-secret-to-vercel.mjs
+      - name: Test feedback validation and attribution
+        run: node --experimental-strip-types --test tests/feedback-validation.test.ts tests/feedback-target.test.ts tests/feedback-retention-migration.test.ts
