@@ -139,3 +139,27 @@ Owner approved one test recipient by email in chat. That personal email, its cre
 **Critical outstanding limits:** The Whop API create/find action returned 200, but Whop's **native invitation email was not observed or verified** in the recipient's mailbox. This test was a secure Preview build-backed integration invocation, not a public `/affiliates` form-to-email-to-confirmation browser test. Production email verification, security review, anti-abuse and token replay protections, terms/privacy, global-default commission alignment, buyer attribution, and renewal commission lifecycle remain unverified. Do not claim public launch ready.
 
 **Next:** Owner checks the authorized test recipient's inbox/spam for the native Whop invitation and opens its affiliate dashboard. If no native invitation arrives, implement an approved transactional notification that links to the real Whop dashboard (without inventing provider URLs), then test the complete website onboarding flow separately.
+
+## 2026-11-13 — Missing native Whop email: cause and engineered fallback
+
+The approved one-recipient API test directly invoked `registerVerifiedAffiliate()`. It did not execute the website's application/email-confirmation or welcome-email routes. Whop's official `POST /affiliates` documentation promises creation/find of the affiliate relationship but **does not document sending a native invitation email**. The test recipient confirmed no native invitation was received in Inbox/Spam. Whop ownership and both 30%-recurring rewards remain verified.
+
+**Design decision:** Keep Whop as the source of truth for affiliate identity, tracking, product overrides and links. FrameLeads sends its own transactional email after successful address verification and Whop read-back. Do NOT market this as a native Whop invitation or invent a Whop notification endpoint.
+
+**Implemented in Draft PR #43:**
+- `src/affiliate-native-email.ts`: shared typed MailerSend sender for the 20-minute confirmation message and Whop referral-link welcome email, with a branded HTML+plain text version.
+- Must receive HTTP `202` **and** an `x-message-id`; a 202 without message ID (possible all-suppressed recipient) is treated as NOT QUEUED. Neither accepted nor queued is falsely called delivered.
+- Disables email open/click/content tracking; does not log links, applicant email, token, or raw provider errors. Rejects non-Whop referral URLs.
+- `apply` and `confirm` routes use the shared sender, leaving the Whop registration logic and disabled Production gates untouched.
+- The walkthrough mockup accurately depicts the FrameLeads welcome email instead of promising an email from Whop. CTA arrow placement and all four existing illustrations are preserved.
+- Mock-based contract tests cover sender response statuses, suppression, invalid links, authorized recipient and safe messaging. This is not evidence of real MailerSend delivery.
+
+**Sender prerequisites (currently NOT set in frameleads-landing):**
+1. Create/verify a sender domain for MailerSend (e.g. `frameleads.io`) with required SPF/DKIM/DMARC.
+2. On the feature branch Preview only, set Sensitive `AFFILIATE_MAILERSEND_API_KEY` and plain `AFFILIATE_MAIL_FROM` for a verified sender address. A dedicated MailerSend service may be used; existing MailerLite marketing-list credentials are NOT a transactional MailerSend token.
+3. Before enabling production, also configure one-time encrypted token key, Cloudflare Turnstile, durable rate limits/replay protections, legal consent and independent review. Two production registration feature gates stay OFF.
+4. Use the approved test recipient for one Preview transactional mail and verify actual receipt plus provider delivery/bounce status using the x-message-id. Then test the complete form→verify→enroll→welcome journey.
+
+A one-time **manual recovery email** was sent from the connected FrameLeads Gmail account to the previously approved test recipient, with instructions to sign in to Whop and copy both links. This is explicitly not the native Whop notification or evidence of automated website email.
+
+Provider references: https://docs.whop.com/api-reference/affiliates/create-affiliate and https://developers.mailersend.com/api/v1/email.
