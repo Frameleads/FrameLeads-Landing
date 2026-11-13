@@ -13,7 +13,7 @@ const approvedImages = [
   ["04-decision-packet-20261102.png", "04-decision-packet.png"],
 ];
 
-const readme = \`FRAMELEADS / AFFILIATE PRODUCT-PROOF KIT
+const readme = `FRAMELEADS / AFFILIATE PRODUCT-PROOF KIT
 Edition: November 2026
 
 These are approved screenshots of the FrameLeads application, using illustrative
@@ -42,7 +42,7 @@ Updated walkthrough screen recordings can be added later without changing
 your affiliate relationship.
 
 © 2026 FrameLeads · BrandFlow Studio
-\`;
+`;
 
 const crcTable = Array.from({ length: 256 }, (_, index) => {
   let n = index;
