@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 
-type RegistrationMode = "preview" | "live" | "disabled";
+type RegistrationMode = "preview" | "preview_e2e" | "live" | "disabled";
 declare global {
   interface Window {
     turnstile?: {
@@ -78,7 +78,9 @@ export default function AffiliateRegistrationForm({ mode }: { mode: Registration
           ? "Too many attempts. Please try again later."
           : data.code === "VERIFICATION_FAILED" || data.code === "VERIFICATION_REQUIRED"
             ? "Please complete the verification and try again."
-            : data.code === "NOT_LIVE"
+            : data.code === "TEST_ACCESS_DENIED"
+              ? "This protected test accepts only the approved test email address."
+              : data.code === "NOT_LIVE"
               ? "Applications are not open yet."
               : "We could not process your application. Please try again later.");
         return;
