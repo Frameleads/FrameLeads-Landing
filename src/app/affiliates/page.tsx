@@ -58,6 +58,9 @@ export default function AffiliatePage() {
         {mode === "preview" && <div className="mb-4 rounded-xl border border-[#FF5A1F]/30 bg-[#FF5A1F]/10 px-4 py-3 text-xs font-semibold leading-5 text-[#FFCAAE]" role="status">
           Preview test only — submissions validate the form, but do not contact Whop or send emails.
         </div>}
+        {mode === "preview_e2e" && <div className="mb-4 rounded-xl border border-[#FF5A1F]/30 bg-[#FF5A1F]/10 px-4 py-3 text-xs font-semibold leading-5 text-[#FFCAAE]" role="status">
+          Protected Preview test — only the approved test email can receive confirmation and enroll in Whop. Public applications remain closed.
+        </div>}
         {mode === "disabled" && <div className="mb-4 rounded-xl border border-white/20 bg-[#242424] px-4 py-3 text-sm text-[#BDBDBD]">
           Partner applications are not open yet.
         </div>}
