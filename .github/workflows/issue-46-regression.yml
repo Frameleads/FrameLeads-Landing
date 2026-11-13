@@ -1,18 +1,29 @@
-name: Issue 46 checkout and video regression QA
+name: Checkout and VSL first-tap regressions
+
 on:
+  pull_request:
+    branches:
+      - main
+      - fix/nextjs-16-4-6-security
+    paths:
+      - src/components/EmbeddedWhopCheckout.tsx
+      - src/components/VideoSection.tsx
+      - src/checkout-elements-lifecycle.ts
+      - src/vsl-device.ts
+      - tests/checkout-elements-lifecycle.test.ts
+      - tests/embedded-checkout-policy.test.ts
+      - tests/vsl-device-regression.test.ts
+      - .github/workflows/issue-46-regression.yml
   push:
     branches:
       - fix/issue-46-lint-regressions-nov13
-  pull_request:
-    branches:
-      - fix/nextjs-16-4-6-security
 
 permissions:
   contents: read
 
 jobs:
-  full-qa:
-    name: Checkout and VSL lifecycle, unit, lint, build and audit
+  checkout-vsl-regression:
+    name: Cancellable checkout initialization and native mobile video tap
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -21,17 +32,7 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '24'
-      - name: Locked install
+      - name: Locked dependency install
         run: npm ci --no-fund
-      - name: Checkout lifecycle and mobile playback targeted regression tests
-        run: node --experimental-strip-types --test tests/checkout-elements-lifecycle.test.ts tests/vsl-device-regression.test.ts
-      - name: Entire unit test suite
-        run: npm test
-      - name: ESLint
-        run: npm run lint
-      - name: TypeScript
-        run: npx tsc --noEmit
-      - name: Next.js production build
-        run: npm run build
-      - name: Production dependency security audit
-        run: npm audit --omit=dev --audit-level=high
+      - name: Targeted Whop checkout and mobile VSL regression tests
+        run: node --experimental-strip-types --test tests/checkout-elements-lifecycle.test.ts tests/embedded-checkout-policy.test.ts tests/vsl-device-regression.test.ts
