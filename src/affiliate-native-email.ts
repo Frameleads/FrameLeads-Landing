@@ -134,6 +134,8 @@ export async function queueAffiliateWelcomeEmail(
     "Your FrameLeads affiliate registration is ready. Whop manages your referral tracking and commissions.",
     "Core ($149/month): 30% on eligible initial and recurring payments.\n" + links.core,
     "Enterprise ($499/month): 30% on eligible initial and recurring payments.\n" + links.enterprise,
+    "Product proof you can use: https://frameleads.io/affiliates#partner-proof-kit\nDownload the four real FrameLeads workflow screenshots as a ZIP. Screens use illustrative demo prospects, not customer results.",
+    "Short product recordings will be added to the same resource area when available.",
     "To view your referral dashboard, sign in to Whop and go to Affiliates → Refer buyers → View assets. Read the latest partner guidelines there before promoting.",
   ];
   return queueAffiliateEmail(
