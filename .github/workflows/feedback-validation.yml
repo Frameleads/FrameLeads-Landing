@@ -10,6 +10,7 @@ on:
       - 'scripts/feedback-hosted-http-smoke.mjs'
       - 'scripts/feedback-hosted-no-copy.mjs'
       - 'scripts/run-feedback-hosted-smoke.ps1'
+      - 'scripts/transfer-feedback-secret-to-vercel.mjs'
       - 'tests/feedback-api.test.ts'
       - 'src/components/FeedbackExperience.tsx'
       - 'src/app/privacy/page.tsx'
@@ -36,6 +37,6 @@ jobs:
         with:
           node-version: '24'
       - name: Check controlled hosted HTTP smoke runner syntax
-        run: node --check scripts/feedback-hosted-http-smoke.mjs && node --check scripts/feedback-hosted-no-copy.mjs
+        run: node --check scripts/feedback-hosted-http-smoke.mjs && node --check scripts/feedback-hosted-no-copy.mjs && node --check scripts/transfer-feedback-secret-to-vercel.mjs
       - name: Test feedback validation and attribution
         run: node --experimental-strip-types --test tests/feedback-validation.test.ts tests/feedback-target.test.ts tests/feedback-retention-migration.test.ts
