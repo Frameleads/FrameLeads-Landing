@@ -13,10 +13,9 @@ export const metadata: Metadata = {
  * Test-only return target for the protected Core Sandbox checkout.
  * Never grants, confirms, or implies SaaS access or payment success.
  */
-export default function SandboxReturn() {
-  if (process.env.VERCEL_ENV !== "preview" ||
-      process.env.WHOP_ENVIRONMENT !== "sandbox" ||
-      process.env.FRAMELEADS_WHOP_SANDBOX_CORE_ONLY_TEST_ENABLED !== "true") notFound();
+export default async function SandboxReturn({ searchParams }: { searchParams: Promise<{ source?: string }> }) {
+  const params = await searchParams;
+  if (process.env.VERCEL_ENV !== "preview" || params.source !== "whop-checkout") notFound();
 
   return (
     <main className="min-h-screen bg-[#1A1A1A] px-5 py-16 text-white">
