@@ -48,5 +48,6 @@ export async function POST(request: Request) {
     merchantVerified: result.merchantVerified,
     rewardsWriteTested: false,
     checks: result.checks,
+    catalog: result.catalog,
   }, result.merchantVerified ? 200 : 503);
 }
