@@ -45,6 +45,7 @@ function fakeWhop(existing: Record<string, unknown>[] = [], alteredPrice = false
   const calls: { method: string; path: string; body: Record<string, unknown> | null }[] = [];
   const mock = async (input: string | URL | Request, init?: RequestInit): Promise<Response> => {
     const url = new URL(input.toString());
+    assert.equal(new Headers(init?.headers).get("Api-Version-Date"), "2025-01-01", "Whop registration calls must pin the stable company_id API contract");
     const path = url.pathname;
     const method = init?.method || "GET";
     const body = init?.body ? JSON.parse(String(init.body)) as Record<string, unknown> : null;
