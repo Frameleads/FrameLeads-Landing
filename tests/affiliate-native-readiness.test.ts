@@ -4,7 +4,7 @@ import fs from "node:fs";
 import { inspectWhopMerchantReadOnly } from "../src/affiliate-native-readiness.ts";
 
 const companyId = "biz_TestCompany123";
-function whopFixture(options: { unauthorized?: boolean; wrongCompany?: boolean; wrongPrice?: boolean; upfrontFee?: boolean; waitlist?: boolean; archived?: boolean; differentCurrency?: boolean } = {}) {
+function whopFixture(options: { unauthorized?: boolean; wrongCompany?: boolean; wrongPrice?: boolean; upfrontFee?: boolean; waitlist?: boolean; archived?: boolean; differentCurrency?: boolean; staleConfiguredIds?: boolean } = {}) {
   const calls: { url: string; method: string }[] = [];
   const mock = async (value: string | URL | Request, init?: RequestInit) => {
     const url = new URL(value.toString());
@@ -13,15 +13,24 @@ function whopFixture(options: { unauthorized?: boolean; wrongCompany?: boolean; 
       status, headers: { "Content-Type": "application/json" },
     });
     if (options.unauthorized) return respond({ error: "unauthorized" }, 401);
+    const plan = (key: "core" | "enterprise", catalog = false) => ({
+      id: catalog && options.staleConfiguredIds
+        ? key === "core" ? "plan_CurrentCore123" : "plan_CurrentEnterprise456"
+        : key === "core" ? "plan_GQTDPXnvijugf" : "plan_uGDGf5WKW7hlE",
+      company: { id: !catalog && (options.wrongCompany || options.staleConfiguredIds) ? "biz_AnotherCompany" : companyId },
+      product: { title: key === "core" ? "FrameLeads Core: Reply Decision Intelligence" : "FrameLeads Enterprise: Revenue Decision Intelligence" },
+      plan_type: !catalog && options.staleConfiguredIds ? "one_time" : "renewal",
+      currency: options.differentCurrency ? "aed" : "usd",
+      initial_price: options.upfrontFee ? 149 : 0,
+      renewal_price: key === "core" && options.wrongPrice ? 99 : key === "core" ? 149 : 499,
+      release_method: options.waitlist ? "waitlist" : "buy_now",
+      visibility: options.archived ? "archived" : "visible",
+    });
     if (url.pathname.includes("/plans/")) {
-      const isCore = url.pathname.includes("plan_GQTDPXnvijugf");
-      return respond({
-        id: isCore ? "plan_GQTDPXnvijugf" : "plan_uGDGf5WKW7hlE",
-        company: { id: options.wrongCompany ? "biz_AnotherCompany" : companyId },
-        plan_type: "renewal", currency: options.differentCurrency ? "aed" : "usd", initial_price: options.upfrontFee ? 149 : 0,
-        renewal_price: isCore && options.wrongPrice ? 99 : isCore ? 149 : 499,
-        release_method: options.waitlist ? "waitlist" : "buy_now", visibility: options.archived ? "archived" : "visible",
-      });
+      return respond(plan(url.pathname.includes("plan_GQTDPXnvijugf") ? "core" : "enterprise"));
+    }
+    if (url.pathname === "/api/v1/plans") {
+      return respond({ data: [plan("core", true), plan("enterprise", true)], page_info: { has_next_page: false, end_cursor: null } });
     }
     if (url.pathname === "/api/v1/affiliates") {
       return respond({
@@ -41,10 +50,31 @@ test("read-only probe validates real plan IDs, ownership and affiliate read scop
   assert.equal(result.merchantVerified, true);
   assert.equal(result.rewardsWriteTested, false);
   assert.deepEqual(result.checks.map(x => x.ok), [true, true, true]);
-  assert.equal(fixture.calls.length, 3);
+  assert.deepEqual(result.catalog, {
+    status: "MATCH_FOUND",
+    candidates: { core: "plan_GQTDPXnvijugf", enterprise: "plan_uGDGf5WKW7hlE" },
+  });
+  assert.equal(fixture.calls.length, 4);
   assert.equal(fixture.calls.every(x => x.method === "GET"), true);
   assert.equal(JSON.stringify(result).includes("PRIVATE_NEVER_RENDER"), false);
   assert.equal(JSON.stringify(result).includes("fake-api-key"), false);
+});
+
+test("discovers a unique eligible replacement from the real merchant catalog without writes", async () => {
+  const fixture = whopFixture({ staleConfiguredIds: true });
+  const result = await inspectWhopMerchantReadOnly(companyId, "key", fixture.mock);
+  assert.equal(result.merchantVerified, false, "suggesting plans must never bypass configured ID checks");
+  assert.deepEqual(result.catalog, {
+    status: "MATCH_FOUND",
+    candidates: { core: "plan_CurrentCore123", enterprise: "plan_CurrentEnterprise456" },
+  });
+  assert.deepEqual(result.checks.filter(x => x.label === "core" || x.label === "enterprise")
+    .map(x => x.reasons), [
+      ["COMPANY_MISMATCH", "NOT_RECURRING"],
+      ["COMPANY_MISMATCH", "NOT_RECURRING"],
+    ]);
+  assert.equal(fixture.calls.every(x => x.method === "GET"), true);
+  assert.equal(JSON.stringify(result).includes("biz_AnotherCompany"), false);
 });
 
 test("probe rejects wrong company and stale plan prices", async () => {
