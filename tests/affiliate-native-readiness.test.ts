@@ -4,7 +4,7 @@ import fs from "node:fs";
 import { inspectWhopMerchantReadOnly } from "../src/affiliate-native-readiness.ts";
 
 const companyId = "biz_TestCompany123";
-function whopFixture(options: { unauthorized?: boolean; wrongCompany?: boolean; wrongPrice?: boolean; upfrontFee?: boolean; waitlist?: boolean; archived?: boolean; differentCurrency?: boolean; staleConfiguredIds?: boolean; catalogErrorStatus?: number; companyReadDenied?: boolean; companyIdentityDiff?: boolean } = {}) {
+function whopFixture(options: { unauthorized?: boolean; wrongCompany?: boolean; wrongPrice?: boolean; upfrontFee?: boolean; waitlist?: boolean; archived?: boolean; differentCurrency?: boolean; staleConfiguredIds?: boolean; catalogErrorStatus?: number; catalogErrorParam?: string; companyReadDenied?: boolean; companyIdentityDiff?: boolean } = {}) {
   const calls: { url: string; method: string }[] = [];
   const mock = async (value: string | URL | Request, init?: RequestInit) => {
     const url = new URL(value.toString());
@@ -30,7 +30,12 @@ function whopFixture(options: { unauthorized?: boolean; wrongCompany?: boolean; 
       return respond(plan(url.pathname.includes("plan_GQTDPXnvijugf") ? "core" : "enterprise"));
     }
     if (url.pathname === "/api/v1/plans") {
-      if (options.catalogErrorStatus) return respond({ error: { message: "SECRET_PROVIDER_BODY_MUST_NOT_LEAK" } }, options.catalogErrorStatus);
+      if (options.catalogErrorStatus) return respond({
+        error: {
+          message: "SECRET_PROVIDER_BODY_MUST_NOT_LEAK",
+          ...(options.catalogErrorParam ? { param: options.catalogErrorParam, code: "parameter_invalid" } : {}),
+        },
+      }, options.catalogErrorStatus);
       return respond({ data: [plan("core", true), plan("enterprise", true)], page_info: { has_next_page: false, end_cursor: null } });
     }
     if (url.pathname === "/api/v1/companies") {
@@ -70,6 +75,20 @@ test("read-only probe validates real plan IDs, ownership and affiliate read scop
   assert.equal(fixture.calls.every(x => x.method === "GET"), true);
   assert.equal(JSON.stringify(result).includes("PRIVATE_NEVER_RENDER"), false);
   assert.equal(JSON.stringify(result).includes("fake-api-key"), false);
+});
+
+test("Whop 400 plan errors expose only allowlisted parameter categories", async () => {
+  for (const [param,expected] of [
+    ["company_id","PROVIDER_REJECTED_COMPANY_ID"],
+    ["account_id","PROVIDER_REQUIRES_ACCOUNT_ID"],
+    ["unknown","PROVIDER_INVALID_QUERY_PARAMETER"],
+  ]) {
+    const fixture = whopFixture({ catalogErrorStatus: 400, catalogErrorParam: param });
+    const result = await inspectWhopMerchantReadOnly(companyId, "secret-key", fixture.mock);
+    assert.ok(result.checks.some(c => c.label === "plan_catalog" && c.code === expected));
+    assert.equal(JSON.stringify(result).includes("SECRET_PROVIDER_BODY_MUST_NOT_LEAK"), false);
+    assert.equal(fixture.calls.every(x => x.method === "GET"), true);
+  }
 });
 
 test("company identity diagnostic recognizes the exact real merchant without exposing other companies", async () => {
