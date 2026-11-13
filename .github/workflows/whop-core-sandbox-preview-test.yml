@@ -1,0 +1,33 @@
+name: Protected Whop Core Sandbox Preview QA
+
+on:
+  push:
+    branches:
+      - test/whop-core-sandbox-pr45-20261113
+
+permissions:
+  contents: read
+
+jobs:
+  qa:
+    name: Verify isolated $5 Core Sandbox preview
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - name: Install dependencies from reviewed lockfile
+        run: npm ci --no-fund
+      - name: Core-only Sandbox policy, Whop and mobile video regressions
+        run: node --experimental-strip-types --test tests/whop-core-sandbox-preview.test.ts tests/embedded-checkout-policy.test.ts tests/checkout-elements-lifecycle.test.ts tests/vsl-device-regression.test.ts
+      - name: Full unit suite
+        run: npm test
+      - name: ESLint and TypeScript
+        run: npm run lint && npx tsc --noEmit
+      - name: Production build smoke
+        run: npm run build
+      - name: High and critical production dependency audit
+        run: npm audit --omit=dev --audit-level=high
