@@ -1,4 +1,4 @@
-import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHash, timingSafeEqual, randomBytes } from "node:crypto";
 
 /**
  * Native Whop affiliate signup. This intentionally does NOT use the older
@@ -40,51 +40,71 @@ export function validateApplicant(input: unknown): AffiliateApplicant | null {
   return { firstName, lastName, email };
 }
 
-export type AffiliateMode = "preview" | "live" | "disabled";
+export type AffiliateMode = "preview" | "preview_e2e" | "live" | "disabled";
+export const AFFILIATE_PREVIEW_TEST_BRANCH = "feat/whop-native-affiliate-preview-20261112";
 export function affiliateMode(env: Record<string, string | undefined>): AffiliateMode {
-  if (env.VERCEL_ENV === "preview") return "preview";
-  // The live switch is intentionally two-key, and a valid production provider
-  // configuration is a separate requirement before ANY Whop call.
+  if (env.VERCEL_ENV === "preview") {
+    // This exact branch can run an allowlisted, login-protected acceptance
+    // test. Other branches remain simulated, regardless of copied variables.
+    if (env.VERCEL_GIT_COMMIT_REF === AFFILIATE_PREVIEW_TEST_BRANCH &&
+        env.AFFILIATE_PREVIEW_E2E_ENABLED === "true" &&
+        env.AFFILIATE_NATIVE_REGISTRATION_ENABLED !== "true" &&
+        env.AFFILIATE_NATIVE_SECURITY_REVIEW_APPROVED !== "true" &&
+        /^[0-9a-f]{64}$/i.test(env.AFFILIATE_PREVIEW_ALLOWED_EMAIL_SHA256 ?? "")) return "preview_e2e";
+    return "preview";
+  }
+  // Production remains separately gated by independent security approval.
   if (env.VERCEL_ENV === "production" &&
       env.AFFILIATE_NATIVE_REGISTRATION_ENABLED === "true" &&
       env.AFFILIATE_NATIVE_SECURITY_REVIEW_APPROVED === "true") return "live";
   return "disabled";
 }
 
+export function previewAllowedEmail(email: string, env: Record<string, string | undefined>): boolean {
+  if (affiliateMode(env) !== "preview_e2e") return false;
+  const stored = env.AFFILIATE_PREVIEW_ALLOWED_EMAIL_SHA256 ?? "";
+  if (!/^[a-f0-9]{64}$/i.test(stored)) return false;
+  const computed = createHash("sha256").update(email.trim().toLowerCase()).digest();
+  return timingSafeEqual(computed, Buffer.from(stored, "hex"));
+}
+
 export function liveConfig(env: Record<string, string | undefined>) {
-  if (affiliateMode(env) !== "live" || env.WHOP_ENVIRONMENT !== "production" ||
+  const mode = affiliateMode(env);
+  if ((mode !== "live" && mode !== "preview_e2e") ||
+      env.WHOP_ENVIRONMENT !== "production" ||
       !/^biz_[A-Za-z0-9]+$/.test(env.AFFILIATE_WHOP_COMPANY_ID ?? "") ||
       !env.AFFILIATE_WHOP_API_KEY ||
       !/^[0-9a-f]{64}$/i.test(env.AFFILIATE_EMAIL_TOKEN_KEY ?? "") ||
       !env.AFFILIATE_RESEND_API_KEY ||
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(env.AFFILIATE_MAIL_FROM ?? "") ||
-      !env.AFFILIATE_TURNSTILE_SECRET ||
-      !env.NEXT_PUBLIC_AFFILIATE_TURNSTILE_SITE_KEY ||
+      (mode === "live" && (!env.AFFILIATE_TURNSTILE_SECRET ||
+                           !env.NEXT_PUBLIC_AFFILIATE_TURNSTILE_SITE_KEY)) ||
       env.AFFILIATE_CORE_PLAN_ID !== AFFILIATE_PLANS[0].planId ||
       env.AFFILIATE_ENTERPRISE_PLAN_ID !== AFFILIATE_PLANS[1].planId) return null;
   return {
+    mode,
     companyId: env.AFFILIATE_WHOP_COMPANY_ID!,
     apiKey: env.AFFILIATE_WHOP_API_KEY!,
     emailTokenKey: env.AFFILIATE_EMAIL_TOKEN_KEY!,
     emailKey: env.AFFILIATE_RESEND_API_KEY!,
     emailFrom: env.AFFILIATE_MAIL_FROM!,
-    turnstileSecret: env.AFFILIATE_TURNSTILE_SECRET!,
+    turnstileSecret: env.AFFILIATE_TURNSTILE_SECRET ?? "",
   };
 }
 
-type TokenPayload = AffiliateApplicant & { expiresAt: number; purpose: "frameleads-affiliate-email-v1" };
+type TokenPayload = AffiliateApplicant & { expiresAt: number; purpose: "frameleads-affiliate-email-v1"; scope?: "preview_e2e" | "live" };
 function tokenKey(hex: string): Buffer {
   if (!/^[0-9a-f]{64}$/i.test(hex)) throw new Error("INVALID_TOKEN_KEY");
   return Buffer.from(hex, "hex");
 }
-export function createEmailConfirmationToken(applicant: AffiliateApplicant, key: string, now = Date.now()): string {
+export function createEmailConfirmationToken(applicant: AffiliateApplicant, key: string, now = Date.now(), scope: "preview_e2e" | "live" = "live"): string {
   const iv = randomBytes(12);
   const cipher = createCipheriv("aes-256-gcm", tokenKey(key), iv);
-  const payload: TokenPayload = { ...applicant, purpose: "frameleads-affiliate-email-v1", expiresAt: now + 20 * 60_000 };
+  const payload: TokenPayload = { ...applicant, purpose: "frameleads-affiliate-email-v1", scope, expiresAt: now + 20 * 60_000 };
   const encrypted = Buffer.concat([cipher.update(JSON.stringify(payload), "utf8"), cipher.final()]);
   return Buffer.concat([iv, cipher.getAuthTag(), encrypted]).toString("base64url");
 }
-export function readEmailConfirmationToken(token: string, key: string, now = Date.now()): AffiliateApplicant | null {
+export function readEmailConfirmationToken(token: string, key: string, now = Date.now(), scope: "preview_e2e" | "live" = "live"): AffiliateApplicant | null {
   if (typeof token !== "string" || token.length > 1024 || !/^[A-Za-z0-9_-]+$/.test(token)) return null;
   try {
     const bytes = Buffer.from(token, "base64url");
@@ -92,7 +112,7 @@ export function readEmailConfirmationToken(token: string, key: string, now = Dat
     const decipher = createDecipheriv("aes-256-gcm", tokenKey(key), bytes.subarray(0, 12));
     decipher.setAuthTag(bytes.subarray(12, 28));
     const data = JSON.parse(Buffer.concat([decipher.update(bytes.subarray(28)), decipher.final()]).toString("utf8")) as TokenPayload;
-    if (data.purpose !== "frameleads-affiliate-email-v1" ||
+    if (data.purpose !== "frameleads-affiliate-email-v1" || data.scope !== scope ||
         !Number.isFinite(data.expiresAt) || now > data.expiresAt || data.expiresAt - now > 20 * 60_000) return null;
     return validateApplicant(data);
   } catch {
