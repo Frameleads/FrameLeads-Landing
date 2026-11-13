@@ -88,22 +88,22 @@ function ApplicationMockup() {
 
 function EmailMockup() {
   return (
-    <div role="img" aria-label="Recreated Whop invitation email with an orange arrow highlighting the Your affiliate dashboard button. No real account details are shown.">
-      <MiniWindow title="Inbox / Affiliate invitation" className="mx-auto max-w-[580px]">
+    <div role="img" aria-label="Illustrative FrameLeads welcome email with an orange arrow highlighting the Open Whop dashboard button. No real account details are shown.">
+      <MiniWindow title="Inbox / FrameLeads welcome email" className="mx-auto max-w-[580px]">
         <div className="bg-[#F2F3F5] px-3 py-4 text-[#27292D] sm:px-6 sm:py-5">
           <div className="mx-auto max-w-[445px] rounded-xl bg-white p-4 shadow-[0_8px_28px_rgba(0,0,0,0.09)] sm:p-5">
             <div className="flex items-center justify-between border-b border-[#F0F0F0] pb-3">
-              <span className="text-[11px] font-bold text-[#262626]">FrameLeads <span className="font-normal text-[#888]">via Whop</span></span>
-              <span className="text-xs font-black tracking-tight text-[#FF5A1F]">whop</span>
+              <span className="text-[11px] font-bold text-[#262626]">FrameLeads <span className="font-normal text-[#888]">Partner Program</span></span>
+              <span className="text-xs font-black tracking-tight text-[#FF5A1F]">FL</span>
             </div>
             <div className="mt-5 flex h-9 w-9 items-center justify-center rounded-lg bg-[#171717] text-lg font-black text-[#FF5A1F]" aria-hidden="true">F</div>
-            <h3 className="mt-4 text-[14px] font-bold leading-5 sm:text-[16px]">You&apos;ve been added as an affiliate</h3>
-            <p className="mt-2 text-[11px] leading-[1.7] text-[#666]">Welcome to the FrameLeads partner program. Your affiliate dashboard is ready to explore.</p>
+            <h3 className="mt-4 text-[14px] font-bold leading-5 sm:text-[16px]">Your affiliate links are ready</h3>
+            <p className="mt-2 text-[11px] leading-[1.7] text-[#666]">Your Whop referral links for Core and Enterprise are ready. Sign in to Whop to manage them.</p>
             <div className="mt-5 flex justify-center pb-1">
               <div className="relative inline-flex items-center">
                 <CurvedArrow className="pointer-events-none absolute right-[calc(100%-5px)] top-1/2 h-10 w-14 -translate-y-1/2 sm:h-12 sm:w-20" />
                 <div className="rounded-md bg-[#1C62D7] px-4 py-2.5 text-center text-[11px] font-bold text-white shadow-sm sm:text-xs">
-                  Your affiliate dashboard
+                  Open Whop
                 </div>
               </div>
             </div>
@@ -213,8 +213,8 @@ const steps = [
   },
   {
     number: "02",
-    title: "Open your invitation",
-    detail: "Check your inbox for the affiliate invitation. Use its blue dashboard button to open Whop.",
+    title: "Open your welcome email",
+    detail: "Confirm your email, then open the FrameLeads welcome message with your Whop referral links.",
     visual: <EmailMockup />,
   },
   {
