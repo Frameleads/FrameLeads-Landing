@@ -261,8 +261,10 @@ test("Whop Elements initialization happens only in the browser after hydration",
   const component = fs.readFileSync("src/components/EmbeddedWhopCheckout.tsx", "utf8");
   assert.doesNotMatch(component, /const whopElements = loadWhop\(\)/);
   assert.match(component, /useEffect\(\(\) => \{/);
-  assert.match(component, /if \(!embedEnabled \|\| !hostedFallback \|\| referralHintPresent\) return/);
-  assert.match(component, /setWhopElements\(loadWhop\(\)\)/);
+  assert.match(component, /return scheduleCheckoutElementsLoad\(/);
+  assert.match(component, /embedEnabled && Boolean\(hostedFallback\) && !referralHintPresent/);
+  assert.match(component, /loadWhop,\s*setWhopElements,\s*\(\) => setElementsUnavailable\(true\)/);
+  assert.doesNotMatch(component, /setWhopElements\(loadWhop\(\)\)/);
   assert.match(component, /if \(!whopElements\)/);
   assert.match(component, /setElementsUnavailable\(true\)/);
   assert.doesNotMatch(component, /onComplete[\s\S]*?grantEntitlement/);
