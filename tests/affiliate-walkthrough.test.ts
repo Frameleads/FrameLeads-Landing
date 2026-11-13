@@ -20,8 +20,8 @@ test("approved hero, recurring badge and CTA copy are present in real page", () 
 
 test("visual steps are anonymized and show the desired Whop walkthrough", () => {
   for (const title of [
-    "Apply", "Open your invitation", "Copy your referral links", "Read your partner guidance",
-    "Your affiliate dashboard", "Affiliate instructions", "Refer buyers", "30.00%",
+    "Apply", "Open your welcome email", "Copy your referral links", "Read your partner guidance",
+    "Open Whop", "Affiliate instructions", "Refer buyers", "30.00%",
     "Read inside Whop",
   ]) assert.ok(walkthrough.includes(title), "missing " + title);
   assert.ok(walkthrough.includes("<CurvedArrow"), "must draw orange callout arrows");
@@ -37,7 +37,8 @@ test("recurring messaging agrees with planned Whop integration; production remai
   assert.ok(form.includes("commissions are recurring"));
   assert.ok(backend.includes('applies_to_payments: "all_payments"'));
   assert.ok(backend.includes('applies_to_payments === "all_payments"'));
-  assert.ok(confirmation.includes("30% recurring on eligible payments"));
+  assert.ok(confirmation.includes("queueAffiliateWelcomeEmail"));
+  assert.ok(walkthrough.includes("FrameLeads welcome message"));
   assert.ok(backend.includes('AFFILIATE_NATIVE_REGISTRATION_ENABLED === "true"'));
   assert.ok(backend.includes('AFFILIATE_NATIVE_SECURITY_REVIEW_APPROVED === "true"'));
   assert.ok(backend.includes('if (env.VERCEL_ENV === "preview") return "preview";'));
