@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { tierInformation, type CheckoutTier } from "../checkout-embed-policy";
 
-type Props = { tier: CheckoutTier; termsVerified: boolean };
+type Props = { tier: CheckoutTier; termsVerified: boolean; sandboxCoreTest?: boolean };
 
 const descriptions: Record<CheckoutTier, string> = {
   "micro-pilot": "A one-time offer capped at 25 total prospects, with existing Micro-Pilot access and feature limits.",
@@ -14,7 +14,7 @@ const descriptions: Record<CheckoutTier, string> = {
  * Amounts remain published reference prices until reconciled with Whop.
  * Never fabricate the payable total or collect promo/payment details here.
  */
-export default function CheckoutOrderSummary({ tier, termsVerified }: Props) {
+export default function CheckoutOrderSummary({ tier, termsVerified, sandboxCoreTest = false }: Props) {
   const details = tierInformation(tier);
 
   return (
@@ -34,22 +34,24 @@ export default function CheckoutOrderSummary({ tier, termsVerified }: Props) {
           </div>
         </div>
 
+        {sandboxCoreTest && <p className="mt-6 rounded-lg border border-[#FF5A1F] px-3 py-2 text-xs font-bold uppercase tracking-wide text-white">Sandbox test only — not a production purchase</p>}
+
         <h1 id="order-heading" className="mt-7 font-heading text-[25px] font-semibold leading-tight tracking-tight sm:text-[26px] lg:text-[28px]">
-          {details.title}
+          {sandboxCoreTest ? "FrameLeads Core — Sandbox Test" : details.title}
         </h1>
         <p className="mt-2 max-w-sm text-sm leading-[1.5] text-[#B8B8B8]">
-          {descriptions[tier]}
+          {sandboxCoreTest ? "Controlled test checkout. No production FrameLeads membership is granted." : descriptions[tier]}
         </p>
 
-        <div className="mt-7 flex flex-wrap items-baseline gap-2" aria-label="Current website reference price">
+        <div className="mt-7 flex flex-wrap items-baseline gap-2" aria-label={sandboxCoreTest ? "Sandbox test price" : "Current website reference price"}>
           <span className="font-heading text-[34px] font-semibold leading-none tracking-tight sm:text-[42px]">
-            {details.displayedPrice}
+            {sandboxCoreTest ? "$5" : details.displayedPrice}
           </span>
           <span className="text-sm text-[#B8B8B8]">{details.billingInterval === "one-time" ? "one-time" : "/ month"}</span>
         </div>
-        {details.usageLabel && <p className="mt-3 text-sm text-[#B8B8B8]">{details.usageLabel}</p>}
+        {!sandboxCoreTest && details.usageLabel && <p className="mt-3 text-sm text-[#B8B8B8]">{details.usageLabel}</p>}
         <div className="mt-5 border-t border-white/[0.12] pt-4">
-          <p className="text-xs text-[#B8B8B8]">{termsVerified ? "Whop confirms the displayed offer terms." : "Current website reference. Whop shows the current price and billing terms before you pay."}</p>
+          <p className="text-xs text-[#B8B8B8]">{sandboxCoreTest ? "Sandbox price is for testing only. Live Core remains $149/month. Confirm all checkout terms with Whop before proceeding." : (termsVerified ? "Whop confirms the displayed offer terms." : "Current website reference. Whop shows the current price and billing terms before you pay.")}</p>
         </div>
       </div>
     </section>
