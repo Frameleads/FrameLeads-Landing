@@ -9,7 +9,11 @@ import type { AffiliateApplicant, NativeAffiliateLinks } from "./affiliate-nativ
  * Never log addresses, confirmation tokens, referral links, or provider bodies.
  */
 export class AffiliateMailError extends Error {
-  constructor(readonly code: string) { super(code); }
+  readonly code: string;
+  constructor(code: string) {
+    super(code);
+    this.code = code;
+  }
 }
 
 function escapeHtml(text: string): string {
