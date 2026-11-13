@@ -7,6 +7,13 @@ import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
  * Commercial policy: 30% on ALL qualifying subscription payments, Core ($149) and Enterprise
  * ($499). The possible $99/$299 and 25% future offer is NOT active.
  */
+// Pin Whop's original stable contract. New API keys default to newer dated
+// schemas, where Plans replaced company_id/company with account_id/account.
+// Without this explicit pin, a valid production merchant produces misleading
+// COMPANY_MISMATCH and a 400 when GET /plans is queried with company_id.
+// The Stable Affiliates API still documents company_id and per-plan overrides.
+// https://docs.whop.com/developer/api/versioning
+export const WHOP_API_VERSION = "2025-01-01";
 export const AFFILIATE_COMMISSION_PERCENT = 30;
 export const AFFILIATE_PLANS = [
   { key: "core", label: "Core", planId: "plan_GQTDPXnvijugf", price: 149 },
@@ -136,7 +143,7 @@ export async function registerVerifiedAffiliate(
     try {
       response = await send(base + path, {
         method,
-        headers: { Authorization: "Bearer " + apiKey, Accept: "application/json", ...(body ? { "Content-Type": "application/json" } : {}) },
+        headers: { Authorization: "Bearer " + apiKey, "Api-Version-Date": WHOP_API_VERSION, Accept: "application/json", ...(body ? { "Content-Type": "application/json" } : {}) },
         ...(body ? { body: JSON.stringify(body) } : {}),
         cache: "no-store",
         redirect: "error",
