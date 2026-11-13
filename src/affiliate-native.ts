@@ -150,7 +150,17 @@ export async function registerVerifiedAffiliate(
         signal: AbortSignal.timeout(10000),
       });
     } catch { throw new NativeWhopError("PROVIDER_UNAVAILABLE"); }
-    if (!response.ok) throw new NativeWhopError(response.status === 429 ? "PROVIDER_RATE_LIMITED" : "PROVIDER_REJECTED");
+    if (!response.ok) {
+      const code = response.status === 403 ? "PROVIDER_WRITE_PERMISSION_DENIED"
+        : response.status === 401 ? "PROVIDER_AUTHORIZATION_INVALID"
+        : response.status === 400 ? "PROVIDER_BAD_REQUEST"
+        : response.status === 404 ? "PROVIDER_NOT_FOUND"
+        : response.status === 422 ? "PROVIDER_INPUT_REJECTED"
+        : response.status === 429 ? "PROVIDER_RATE_LIMITED"
+        : response.status >= 500 ? "PROVIDER_SERVER_ERROR"
+        : "PROVIDER_REJECTED";
+      throw new NativeWhopError(code);
+    }
     let result: unknown;
     try { result = await response.json(); } catch { throw new NativeWhopError("PROVIDER_INVALID_RESPONSE"); }
     if (!isRecord(result)) throw new NativeWhopError("PROVIDER_INVALID_RESPONSE");
