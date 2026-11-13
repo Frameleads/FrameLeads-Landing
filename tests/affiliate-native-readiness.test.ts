@@ -4,7 +4,7 @@ import fs from "node:fs";
 import { inspectWhopMerchantReadOnly } from "../src/affiliate-native-readiness.ts";
 
 const companyId = "biz_TestCompany123";
-function whopFixture(options: { unauthorized?: boolean; wrongCompany?: boolean; wrongPrice?: boolean; upfrontFee?: boolean; waitlist?: boolean; archived?: boolean; differentCurrency?: boolean; staleConfiguredIds?: boolean; catalogErrorStatus?: number } = {}) {
+function whopFixture(options: { unauthorized?: boolean; wrongCompany?: boolean; wrongPrice?: boolean; upfrontFee?: boolean; waitlist?: boolean; archived?: boolean; differentCurrency?: boolean; staleConfiguredIds?: boolean; catalogErrorStatus?: number; companyReadDenied?: boolean; companyIdentityDiff?: boolean } = {}) {
   const calls: { url: string; method: string }[] = [];
   const mock = async (value: string | URL | Request, init?: RequestInit) => {
     const url = new URL(value.toString());
@@ -33,6 +33,16 @@ function whopFixture(options: { unauthorized?: boolean; wrongCompany?: boolean; 
       if (options.catalogErrorStatus) return respond({ error: { message: "SECRET_PROVIDER_BODY_MUST_NOT_LEAK" } }, options.catalogErrorStatus);
       return respond({ data: [plan("core", true), plan("enterprise", true)], page_info: { has_next_page: false, end_cursor: null } });
     }
+    if (url.pathname === "/api/v1/companies") {
+      if (options.companyReadDenied) return respond({ error: "forbidden" }, 403);
+      return respond({
+        data: [
+          { id: options.companyIdentityDiff ? "biz_VerifiedBrandFlow123" : companyId, route: "brandflowstudio", title: "BrandFlow Studio" },
+          { id: "biz_UnrelatedCompany", route: "othermerchant", title: "Not FrameLeads" },
+        ],
+        page_info: { has_next_page: false, end_cursor: null },
+      });
+    }
     if (url.pathname === "/api/v1/affiliates") {
       return respond({
         data: [{ id: "aff_xxxxxxxxxxxxxx", user: { name: "PRIVATE_NEVER_RENDER" } }],
@@ -50,15 +60,36 @@ test("read-only probe validates real plan IDs, ownership and affiliate read scop
   assert.equal(result.connected, true);
   assert.equal(result.merchantVerified, true);
   assert.equal(result.rewardsWriteTested, false);
+  assert.deepEqual(result.identity, { status: "MATCHED" });
   assert.deepEqual(result.checks.map(x => x.ok), [true, true, true]);
   assert.deepEqual(result.catalog, {
     status: "MATCH_FOUND",
     candidates: { core: "plan_GQTDPXnvijugf", enterprise: "plan_uGDGf5WKW7hlE" },
   });
-  assert.equal(fixture.calls.length, 4);
+  assert.equal(fixture.calls.length, 5);
   assert.equal(fixture.calls.every(x => x.method === "GET"), true);
   assert.equal(JSON.stringify(result).includes("PRIVATE_NEVER_RENDER"), false);
   assert.equal(JSON.stringify(result).includes("fake-api-key"), false);
+});
+
+test("company identity diagnostic recognizes the exact real merchant without exposing other companies", async () => {
+  const mismatch = whopFixture({ companyIdentityDiff: true });
+  const result = await inspectWhopMerchantReadOnly(companyId, "secret", mismatch.mock);
+  assert.deepEqual(result.identity, {
+    status: "CONFIGURED_ID_DIFFERS",
+    verifiedBusinessId: "biz_VerifiedBrandFlow123",
+  });
+  assert.equal(mismatch.calls.every(call => call.method === "GET"), true);
+  assert.equal(JSON.stringify(result).includes("biz_UnrelatedCompany"), false);
+  assert.equal(JSON.stringify(result).includes("secret"), false);
+});
+
+test("company identity lookup reports missing read-only permission without declaring plan failure", async () => {
+  const fixture = whopFixture({ companyReadDenied: true });
+  const result = await inspectWhopMerchantReadOnly(companyId, "key", fixture.mock);
+  assert.deepEqual(result.identity, { status: "COMPANY_READ_PERMISSION_MISSING" });
+  assert.equal(result.merchantVerified, true, "identity lookup is an optional diagnostic");
+  assert.equal(fixture.calls.every(call => call.method === "GET"), true);
 });
 
 test("Whop catalog request uses only required company_id parameter", async () => {
