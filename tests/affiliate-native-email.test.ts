@@ -56,7 +56,7 @@ test("welcome message includes verified Core and Enterprise links and practical 
   await queueAffiliateWelcomeEmail(applicant, links, config, provider.send);
   const body = provider.calls[0].body;
   assert.equal(body.subject, "Your FrameLeads affiliate links");
-  for (const item of [links.core, links.enterprise, "30% on eligible initial and recurring payments", "Refer buyers"]) {
+  for (const item of [links.core, links.enterprise, "30% on eligible initial and recurring payments", "Refer buyers", "https://frameleads.io/affiliates#partner-proof-kit", "illustrative demo prospects"]) {
     assert.ok(String(body.text).includes(item), "missing " + item);
   }
   assert.match(String(body.html), /Open Whop/);
