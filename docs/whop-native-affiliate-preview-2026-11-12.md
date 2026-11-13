@@ -119,3 +119,23 @@ The temporary credentialed build-time probe and its prebuild hook were removed i
 **Still NOT verified:** actual affiliate creation, 30% all_payments override writes/read-back, invitation email, affiliate clicks and purchases, renewal payout, delivery retries, replay/abuse protections, and production security approval. PR remains draft, Production gates remain OFF. Do not claim automatic email delivery is verified until tested.
 
 Docs: https://docs.whop.com/developer/api/versioning
+
+## 2026-11-13 — CONTROLLED REAL WHOP AFFILIATE ENROLLMENT PASSED
+
+Owner approved one test recipient by email in chat. That personal email, its credential, the resulting affiliate ID, and its generated referral URLs are **not** recorded in this repository or build logs.
+
+**Real provider-backed evidence from one Vercel Preview build (not mocks):**
+- The protected branch-only preflight returned `PREFLIGHT_OK` with the pinned Whop API version `2025-01-01`.
+- `GET /plans/{Core}` and `GET /plans/{Enterprise}` both HTTP 200.
+- `POST /affiliates` create/find returned HTTP 200.
+- Affiliate override `GET` returned HTTP 200.
+- Core scoped override `POST` returned HTTP 200, followed by a successful override `GET`.
+- Enterprise scoped override `POST` returned HTTP 200, followed by a successful override `GET`.
+- Final `ENROLLMENT_AND_OVERRIDES_VERIFIED` result reported both Whop-generated checkout links present and `30pct_all_payments` recurring commission. The integration checks both overrides against their exact plan IDs, 30% percentage, and `all_payments` scope.
+- No purchase, subscription, payout, global commission modification, or Vercel Production write occurred.
+
+**Safety cleanup:** Immediately after observing the single successful execution, changed branch-scoped `AFFILIATE_NATIVE_SINGLE_TEST_ENABLED` to `false`, scrubbed the Sensitive test-recipient variable to a sentinel, removed the npm `prebuild` hook, and deleted the temporary integration script. The final Preview deployment uses the cleaned code. Public affiliate registration remains disabled; PR stays draft.
+
+**Critical outstanding limits:** The Whop API create/find action returned 200, but Whop's **native invitation email was not observed or verified** in the recipient's mailbox. This test was a secure Preview build-backed integration invocation, not a public `/affiliates` form-to-email-to-confirmation browser test. Production email verification, security review, anti-abuse and token replay protections, terms/privacy, global-default commission alignment, buyer attribution, and renewal commission lifecycle remain unverified. Do not claim public launch ready.
+
+**Next:** Owner checks the authorized test recipient's inbox/spam for the native Whop invitation and opens its affiliate dashboard. If no native invitation arrives, implement an approved transactional notification that links to the real Whop dashboard (without inventing provider URLs), then test the complete website onboarding flow separately.
