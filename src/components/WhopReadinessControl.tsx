@@ -99,7 +99,7 @@ export default function WhopReadinessControl() {
               ? "No qualifying Core or Enterprise subscription was found at the expected price. Check the real merchant's plans before making changes."
               : result.catalog.status === "AMBIGUOUS"
                 ? "Multiple plans have the same qualifying details. A merchant-side selection is needed before choosing any plan ID."
-                : "The merchant plan catalog could not be inspected. Existing IDs remain unverified."}
+                : "The merchant plan catalog could not be inspected. The read-only status above distinguishes a request error, invalid merchant context, permission failure, or Whop service error. Existing IDs remain unverified."}
         </p>
         {(["core", "enterprise"] as const).map(name => <div key={name} className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-3">
           <span className="text-xs font-semibold capitalize text-white">{name}</span>
