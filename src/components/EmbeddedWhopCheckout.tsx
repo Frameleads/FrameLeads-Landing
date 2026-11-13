@@ -1,8 +1,9 @@
 "use client";
 
 import { WhopElements, Checkout, CheckoutElement } from "@whop/elements-react";
-import { loadWhop } from "@whop/elements";
+import type { loadWhop } from "@whop/elements";
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { initializeWhopCheckout } from "../whop-loader";
 import { getPrivacyConsent, subscribePrivacyConsent } from "../privacy-consent";
 import { referralCheckoutDecision } from "../checkout-embed-policy";
 
@@ -30,14 +31,19 @@ export default function EmbeddedWhopCheckout({
   const [whopElements, setWhopElements] = useState<ReturnType<typeof loadWhop> | null>(null);
 
   useEffect(() => {
-    // Disabled checkouts, referrals routed to hosted checkout and server-side
-    // renders must never initialize third-party payment elements.
+    // Never load Whop on the server, for disabled embeds, or for referrals.
+    // Async import runs after hydration; cancellation prevents late SDK
+    // initialization or state updates after navigation / StrictMode cleanup.
     if (!embedEnabled || !hostedFallback || referralHintPresent) return;
-    try {
-      setWhopElements(loadWhop());
-    } catch {
-      setElementsUnavailable(true);
-    }
+    let active = true;
+    void initializeWhopCheckout(
+      { embedEnabled, hostedFallback, referralHintPresent },
+      () => import("@whop/elements"),
+      () => active,
+      elements => setWhopElements(elements),
+      () => setElementsUnavailable(true),
+    );
+    return () => { active = false; };
   }, [embedEnabled, hostedFallback, referralHintPresent]);
   const [checkoutFinished, setCheckoutFinished] = useState(false);
   const consent = useSyncExternalStore(subscribePrivacyConsent, getPrivacyConsent, () => null);
