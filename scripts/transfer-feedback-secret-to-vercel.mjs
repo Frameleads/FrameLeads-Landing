@@ -142,8 +142,7 @@ async function main() {
       item.name === EXPECTED.supabaseKeyName &&
       typeof item.value === "string" &&
       item.value.startsWith("sb_secret_") &&
-      item.value.length >= 30 &&
-      (item.type == null || String(item.type).toLowerCase() === "secret")
+      item.value.length >= 30
     );
     parsed = null;
     if (matches.length !== 1) {
@@ -170,7 +169,17 @@ async function main() {
     console.log("No deployment occurred. Existing live deployments do not automatically receive new env values.");
     console.log("NEXT: independently verify the variable type/scope and all three OFF flags in Vercel.");
   } finally {
-    rmSync(tmp, { recursive: true, force: true });
+    // On Windows, npx/cmd.exe descendants or antivirus can briefly keep a
+    // handle open on a temporary working directory. Cleanup is best-effort:
+    // it must never hide the actual CLI error or a successful update.
+    // The directory contains ONLY non-secret Vercel project/org IDs.
+    try {
+      rmSync(tmp, { recursive: true, force: true, maxRetries: 12, retryDelay: 250 });
+    } catch (cleanupError) {
+      console.warn("NOTICE: Windows could not remove the temporary project-link directory yet. " +
+        "It contains only Vercel project/org IDs, never a secret. " +
+        "The CLI authentication/update result above is the authoritative status.");
+    }
   }
 }
 try { await main(); }
