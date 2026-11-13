@@ -4,7 +4,7 @@ import fs from "node:fs";
 import { inspectWhopMerchantReadOnly } from "../src/affiliate-native-readiness.ts";
 
 const companyId = "biz_TestCompany123";
-function whopFixture(options: { unauthorized?: boolean; wrongCompany?: boolean; wrongPrice?: boolean } = {}) {
+function whopFixture(options: { unauthorized?: boolean; wrongCompany?: boolean; wrongPrice?: boolean; upfrontFee?: boolean; waitlist?: boolean; archived?: boolean; differentCurrency?: boolean } = {}) {
   const calls: { url: string; method: string }[] = [];
   const mock = async (value: string | URL | Request, init?: RequestInit) => {
     const url = new URL(value.toString());
@@ -18,9 +18,9 @@ function whopFixture(options: { unauthorized?: boolean; wrongCompany?: boolean; 
       return respond({
         id: isCore ? "plan_GQTDPXnvijugf" : "plan_uGDGf5WKW7hlE",
         company: { id: options.wrongCompany ? "biz_AnotherCompany" : companyId },
-        plan_type: "renewal", currency: "usd", initial_price: 0,
+        plan_type: "renewal", currency: options.differentCurrency ? "aed" : "usd", initial_price: options.upfrontFee ? 149 : 0,
         renewal_price: isCore && options.wrongPrice ? 99 : isCore ? 149 : 499,
-        release_method: "buy_now", visibility: "visible",
+        release_method: options.waitlist ? "waitlist" : "buy_now", visibility: options.archived ? "archived" : "visible",
       });
     }
     if (url.pathname === "/api/v1/affiliates") {
@@ -52,8 +52,38 @@ test("probe rejects wrong company and stale plan prices", async () => {
   const wrongPrice = await inspectWhopMerchantReadOnly(companyId, "key", whopFixture({ wrongPrice: true }).mock);
   assert.equal(wrongCompany.merchantVerified, false);
   assert.equal(wrongPrice.merchantVerified, false);
-  assert.ok(wrongCompany.checks.some(x => x.code === "MERCHANT_OR_PLAN_MISMATCH"));
-  assert.ok(wrongPrice.checks.some(x => x.code === "MERCHANT_OR_PLAN_MISMATCH"));
+  assert.ok(wrongCompany.checks.some(x => x.reasons?.includes("COMPANY_MISMATCH")));
+  assert.ok(wrongPrice.checks.some(x => x.reasons?.includes("RENEWAL_PRICE_MISMATCH")));
+  assert.equal(JSON.stringify(wrongCompany).includes("biz_AnotherCompany"), false);
+  assert.equal(JSON.stringify(wrongPrice).includes("99"), false);
+});
+
+test("diagnostics identify all mismatched fields together without exposing raw provider values", async () => {
+  const fixture = whopFixture({
+    wrongCompany: true, wrongPrice: true, upfrontFee: true, waitlist: true,
+    archived: true, differentCurrency: true,
+  });
+  const result = await inspectWhopMerchantReadOnly(companyId, "private-api-key", fixture.mock);
+  const core = result.checks.find(check => check.label === "core");
+  assert.deepEqual(core?.reasons, [
+    "COMPANY_MISMATCH",
+    "CURRENCY_MISMATCH",
+    "RENEWAL_PRICE_MISMATCH",
+    "UPFRONT_FEE_MISMATCH",
+    "PLAN_VISIBILITY_INVALID",
+    "NOT_DIRECT_PURCHASE",
+  ]);
+  assert.equal(result.merchantVerified, false);
+  assert.equal(fixture.calls.every(call => call.method === "GET"), true);
+  for (const secret of ["private-api-key", "biz_AnotherCompany", '"aed"', '"99"', '"149"']) {
+    assert.equal(JSON.stringify(result).includes(secret), false, "must not disclose " + secret);
+  }
+});
+
+test("hidden, direct-link plans are acceptable while archived ones fail closed", async () => {
+  const archived = await inspectWhopMerchantReadOnly(companyId, "key", whopFixture({ archived: true }).mock);
+  assert.equal(archived.merchantVerified, false);
+  assert.deepEqual(archived.checks[0]?.reasons, ["PLAN_VISIBILITY_INVALID"]);
 });
 
 test("probe returns sanitized status for invalid key and never attempts a write", async () => {
