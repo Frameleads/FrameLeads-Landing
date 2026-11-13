@@ -39,6 +39,7 @@ async function queueAffiliateEmail(
   text: string,
   html: string,
   send: typeof fetch,
+  idempotencyKey?: string,
 ): Promise<AffiliateQueuedMessage> {
   if (!config.apiKey || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(config.fromEmail)) {
     throw new AffiliateMailError("MAIL_NOT_CONFIGURED");
@@ -51,6 +52,7 @@ async function queueAffiliateEmail(
         Authorization: "Bearer " + config.apiKey,
         "Content-Type": "application/json",
         Accept: "application/json",
+        ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
       },
       body: JSON.stringify({
         from: "FrameLeads <" + config.fromEmail + ">",
@@ -109,7 +111,10 @@ export async function queueAffiliateVerificationEmail(
   send: typeof fetch = fetch,
 ): Promise<AffiliateQueuedMessage> {
   const target = new URL(confirmationUrl);
-  if (target.origin !== "https://frameleads.io" || target.pathname !== "/affiliates/confirm" ||
+  const isProduction = target.origin === "https://frameleads.io";
+  const isProtectedPreview = target.protocol === "https:" &&
+    /^frameleads-landing-[a-z0-9-]+\.vercel\.app$/.test(target.hostname);
+  if ((!isProduction && !isProtectedPreview) || target.pathname !== "/affiliates/confirm" ||
       !/^#token=[A-Za-z0-9_-]+$/.test(target.hash)) throw new AffiliateMailError("CONFIRMATION_URL_INVALID");
   return queueAffiliateEmail(
     applicant,
@@ -131,6 +136,7 @@ export async function queueAffiliateWelcomeEmail(
   links: NativeAffiliateLinks,
   config: AffiliateMailConfig,
   send: typeof fetch = fetch,
+  idempotencyKey?: string,
 ): Promise<AffiliateQueuedMessage> {
   if (!whopReferralUrl(links.core) || !whopReferralUrl(links.enterprise)) {
     throw new AffiliateMailError("AFFILIATE_LINKS_INVALID");
@@ -149,5 +155,6 @@ export async function queueAffiliateWelcomeEmail(
     paragraphs.join("\n\n") + "\n\nFrameLeads",
     emailHtml("Your affiliate links are ready", paragraphs, { label: "Open Whop", url: "https://whop.com" }),
     send,
+    idempotencyKey,
   );
 }
