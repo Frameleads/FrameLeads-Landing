@@ -1,5 +1,6 @@
+import { createHash } from "node:crypto";
 import {
-  liveConfig, readEmailConfirmationToken, registerVerifiedAffiliate, NativeWhopError,
+  liveConfig, previewAllowedEmail, readEmailConfirmationToken, registerVerifiedAffiliate, NativeWhopError,
 } from "../../../../affiliate-native.ts";
 import { queueAffiliateWelcomeEmail, AffiliateMailError } from "../../../../affiliate-native-email.ts";
 
@@ -17,6 +18,12 @@ export async function POST(request: Request) {
   if (Number(request.headers.get("content-length") ?? "0") > 1800) return reply("BODY_TOO_LARGE", 413);
   const config = liveConfig(process.env);
   if (!config) return reply("NOT_LIVE", 503);
+  if (config.mode === "preview_e2e") {
+    const url = new URL(request.url);
+    if (url.protocol !== "https:" || !/^frameleads-landing-[a-z0-9-]+\.vercel\.app$/.test(url.hostname)) {
+      return reply("TEST_ACCESS_DENIED", 403);
+    }
+  }
 
   let token: unknown;
   try {
@@ -26,8 +33,12 @@ export async function POST(request: Request) {
     token = parsed && typeof parsed === "object" && !Array.isArray(parsed) && "token" in parsed ? parsed.token : null;
   } catch { return reply("INVALID_TOKEN", 400); }
 
-  const applicant = typeof token === "string" ? readEmailConfirmationToken(token, config.emailTokenKey) : null;
+  const applicant = typeof token === "string"
+    ? readEmailConfirmationToken(token, config.emailTokenKey, Date.now(), config.mode) : null;
   if (!applicant) return reply("EXPIRED_OR_INVALID_TOKEN", 400);
+  if (config.mode === "preview_e2e" && !previewAllowedEmail(applicant.email, process.env)) {
+    return reply("TEST_ACCESS_DENIED", 403);
+  }
 
   let links: { core: string; enterprise: string };
   try {
@@ -50,6 +61,8 @@ export async function POST(request: Request) {
       applicant,
       links,
       { apiKey: config.emailKey, fromEmail: config.emailFrom },
+      fetch,
+      "affiliate-welcome-" + createHash("sha256").update(String(token)).digest("hex").slice(0,48),
     );
   } catch (error) {
     const code = error instanceof AffiliateMailError ? error.code : "MAIL_PROVIDER_UNAVAILABLE";
