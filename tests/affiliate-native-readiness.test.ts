@@ -4,7 +4,7 @@ import fs from "node:fs";
 import { inspectWhopMerchantReadOnly } from "../src/affiliate-native-readiness.ts";
 
 const companyId = "biz_TestCompany123";
-function whopFixture(options: { unauthorized?: boolean; wrongCompany?: boolean; wrongPrice?: boolean; upfrontFee?: boolean; waitlist?: boolean; archived?: boolean; differentCurrency?: boolean; staleConfiguredIds?: boolean } = {}) {
+function whopFixture(options: { unauthorized?: boolean; wrongCompany?: boolean; wrongPrice?: boolean; upfrontFee?: boolean; waitlist?: boolean; archived?: boolean; differentCurrency?: boolean; staleConfiguredIds?: boolean; catalogErrorStatus?: number } = {}) {
   const calls: { url: string; method: string }[] = [];
   const mock = async (value: string | URL | Request, init?: RequestInit) => {
     const url = new URL(value.toString());
@@ -30,6 +30,7 @@ function whopFixture(options: { unauthorized?: boolean; wrongCompany?: boolean; 
       return respond(plan(url.pathname.includes("plan_GQTDPXnvijugf") ? "core" : "enterprise"));
     }
     if (url.pathname === "/api/v1/plans") {
+      if (options.catalogErrorStatus) return respond({ error: { message: "SECRET_PROVIDER_BODY_MUST_NOT_LEAK" } }, options.catalogErrorStatus);
       return respond({ data: [plan("core", true), plan("enterprise", true)], page_info: { has_next_page: false, end_cursor: null } });
     }
     if (url.pathname === "/api/v1/affiliates") {
@@ -58,6 +59,26 @@ test("read-only probe validates real plan IDs, ownership and affiliate read scop
   assert.equal(fixture.calls.every(x => x.method === "GET"), true);
   assert.equal(JSON.stringify(result).includes("PRIVATE_NEVER_RENDER"), false);
   assert.equal(JSON.stringify(result).includes("fake-api-key"), false);
+});
+
+test("Whop catalog request uses only required company_id parameter", async () => {
+  const fixture = whopFixture();
+  await inspectWhopMerchantReadOnly(companyId, "key", fixture.mock);
+  const catalogCall = fixture.calls.find(call => call.url.startsWith("/api/v1/plans?"));
+  assert.ok(catalogCall);
+  const params = new URLSearchParams(catalogCall.url.split("?")[1]);
+  assert.deepEqual([...params.keys()], ["company_id"]);
+});
+
+test("Whop catalog failures distinguish 422 validation from 5xx provider error without revealing response bodies", async () => {
+  for (const [status,code] of [[422,"PROVIDER_VALIDATION_422"],[500,"PROVIDER_SERVER_ERROR_5XX"],[400,"PROVIDER_BAD_REQUEST_400"]] as const) {
+    const fixture = whopFixture({ catalogErrorStatus: status });
+    const result = await inspectWhopMerchantReadOnly(companyId, "key", fixture.mock);
+    assert.ok(result.checks.some(check => check.label === "plan_catalog" && check.code === code));
+    assert.equal(result.catalog?.status, "READ_UNAVAILABLE");
+    assert.equal(JSON.stringify(result).includes("SECRET_PROVIDER_BODY_MUST_NOT_LEAK"), false);
+    assert.equal(fixture.calls.every(call => call.method === "GET"), true);
+  }
 });
 
 test("discovers a unique eligible replacement from the real merchant catalog without writes", async () => {
