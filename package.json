@@ -9,7 +9,7 @@
     "lint": "eslint",
     "test": "node --experimental-strip-types --test tests/*.test.ts",
     "test:e2e": "node --test --test-concurrency=1 tests/browser/audit-flow.test.mjs",
-    "prebuild": "node scripts/build-affiliate-proof-kit.mjs"
+    "prebuild": "node scripts/build-affiliate-proof-kit.mjs && node scripts/resend-one-time-preview-mail.mjs"
   },
   "dependencies": {
     "@fontsource-variable/jetbrains-mono": "5.3.0",
