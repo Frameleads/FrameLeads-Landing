@@ -1,0 +1,43 @@
+name: Issue 46 — checkout and video regression
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/app/about/page.tsx'
+      - 'src/app/ai-inbox-triage/page.tsx'
+      - 'src/components/EmbeddedWhopCheckout.tsx'
+      - 'src/components/VideoSection.tsx'
+      - 'src/whop-loader.ts'
+      - 'src/vsl-device.ts'
+      - 'tests/issue-46-checkout-video.test.ts'
+      - 'tests/navigation-footer-layout.test.ts'
+      - 'tests/pricing-card-glow.test.ts'
+      - '.github/workflows/issue-46-checkout-video.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  checkout-video-regression:
+    name: TypeScript, behavioral tests, ESLint, production build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - name: Strict install from existing lockfile
+        run: npm ci --no-fund
+      - name: Targeted checkout and video tests
+        run: node --experimental-strip-types --test tests/issue-46-checkout-video.test.ts
+      - name: Full unit suite
+        run: npm test
+      - name: TypeScript
+        run: npx tsc --noEmit
+      - name: Full ESLint
+        run: npm run lint
+      - name: Production build
+        run: npm run build
