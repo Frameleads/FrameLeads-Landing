@@ -3,6 +3,10 @@
 import { useState } from "react";
 
 type Check = { label: string; ok: boolean; code: string; reasons?: string[] };
+type Catalog = {
+  status: "MATCH_FOUND" | "NO_MATCH" | "AMBIGUOUS" | "READ_UNAVAILABLE";
+  candidates: { core: string | null; enterprise: string | null };
+};
 type Result = {
   ok?: boolean;
   code?: string;
@@ -10,6 +14,7 @@ type Result = {
   merchantVerified?: boolean;
   rewardsWriteTested?: false;
   checks?: Check[];
+  catalog?: Catalog;
 };
 
 const reasonLabels: Record<string, string> = {
@@ -85,6 +90,24 @@ export default function WhopReadinessControl() {
           </ul>}
         </div>)}
       </div>
+      {result.catalog && <div className="mt-5 rounded-xl border border-white/15 bg-[#242424] p-4">
+        <p className="text-sm font-bold text-white">Real merchant plan discovery</p>
+        <p className="mt-2 text-xs leading-6 text-[#BDBDBD]">
+          {result.catalog.status === "MATCH_FOUND"
+            ? "Whop returned eligible plan candidates belonging to the connected merchant. These are suggestions only. Nothing has been changed."
+            : result.catalog.status === "NO_MATCH"
+              ? "No qualifying Core or Enterprise subscription was found at the expected price. Check the real merchant's plans before making changes."
+              : result.catalog.status === "AMBIGUOUS"
+                ? "Multiple plans have the same qualifying details. A merchant-side selection is needed before choosing any plan ID."
+                : "The merchant plan catalog could not be inspected. Existing IDs remain unverified."}
+        </p>
+        {(["core", "enterprise"] as const).map(name => <div key={name} className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-3">
+          <span className="text-xs font-semibold capitalize text-white">{name}</span>
+          <code className="break-all text-xs text-[#FFB18C]">
+            {result.catalog?.candidates[name] ?? "No unique matching plan"}
+          </code>
+        </div>)}
+      </div>}
       {result.connected && !result.merchantVerified && <p className="mt-4 text-xs leading-6 text-[#BDBDBD]">Your API credential can reach Whop. The reasons above show which required plan details differ. Do not alter product prices or affiliate rewards based on this diagnostic alone.</p>}
       <p className="mt-4 text-xs leading-5 text-[#999]">No write operations performed. No API keys, personal data, raw merchant IDs, or affiliate links are displayed.</p>
     </div>}
