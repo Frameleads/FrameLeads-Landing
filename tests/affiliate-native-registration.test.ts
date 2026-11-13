@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import fs from "node:fs";
 import {
-  AFFILIATE_COMMISSION_PERCENT, AFFILIATE_PLANS, affiliateMode, liveConfig,
+  AFFILIATE_COMMISSION_PERCENT, AFFILIATE_PLANS, affiliateMode, previewAllowedEmail, liveConfig,
   createEmailConfirmationToken, readEmailConfirmationToken, validateApplicant,
   registerVerifiedAffiliate, NativeWhopError, WHOP_API_VERSION,
 } from "../src/affiliate-native.ts";
@@ -29,8 +29,17 @@ test("30% recurring-payment policy is fixed to current Core and Enterprise plans
   assert.equal(validateApplicant({ ...applicant, firstName: "<script>" }), null);
 });
 
-test("preview always dry-runs; production requires two intentional gates and exact configuration", () => {
+test("Preview E2E is branch- and allowlist-gated; production still requires two independent gates", () => {
   assert.equal(affiliateMode({ VERCEL_ENV: "preview", AFFILIATE_NATIVE_REGISTRATION_ENABLED: "true" }), "preview");
+  const allowedHash = "2e1ce086779ab3a6cc2f3b1b6ea9e4c497edc20b6b9440cefbc26353c37a7e11";
+  const modeEnv = {
+    VERCEL_ENV: "preview", VERCEL_GIT_COMMIT_REF: "feat/whop-native-affiliate-preview-20261112",
+    AFFILIATE_PREVIEW_E2E_ENABLED: "true", AFFILIATE_PREVIEW_ALLOWED_EMAIL_SHA256: allowedHash,
+  };
+  assert.equal(affiliateMode(modeEnv), "preview_e2e");
+  assert.equal(affiliateMode({ ...modeEnv, VERCEL_GIT_COMMIT_REF: "main" }), "preview");
+  assert.equal(affiliateMode({ ...modeEnv, AFFILIATE_NATIVE_REGISTRATION_ENABLED: "true" }), "preview");
+  assert.equal(affiliateMode({ ...modeEnv, AFFILIATE_NATIVE_SECURITY_REVIEW_APPROVED: "true" }), "preview");
   assert.equal(affiliateMode({ VERCEL_ENV: "production", AFFILIATE_NATIVE_REGISTRATION_ENABLED: "true" }), "disabled");
   assert.equal(liveConfig({ VERCEL_ENV: "production", AFFILIATE_NATIVE_REGISTRATION_ENABLED: "true", AFFILIATE_NATIVE_SECURITY_REVIEW_APPROVED: "true" }), null);
   assert.equal(affiliateMode({ VERCEL_ENV: "production", AFFILIATE_NATIVE_REGISTRATION_ENABLED: "true", AFFILIATE_NATIVE_SECURITY_REVIEW_APPROVED: "true" }), "live");
@@ -45,6 +54,10 @@ test("email token is authenticated, has short expiry, and hides the email from c
   assert.equal(readEmailConfirmationToken(token, "ab".repeat(32), now), null);
   assert.equal(readEmailConfirmationToken((token[0] === "A" ? "B" : "A") + token.slice(1), secret, now), null);
   assert.equal(readEmailConfirmationToken(token, secret, now + 21 * 60_000), null);
+  const previewToken = createEmailConfirmationToken(applicant, secret, now, "preview_e2e");
+  assert.deepEqual(readEmailConfirmationToken(previewToken, secret, now, "preview_e2e"), applicant);
+  assert.equal(readEmailConfirmationToken(previewToken, secret, now, "live"), null);
+  assert.equal(readEmailConfirmationToken(token, secret, now, "preview_e2e"), null);
 });
 
 function fakeWhop(existing: Record<string, unknown>[] = [], alteredPrice = false) {
