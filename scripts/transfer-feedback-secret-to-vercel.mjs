@@ -26,7 +26,7 @@ const EXPECTED = Object.freeze({
 });
 const IS_WINDOWS = process.platform === "win32";
 const SUPABASE_VERSION = "3.1.0";
-const VERCEL_VERSION = "59.6.0";
+const VERCEL_VERSION = "65.12.1";
 const OUTPUT_LIMIT = 512 * 1024;
 
 function fixedNpx(packageName, args) {
