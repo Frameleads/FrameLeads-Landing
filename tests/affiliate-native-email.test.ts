@@ -49,7 +49,7 @@ test("Resend accepts verification email only with a provider email ID; accepted 
   assert.match(String(item.body.subject), /Confirm your FrameLeads affiliate application/);
   assert.ok(String(item.body.text).includes(confirmUrl));
   assert.ok(String(item.body.html).includes("&lt;Tester&gt;"), "user-provided names must be escaped");
-  assert.equal("settings" in item.body, false, "do not send unsupported MailerSend options");
+  assert.equal("settings" in item.body, false, "do not send unsupported provider options");
 });
 
 test("Resend welcome email includes approved links, recurring terms and screenshot resources", async () => {
