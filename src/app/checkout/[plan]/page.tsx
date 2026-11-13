@@ -27,16 +27,19 @@ export default async function FrameLeadsCheckout({ params, searchParams }: Props
   const query = await searchParams;
   const referralHintPresent = Object.prototype.hasOwnProperty.call(query, "a");
   const config = embeddedCheckoutPolicy(plan, process.env);
+  const sandboxCoreTest = process.env.VERCEL_ENV === "preview" &&
+    process.env.FRAMELEADS_WHOP_SANDBOX_CORE_ONLY_TEST_ENABLED === "true" &&
+    plan === "core" && config.available && config.environment === "sandbox";
   const termsVerified = process.env.VERCEL_ENV === "preview"
     ? config.available
     : process.env.FRAMELEADS_WHOP_PLAN_TERMS_VERIFIED === "true";
 
   return (
     <main className="grid min-h-screen min-w-0 overflow-x-hidden bg-white font-sans lg:grid-cols-2">
-      <CheckoutOrderSummary tier={plan} termsVerified={termsVerified} />
+      <CheckoutOrderSummary tier={plan} termsVerified={termsVerified} sandboxCoreTest={sandboxCoreTest} />
       <section aria-label="Secure Whop payment" className="min-w-0 bg-[#FFFFFF] px-5 py-8 text-[#1A1A1A] sm:px-8 sm:py-10 lg:px-12 lg:py-20">
         <div className="mx-auto w-full max-w-[460px]">
-          <h2 className="mb-7 text-xl font-semibold leading-tight text-[#1A1A1A]">Complete your purchase</h2>
+          <h2 className="mb-7 text-xl font-semibold leading-tight text-[#1A1A1A]">{sandboxCoreTest ? "Whop Sandbox payment — test only" : "Complete your purchase"}</h2>
           <EmbeddedWhopCheckout
             planId={config.planId ?? ""}
             returnUrl={config.returnUrl ?? ""}
