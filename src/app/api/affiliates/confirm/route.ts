@@ -63,6 +63,7 @@ export async function POST(request: Request) {
       { apiKey: config.emailKey, fromEmail: config.emailFrom },
       fetch,
       "affiliate-welcome-" + createHash("sha256").update(String(token)).digest("hex").slice(0,48),
+      (config.mode === "preview_e2e" ? new URL(request.url).origin : "https://frameleads.io") + "/affiliates#partner-proof-kit",
     );
   } catch (error) {
     const code = error instanceof AffiliateMailError ? error.code : "MAIL_PROVIDER_UNAVAILABLE";
