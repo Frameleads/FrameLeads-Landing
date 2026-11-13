@@ -45,9 +45,17 @@ export async function inspectWhopMerchantReadOnly(
         signal: AbortSignal.timeout(9000),
       });
       if (!response.ok) {
-        const code = response.status === 401 ? "INVALID_CREDENTIAL" : response.status === 403
-          ? "INSUFFICIENT_PERMISSIONS" : response.status === 404 ? "NOT_FOUND"
-          : response.status === 429 ? "PROVIDER_RATE_LIMIT" : "PROVIDER_ERROR";
+        // Do not surface provider response bodies: they can contain request
+        // metadata or account information. HTTP category is sufficient to
+        // diagnose whether this is a client, permission, or provider failure.
+        const code = response.status === 400 ? "PROVIDER_BAD_REQUEST_400"
+          : response.status === 401 ? "INVALID_CREDENTIAL"
+          : response.status === 403 ? "INSUFFICIENT_PERMISSIONS"
+          : response.status === 404 ? "NOT_FOUND"
+          : response.status === 422 ? "PROVIDER_VALIDATION_422"
+          : response.status === 429 ? "PROVIDER_RATE_LIMIT"
+          : response.status >= 500 ? "PROVIDER_SERVER_ERROR_5XX"
+          : "PROVIDER_OTHER_HTTP_ERROR";
         checks.push({ label: path.startsWith("/plans") ? "plan_catalog" : "affiliate_read", ok: false, code });
         owned = false;
         return null;
@@ -116,7 +124,10 @@ export async function inspectWhopMerchantReadOnly(
   let cursor: string | undefined;
   let catalogComplete = false;
   for (let page = 0; page < 6; page++) {
-    const params = new URLSearchParams({ company_id: companyId, first: "50" });
+    // Whop documents company_id as the only required list argument.
+    // Omit optional paging limits for the first request to avoid relying
+    // on an undocumented maximum or account-specific limit.
+    const params = new URLSearchParams({ company_id: companyId });
     if (cursor) params.set("after", cursor);
     const listResult = await read("/plans?" + params.toString());
     if (!listResult || !Array.isArray(listResult.data) ||
