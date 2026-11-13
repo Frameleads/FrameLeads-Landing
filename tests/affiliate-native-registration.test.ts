@@ -14,7 +14,7 @@ const applicant = { firstName: "Jane", lastName: "Doe", email: "jane@example.com
 test("Whop API contract is pinned, and temporary credentialed build probe is removed", () => {
   assert.equal(WHOP_API_VERSION, "2025-01-01");
   const pack = JSON.parse(fs.readFileSync("package.json", "utf8")) as { scripts: Record<string, string> };
-  assert.equal(pack.scripts.prebuild, undefined);
+  assert.equal(pack.scripts.prebuild, "node scripts/build-affiliate-proof-kit.mjs", "only non-credentialed screenshot packaging is allowed at build time");
   assert.equal(fs.existsSync("scripts/verify-whop-affiliate-preview.ts"), false);
 });
 
