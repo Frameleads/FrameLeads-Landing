@@ -56,7 +56,7 @@ export function liveConfig(env: Record<string, string | undefined>) {
       !/^biz_[A-Za-z0-9]+$/.test(env.AFFILIATE_WHOP_COMPANY_ID ?? "") ||
       !env.AFFILIATE_WHOP_API_KEY ||
       !/^[0-9a-f]{64}$/i.test(env.AFFILIATE_EMAIL_TOKEN_KEY ?? "") ||
-      !env.AFFILIATE_MAILERSEND_API_KEY ||
+      !env.AFFILIATE_RESEND_API_KEY ||
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(env.AFFILIATE_MAIL_FROM ?? "") ||
       !env.AFFILIATE_TURNSTILE_SECRET ||
       !env.NEXT_PUBLIC_AFFILIATE_TURNSTILE_SITE_KEY ||
@@ -66,7 +66,7 @@ export function liveConfig(env: Record<string, string | undefined>) {
     companyId: env.AFFILIATE_WHOP_COMPANY_ID!,
     apiKey: env.AFFILIATE_WHOP_API_KEY!,
     emailTokenKey: env.AFFILIATE_EMAIL_TOKEN_KEY!,
-    emailKey: env.AFFILIATE_MAILERSEND_API_KEY!,
+    emailKey: env.AFFILIATE_RESEND_API_KEY!,
     emailFrom: env.AFFILIATE_MAIL_FROM!,
     turnstileSecret: env.AFFILIATE_TURNSTILE_SECRET!,
   };
