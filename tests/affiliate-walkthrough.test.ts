@@ -41,7 +41,8 @@ test("recurring messaging agrees with planned Whop integration; production remai
   assert.ok(walkthrough.includes("FrameLeads welcome message"));
   assert.ok(backend.includes('AFFILIATE_NATIVE_REGISTRATION_ENABLED === "true"'));
   assert.ok(backend.includes('AFFILIATE_NATIVE_SECURITY_REVIEW_APPROVED === "true"'));
-  assert.ok(backend.includes('if (env.VERCEL_ENV === "preview") return "preview";'));
+  assert.ok(backend.includes('AFFILIATE_PREVIEW_E2E_ENABLED === "true"'));
+  assert.ok(backend.includes('env.VERCEL_GIT_COMMIT_REF === AFFILIATE_PREVIEW_TEST_BRANCH'));
 });
 
 test("arrow tips are anchored directly to their respective CTA or row copy icons", () => {
