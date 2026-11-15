@@ -7,6 +7,9 @@ on:
       - "src/affiliate-native-email.ts"
       - "src/affiliate-native-readiness.ts"
       - "src/app/affiliates/**"
+      - "src/app/privacy/page.tsx"
+      - "src/app/terms/page.tsx"
+      - "public/resources/frameleads-affiliate-full-product-proof-23.zip"
       - "src/app/api/affiliates/**"
       - "src/components/AffiliateRegistrationForm.tsx"
       - "src/components/ConfirmAffiliateEmail.tsx"
@@ -53,4 +56,4 @@ jobs:
           NODE_OPTIONS: --max-old-space-size=4096
         run: npm run build
       - name: Verify downloadable partner proof ZIP exists
-        run: test -s public/resources/frameleads-affiliate-product-proof.zip
+        run: test -s public/resources/frameleads-affiliate-product-proof.zip && test -s public/resources/frameleads-affiliate-full-product-proof-23.zip
