@@ -68,3 +68,21 @@ test("affiliate Preview contains downloadable proof section with approved image 
   assert.match(component, /illustrative prospect data/);
   assert.doesNotMatch(component, /Google Drive|customer success stories|guaranteed 10x/i);
 });
+
+
+test("complete partner library includes all 23 screenshots without an external Google Drive dependency", () => {
+  const filename = "public/resources/frameleads-affiliate-full-product-proof-23.zip";
+  const zip = fs.readFileSync(filename);
+  assert.ok(zip.length > 2_000_000 && zip.length < 4_000_000);
+  assert.equal(zip.readUInt32LE(0), 0x04034b50);
+  const tail = zip.length - 22;
+  assert.equal(zip.readUInt32LE(tail), 0x06054b50);
+  assert.equal(zip.readUInt16LE(tail + 10), 25, "23 image files plus a guide and manifest");
+  const component = fs.readFileSync("src/components/AffiliateProofKit.tsx", "utf8");
+  const email = fs.readFileSync("src/affiliate-native-email.ts", "utf8");
+  assert.ok(component.includes('href="/resources/frameleads-affiliate-full-product-proof-23.zip"'));
+  assert.ok(component.includes("Download all 23 screenshots"));
+  assert.ok(component.includes("Inbox Triage"));
+  assert.ok(email.includes("complete set of 23 product screenshots"));
+  assert.doesNotMatch(component, /drive\.google\.com|Google Drive/i);
+});
