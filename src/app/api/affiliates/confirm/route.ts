@@ -18,6 +18,10 @@ export async function POST(request: Request) {
   if (Number(request.headers.get("content-length") ?? "0") > 1800) return reply("BODY_TOO_LARGE", 413);
   const config = liveConfig(process.env);
   if (!config) return reply("NOT_LIVE", 503);
+  if (config.mode === "live" &&
+      !["frameleads.io", "www.frameleads.io"].includes(new URL(request.url).hostname)) {
+    return reply("HOST_REJECTED", 403);
+  }
   if (config.mode === "preview_e2e") {
     const url = new URL(request.url);
     if (url.protocol !== "https:" || !/^frameleads-landing-[a-z0-9-]+\.vercel\.app$/.test(url.hostname)) {
