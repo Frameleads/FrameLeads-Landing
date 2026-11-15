@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import FirstPartyMeasurement from '../components/FirstPartyMeasurement';
 import PrivacyChoices from '../components/PrivacyChoices';
+import FeedbackExperience from '../components/FeedbackExperience';
 import localFont from "next/font/local";
 import "./globals.css";
 
@@ -98,6 +99,7 @@ export default function RootLayout({
         <FirstPartyMeasurement />
         {children}
         <PrivacyChoices />
+        <FeedbackExperience />
       </body>
     </html>
   );

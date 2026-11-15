@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { tierInformation, type CheckoutTier } from "../checkout-embed-policy";
+import { CheckoutFeedbackLink } from "./FeedbackExperience";
 
 type Props = { tier: CheckoutTier; termsVerified: boolean };
 
@@ -51,6 +52,7 @@ export default function CheckoutOrderSummary({ tier, termsVerified }: Props) {
         <div className="mt-5 border-t border-white/[0.12] pt-4">
           <p className="text-xs text-[#B8B8B8]">{termsVerified ? "Whop confirms the displayed offer terms." : "Current website reference. Whop shows the current price and billing terms before you pay."}</p>
         </div>
+        <CheckoutFeedbackLink context={tier === "micro-pilot" ? "micro_pilot" : tier} />
       </div>
     </section>
   );
