@@ -64,6 +64,11 @@ test("Resend welcome email includes approved links, recurring terms and screensh
     assert.ok(String(body.text).includes(value), "missing " + value);
   }
   assert.match(String(body.html), /Open Whop/);
+  assert.match(String(body.html), /Core referral link/);
+  assert.match(String(body.html), /Enterprise referral link/);
+  assert.match(String(body.html), /Download all 23 product screenshots/);
+  assert.match(String(body.html), /href="https:\/\/whop.com\/frameleads\/core\?a=testing"/);
+  assert.match(String(body.html), /frameleads-affiliate-full-product-proof-23\.zip/);
   assert.equal(provider.calls[0].url, "https://api.resend.com/emails");
 });
 
