@@ -78,3 +78,11 @@ Only after Stage 2, legal approval, updated Privacy effective date, browser/mobi
 Stop for any unexpected paid prompt, public alias change, public preview write capability, environment mismatch, secret/key exposure, unauthorized Supabase row, failed RLS/ACL assertion, CI regression, or checkout behavior change. Keep local test results, GitHub SHA/CI run links, deployed/preview deployment ID, URL **without authentication tokens**, exact response statuses, and sanitized zero-row verification.
 
 **No public feedback, no production deployment, no paid resource, no test credential extraction, no PR #42 merge has been performed in this November 15 review.**
+
+## E. Owner decision — technical privacy refinements accepted in principle (Nov 15, 2026)
+
+Owner **accepted the technical wording refinements in principle only**, while explicitly keeping final legal approval pending verification of the business identity and processing arrangements. This is **not** consent to publish the policy, enable feedback, merge PR #42, make a production deployment, exercise a stored Vercel credential, or incur charges.
+
+The draft branch stages: (1) clarification that a comment may be submitted without a selected reason and a pricing-card selection does not confirm purchase, (2) a short form caution against confidential and sensitive information, (3) more precise hourly database retention language, and (4) independent effective-date labels so Terms retains **October 13, 2026** while the revised Privacy Policy explicitly remains a **draft with no assigned effective date**. Set the Privacy Policy's actual effective date **only upon separately approved publication**; do not backdate it.
+
+**Remaining legal gate:** confirm controller/business identity, applicable legal basis and data subject rights, Vercel/Supabase processor arrangements and transfer regions/mechanisms, privacy publication requirements, and truthful date. Obtain separate owner release decisions after runtime validation. Existing release flags stay false; feedback PR remains draft.
