@@ -77,7 +77,7 @@ export default function AffiliatePage() {
     <AffiliateWalkthrough />
     <AffiliateProofKit />
     <footer className="relative z-10 border-t border-white/[0.1] px-5 py-8 text-center text-xs text-[#888]">
-      © 2026 FrameLeads · A BrandFlow Studio company
+      © 2026 FrameLeads · by BrandFlow Studio
     </footer>
   </main>;
 }

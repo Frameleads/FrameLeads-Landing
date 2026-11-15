@@ -105,7 +105,7 @@ function emailHtml(title: string, paragraphs: string[], cta?: { label: string; u
     '<p style="color:#FF5A1F;font-weight:800;letter-spacing:2px">FRAMELEADS</p>' +
     '<h1 style="font-size:24px">' + escapeHtml(title) + '</h1>' +
     paragraphs.map(p => '<p style="line-height:1.65;overflow-wrap:anywhere">' + escapeHtml(p) + '</p>').join("") +
-    link + resourceLinks + '<p style="color:#888;font-size:12px">FrameLeads · A BrandFlow Studio company</p></div></body></html>';
+    link + resourceLinks + '<p style="color:#888;font-size:12px">FrameLeads · by BrandFlow Studio</p></div></body></html>';
 }
 
 export async function queueAffiliateVerificationEmail(
