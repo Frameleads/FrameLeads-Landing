@@ -121,3 +121,79 @@ test("protected Preview real flow verifies recipient before touching Whop, then 
     restoreEnv();
   }
 });
+
+
+test("production affiliate API refuses fake Turnstile actions and hostnames before sending email", async () => {
+  const liveEnv = {
+    ...config,
+    VERCEL_ENV: "production",
+    AFFILIATE_NATIVE_REGISTRATION_ENABLED: "true",
+    AFFILIATE_NATIVE_SECURITY_REVIEW_APPROVED: "true",
+    AFFILIATE_TURNSTILE_SECRET: "mock-secret",
+    NEXT_PUBLIC_AFFILIATE_TURNSTILE_SITE_KEY: "mock-site-key",
+  };
+  putEnv(liveEnv);
+  const originalFetch = globalThis.fetch;
+  let action = "wrong_action";
+  let hostname = "frameleads.io";
+  let sends = 0;
+  try {
+    globalThis.fetch = (async (input, options) => {
+      const u = new URL(String(input));
+      if (u.hostname === "challenges.cloudflare.com") {
+        return new Response(JSON.stringify({ success: true, action, hostname }), {
+          status: 200, headers: { "Content-Type": "application/json" },
+        });
+      }
+      if (u.hostname === "api.resend.com") {
+        sends++;
+        const b = JSON.parse(String(options?.body));
+        assert.deepEqual(b.to, [recipient]);
+        return new Response(JSON.stringify({ id: "49a3999c-0ce1-4ea6-ab68-afcd6dc2e794" }), {
+          status: 200, headers: { "Content-Type": "application/json" },
+        });
+      }
+      throw new Error("An unauthorized provider was contacted");
+    }) as typeof fetch;
+
+    function liveRequest(ip: string, host = "frameleads.io") {
+      const origin = "https://" + host;
+      return new Request(origin + "/api/affiliates/apply", {
+        method: "POST",
+        headers: {
+          Origin: origin, "Content-Type": "application/json",
+          "sec-fetch-site": "same-origin", "x-real-ip": ip,
+        },
+        body: JSON.stringify({
+          firstName: "Jane", lastName: "Tester", email: recipient,
+          agreed: true, website: "", turnstileToken: "mock-valid-challenge-token",
+        }),
+      });
+    }
+    assert.equal(affiliateMode(process.env), "live");
+    const invalidAction = await apply(liveRequest("198.51.100.210"));
+    assert.equal(invalidAction.status, 403);
+    assert.equal(sends, 0);
+
+    action = "affiliate_signup";
+    hostname = "attacker.example";
+    const invalidHost = await apply(liveRequest("198.51.100.211"));
+    assert.equal(invalidHost.status, 403);
+    assert.equal(sends, 0);
+
+    hostname = "frameleads.io";
+    const forbiddenAPIHost = await apply(liveRequest("198.51.100.212", "other.vercel.app"));
+    assert.equal(forbiddenAPIHost.status, 403);
+    assert.equal(sends, 0);
+
+    const allowed = await apply(liveRequest("198.51.100.213"));
+    assert.equal(allowed.status, 202);
+    assert.equal(sends, 1);
+  } finally {
+    globalThis.fetch = originalFetch;
+    for (const key of Object.keys(liveEnv)) {
+      const prior = before[key];
+      if (prior === undefined) delete process.env[key]; else process.env[key] = prior;
+    }
+  }
+});
