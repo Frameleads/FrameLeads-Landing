@@ -50,6 +50,10 @@ export async function POST(request: Request) {
         !/^frameleads-landing-[a-z0-9-]+\.vercel\.app$/.test(url.hostname) ||
         !previewAllowedEmail(applicant.email, process.env)) return json("TEST_ACCESS_DENIED", 403);
   }
+  if (config.mode === "live" &&
+      !["frameleads.io", "www.frameleads.io"].includes(new URL(request.url).hostname)) {
+    return json("HOST_REJECTED", 403);
+  }
   if (config.mode === "live" && (typeof input.turnstileToken !== "string" || input.turnstileToken.length < 10 || input.turnstileToken.length > 3000)) {
     return json("VERIFICATION_REQUIRED", 400);
   }
@@ -73,7 +77,11 @@ export async function POST(request: Request) {
         body: new URLSearchParams({ secret: config.turnstileSecret, response: String(input.turnstileToken) }),
       });
       const result: unknown = await response.json();
-      verified = response.ok && Boolean(result && typeof result === "object" && "success" in result && result.success === true);
+      const outcome = result && typeof result === "object" && !Array.isArray(result)
+        ? result as Record<string, unknown> : {};
+      verified = response.ok && outcome.success === true &&
+        outcome.hostname === new URL(request.url).hostname &&
+        outcome.action === "affiliate_signup";
     } catch { return json("VERIFICATION_UNAVAILABLE", 503); }
     if (!verified) return json("VERIFICATION_FAILED", 403);
   }
