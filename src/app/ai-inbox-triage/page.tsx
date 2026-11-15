@@ -236,7 +236,7 @@ export default function AiInboxTriageGuide() {
             </Section>
 
             <Section id="pricing-objections-proof" index="05" topic="Commercial replies" title="How should AI handle pricing questions, objections, and proof requests?">
-              <p>These are consequential sales conversations. The reply should be assessed against approved pricing, real evidence, and the team's authority to make commitments. A polished draft is not useful if it invents a discount or promises results that have not been demonstrated.</p>
+              <p>These are consequential sales conversations. The reply should be assessed against approved pricing, real evidence, and the team&apos;s authority to make commitments. A polished draft is not useful if it invents a discount or promises results that have not been demonstrated.</p>
               <div className="rounded-xl border border-white/[0.14] bg-[#242424] p-5 sm:p-6">
                 <p className="font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#FF5A1F]">Illustrative outbound reply</p>
                 <blockquote className="mt-3 border-l-2 border-[#FF5A1F]/55 pl-4 text-base font-medium leading-7 text-white">“We are comparing agencies this week. Can you send pricing, a relevant case study, and how your team handles prospect replies? Our founder reviews options Thursday.”</blockquote>
@@ -245,7 +245,7 @@ export default function AiInboxTriageGuide() {
                   <div><p className="font-mono text-[10px] font-bold text-[#888888]">SAFER NEXT ACTION</p><p className="mt-2 text-sm leading-6">Prepare accurate pricing and verified evidence; route unapproved commitments for review</p></div>
                 </div>
               </div>
-              <p>Answer the prospect's actual question first. If the case study or authority to offer a discount is missing, mark that gap clearly rather than making it up. An <strong>AI-generated draft</strong> should remain reviewable when it touches scope, commercial terms, or consequential promises.</p>
+              <p>Answer the prospect&apos;s actual question first. If the case study or authority to offer a discount is missing, mark that gap clearly rather than making it up. An <strong>AI-generated draft</strong> should remain reviewable when it touches scope, commercial terms, or consequential promises.</p>
             </Section>
 
             <Section id="human-approval" index="06" topic="Human control" title="When should AI draft, send, or ask a human to approve?">
@@ -272,7 +272,7 @@ export default function AiInboxTriageGuide() {
             </Section>
 
             <Section id="measure-roi" index="08" topic="Measurement" title="How can an agency measure whether reply automation is worth it?">
-              <p>Use a small controlled pilot with the team's existing replies and compare it with the current manual process. Focus on outcomes rather than vanity metrics such as total AI-generated drafts.</p>
+              <p>Use a small controlled pilot with the team&apos;s existing replies and compare it with the current manual process. Focus on outcomes rather than vanity metrics such as total AI-generated drafts.</p>
               <div className="overflow-x-auto rounded-xl border border-white/[0.12]">
                 <table className="w-full min-w-[520px] border-collapse text-left text-sm">
                   <thead className="bg-[#292929] text-white"><tr><th scope="col" className="p-4">Measure</th><th scope="col" className="p-4">What it tells you</th></tr></thead>

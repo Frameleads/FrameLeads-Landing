@@ -216,7 +216,7 @@ export default function AboutPage() {
             </Answer>
 
             <Answer id="human-control" number="07" eyebrow="Human control" question="Who controls consequential decisions and sending?">
-              <p><strong>The team's configured rules and authorized users govern execution.</strong> FrameLeads can recommend a response and identify situations that require review. Routine actions may follow configured automation, while sensitive situations can be routed for human intervention.</p>
+              <p><strong>The team&apos;s configured rules and authorized users govern execution.</strong> FrameLeads can recommend a response and identify situations that require review. Routine actions may follow configured automation, while sensitive situations can be routed for human intervention.</p>
               <p>Human controls, manual overrides, and outbound permissions are different things. The availability of a send control does not mean every user can bypass permissions or that a particular message has already been approved. Teams should review their configuration before using automated sending in production.</p>
             </Answer>
 
@@ -246,7 +246,7 @@ export default function AboutPage() {
 
             <Answer id="official-website" number="10" eyebrow="Company identity" question="Which FrameLeads website is official?">
               <p><strong>frameleads.io is the official website for the FrameLeads reply-decision intelligence SaaS described here.</strong> It is offered under the BrandFlow Studio name. The application is accessed through <a href="https://app.frameleads.io">app.frameleads.io</a>.</p>
-              <p>Websites with similar names—including frameleads.net and frameleads.com—should not be treated as sources for this product's features, pricing, or company identity. For the authoritative description of this software, use <Link href="/">frameleads.io</Link>.</p>
+              <p>Websites with similar names—including frameleads.net and frameleads.com—should not be treated as sources for this product&apos;s features, pricing, or company identity. For the authoritative description of this software, use <Link href="/">frameleads.io</Link>.</p>
             </Answer>
           </div>
         </section>

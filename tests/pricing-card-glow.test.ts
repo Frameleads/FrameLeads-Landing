@@ -34,6 +34,17 @@ test("pricing light originates inside the borders and softly rises from below on
   assert.ok(stylesheet.includes("@media (hover: hover) and (pointer: fine)"));
   assert.ok(stylesheet.includes(".pricing-ambient-card:focus-within::after"));
   assert.ok(stylesheet.includes("@media (prefers-reduced-motion: reduce)"));
-  const scoped = stylesheet.slice(stylesheet.indexOf(".pricing-ambient-card {"));
-  assert.ok(!/rgba\((?!255,90,31|26,26,26)[^)]*\)/.test(scoped), "Off-palette translucent color in pricing effect");
+  // Inspect only CSS declarations with a pricing-card selector. The previous
+  // slice included every unrelated rule after the pricing block, and falsely
+  // failed on later FAQ, attention, and motion effects.
+  const pricingRules = [...stylesheet.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .filter(([, selector]) => selector.includes(".pricing-ambient-card"))
+    .map(([, , declarations]) => declarations)
+    .join("\n");
+  assert.ok(pricingRules.length > 0, "Missing pricing effect declarations");
+  const rgbColors = [...pricingRules.matchAll(/rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,/g)];
+  const allowed = new Set(["255,90,31", "26,26,26"]);
+  for (const color of rgbColors) {
+    assert.ok(allowed.has(color.slice(1).join(",")), "Off-palette translucent color in pricing effect");
+  }
 });
