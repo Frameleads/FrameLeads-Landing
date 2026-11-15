@@ -26,7 +26,7 @@ export default function PrivacyPage() {
 
     <LegalSection title="3. How we use information">
       <p>We use information to operate and secure the website and services; provide the Audit diagnosis and any workflow map you request; respond to messages; deliver requested resources; manage accounts, purchases, and subscriptions; understand service performance when you allow analytics; measure advertising when you allow advertising measurement; prevent misuse; and meet legal obligations.</p>
-      <p>We also use optional private feedback to understand prospective customers&apos; concerns and improve our product, offer explanations, onboarding, and support. Private feedback is not published as a review or testimonial or shared publicly without separate permission.</p>
+      <p>We also use optional private feedback to understand prospective customers&apos; concerns and improve our product, offer explanations, onboarding, and support. Choosing to submit feedback does not subscribe you to marketing messages or change your optional analytics and advertising preferences. Private feedback is not published as a review or testimonial or shared publicly without separate permission.</p>
       <p>We do not require optional analytics or advertising consent to complete the Reply Workflow Audit or view its diagnosis. You choose whether to provide contact details for a separate workflow-map request.</p>
     </LegalSection>
 
