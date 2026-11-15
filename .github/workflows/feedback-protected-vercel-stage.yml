@@ -98,7 +98,9 @@ jobs:
           printf '{"orgId":"%s","projectId":"%s"}\n' "$VERCEL_ORG_ID" "$VERCEL_PROJECT_ID" > .vercel/project.json
           deployment_url="$(cat /tmp/feedback-staged-url.txt)"
           code="$(npm exec --yes --package=vercel@65.12.0 -- vercel curl /api/__feedback_attest --deployment "$deployment_url" -- -sS -o /tmp/feedback-ready.json -w '%{http_code}')"
+          echo "Authenticated readiness response: HTTP $code"
           if [ "$code" != "200" ] || ! node -e 'if (JSON.parse(require("node:fs").readFileSync("/tmp/feedback-ready.json","utf8")).ready !== true) process.exit(1)'; then
+            node -e 'const fs=require("node:fs");try {const v=JSON.parse(fs.readFileSync("/tmp/feedback-ready.json","utf8"));console.log("Safe diagnostic:",v.error||"response-not-ready")}catch{console.log("Safe diagnostic: non-JSON upstream response")}'
             echo "BLOCKED: protected staging readiness gate failed."; exit 1
           fi
           echo "Authenticated test endpoint readiness verified."
