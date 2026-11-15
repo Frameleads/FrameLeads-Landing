@@ -65,7 +65,7 @@ test("affiliate Preview contains downloadable proof section with approved image 
     assert.ok(component.includes("/images/product-proof/" + source));
   }
   assert.match(component, /Coming next:/);
-  assert.match(component, /illustrative prospect data/);
+  assert.match(component, /illustrative (demo )?prospect data/);
   assert.doesNotMatch(component, /Google Drive|customer success stories|guaranteed 10x/i);
 });
 
