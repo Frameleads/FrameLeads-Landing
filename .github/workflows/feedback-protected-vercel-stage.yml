@@ -53,3 +53,72 @@ jobs:
           esac
           echo "STAGED_NOT_PROMOTED_URL=$deployment_url"
           echo "No domain promotion, no public feedback activation. Verify aliases independently before further steps."
+
+      - name: Confirm custom production domains remain on their ORIGINAL deployment
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: team_jX56ywj76j7NPQT2CaY19x6u
+        run: |
+          set -euo pipefail
+          for domain in frameleads.io www.frameleads.io; do
+            curl --fail --silent --show-error \
+              --header "Authorization: Bearer ${VERCEL_TOKEN}" \
+              "https://api.vercel.com/v4/aliases/${domain}?teamId=${VERCEL_ORG_ID}" \
+              | node -e '
+                let json="";
+                process.stdin.on("data", c => json += c);
+                process.stdin.on("end", () => {
+                  const record = JSON.parse(json);
+                  if (record.deploymentId !== "dpl_7WATTiUVgdTW6p1r3Z9DchoAaWXp") {
+                    process.stderr.write("BLOCKED: public alias no longer maps to previously approved deployment.\n");
+                    process.exitCode = 1;
+                  }
+                });
+              '
+          done
+          echo "Both live aliases unchanged."
+      - name: Verify staging endpoint is protected BEFORE any authenticated access
+        run: |
+          set -euo pipefail
+          deployment_url="$(cat /tmp/feedback-staged-url.txt)"
+          unauthenticated_code="$(curl -sS --max-time 15 --output /dev/null --write-out '%{http_code}' "$deployment_url/api/__feedback_attest")"
+          case "$unauthenticated_code" in
+            302|303|307|308|401|403) ;;
+            *) echo "BLOCKED: protected deployment failed unauthenticated test (HTTP $unauthenticated_code)."; exit 1 ;;
+          esac
+          echo "Unauthenticated access was blocked (HTTP $unauthenticated_code)."
+      - name: Check protected test-only endpoint readiness (NO WRITE)
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: team_jX56ywj76j7NPQT2CaY19x6u
+          VERCEL_PROJECT_ID: prj_RZK6ci9krd8EQPzpFF2vNHI7S3tV
+        run: |
+          set -euo pipefail
+          mkdir -p .vercel
+          printf '{"orgId":"%s","projectId":"%s"}\n' "$VERCEL_ORG_ID" "$VERCEL_PROJECT_ID" > .vercel/project.json
+          deployment_url="$(cat /tmp/feedback-staged-url.txt)"
+          code="$(npm exec --yes --package=vercel@65.12.0 -- vercel curl /api/__feedback_attest --deployment "$deployment_url" -sS -o /tmp/feedback-ready.json -w '%{http_code}')"
+          if [ "$code" != "200" ] || ! node -e 'if (JSON.parse(require("node:fs").readFileSync("/tmp/feedback-ready.json","utf8")).ready !== true) process.exit(1)'; then
+            echo "BLOCKED: protected staging readiness gate failed."; exit 1
+          fi
+          echo "Authenticated test endpoint readiness verified."
+      - name: Exactly ONE owner-approved synthetic Vercel runtime submission
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: team_jX56ywj76j7NPQT2CaY19x6u
+          VERCEL_PROJECT_ID: prj_RZK6ci9krd8EQPzpFF2vNHI7S3tV
+        run: |
+          set -euo pipefail
+          test "$GITHUB_RUN_ATTEMPT" = "1" || { echo 'BLOCKED: reruns must not repeat the test write.'; exit 1; }
+          deployment_url="$(cat /tmp/feedback-staged-url.txt)"
+          code="$(npm exec --yes --package=vercel@65.12.0 -- vercel curl /api/__feedback_attest --deployment "$deployment_url" \
+            -X POST -H "Content-Type: application/json" -H "Origin: $deployment_url" \
+            --data '{"purpose":"approved-synthetic-vercel-test"}' \
+            -sS -o /tmp/feedback-synthetic-result.json -w '%{http_code}')"
+          if [ "$code" != "201" ] || ! node -e '
+            const result=JSON.parse(require("node:fs").readFileSync("/tmp/feedback-synthetic-result.json","utf8"));
+            if (result.saved !== true || result.marker !== "fl_vrt_20261115_8fd471c7") process.exit(1)
+          '; then
+            echo "BLOCKED: Vercel-origin synthetic save did not return expected 201."; exit 1
+          fi
+          echo "HTTP 201: exactly one fixed synthetic submission accepted. Await independent Supabase admin readback and exact cleanup."
