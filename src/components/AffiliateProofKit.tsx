@@ -2,14 +2,6 @@ import Image from "next/image";
 
 const screenshots = [
   {
-    title: "Outbound Sandbox",
-    subtitle: "Show the prepared outreach workspace and its prospect context.",
-    file: "01-outbound-sandbox.png",
-    src: "/images/product-proof/01-outbound-sandbox.png",
-    width: 1497,
-    height: 787,
-  },
-  {
     title: "Inbox Triage",
     subtitle: "Show what happens when qualified prospects reply.",
     file: "02-incoming-reply-20261102.png",
@@ -32,6 +24,14 @@ const screenshots = [
     src: "/images/product-proof/04-decision-packet-20261102.png",
     width: 1532,
     height: 867,
+  },
+  {
+    title: "Outbound Sandbox",
+    subtitle: "Show the prepared outreach workspace and its prospect context.",
+    file: "01-outbound-sandbox.png",
+    src: "/images/product-proof/01-outbound-sandbox.png",
+    width: 1497,
+    height: 787,
   },
 ] as const;
 
