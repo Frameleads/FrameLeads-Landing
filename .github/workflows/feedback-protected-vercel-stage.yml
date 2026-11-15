@@ -1,0 +1,55 @@
+name: Protected feedback Vercel staging gate (NO PROMOTION)
+on:
+  push:
+    branches:
+      - test/feedback-vercel-credential-gate-20261115
+
+permissions:
+  contents: read
+
+concurrency:
+  group: feedback-protected-vercel-stage
+  cancel-in-progress: false
+
+jobs:
+  stage-nonpromoted:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact temporary test branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Verify safe staging scope and existing Vercel CI credentials
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = 'test/feedback-vercel-credential-gate-20261115'
+          if [ -z "${VERCEL_TOKEN:-}" ]; then
+            echo 'BLOCKED: no pre-existing VERCEL_TOKEN GitHub Actions secret; no deployment attempted.'
+            exit 1
+          fi
+          echo 'A pre-existing Vercel CI token is available; its value will never be printed.'
+      - name: Set up Node 24
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - name: Create protected production-environment staging without assigning domains
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: team_jX56ywj76j7NPQT2CaY19x6u
+          VERCEL_PROJECT_ID: prj_RZK6ci9krd8EQPzpFF2vNHI7S3tV
+          CI: "1"
+        run: |
+          set -euo pipefail
+          # No env pull, no decrypt, no stored feedback, no public release switches.
+          # --skip-domain is essential: never substitute --prod alone.
+          npm exec --yes --package=vercel@65.12.0 -- vercel deploy --prod --skip-domain --yes > /tmp/feedback-staged-url.txt
+          deployment_url="$(cat /tmp/feedback-staged-url.txt)"
+          case "$deployment_url" in
+            https://*.vercel.app) ;;
+            *) echo "BLOCKED: invalid generated deployment URL"; exit 1 ;;
+          esac
+          echo "STAGED_NOT_PROMOTED_URL=$deployment_url"
+          echo "No domain promotion, no public feedback activation. Verify aliases independently before further steps."
