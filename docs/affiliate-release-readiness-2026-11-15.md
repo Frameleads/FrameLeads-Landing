@@ -20,6 +20,10 @@
 5. **Controlled activation**: first merge PR #43 without enabling public registration, verify information page and 23 ZIP work. Then separately enable `AFFILIATE_NATIVE_REGISTRATION_ENABLED=true` and `AFFILIATE_NATIVE_SECURITY_REVIEW_APPROVED=true` after the above steps, rebuild Production, verify protected normal form now shows Live (no Preview banner), and monitor safe anonymized function error codes.
 6. **Track first real referral** through Whop after organic launch. A paid checkout test or Whop Sandbox purchase is not a prerequisite for publishing the native program; payout/renewal behavior remains provider-dependent and must not be represented as already proven by a test sale.
 
+## Hosting plan compliance consideration (not caused by affiliate code)
+
+The currently connected Vercel team has been shown as **Hobby** in owner screenshots. Vercel's published terms as of 19 Oct 2026 restrict Hobby to personal/non-commercial use and define commercial usage broadly. The FrameLeads website advertises paid subscriptions, so the owner should review the plan requirement before continuing commercial operation. **No paid upgrade is authorized or performed.** This is separate from the technical readiness of PR #43. Sources: https://vercel.com/legal/terms and https://vercel.com/docs/limits/fair-use-guidelines.
+
 ## Explicit non-actions
 
 Do not create or change Whop plans, enable any public endpoint or switch Production flags, merge or deploy Production, share private credentials, modify unrelated Supabase or checkout systems, or incur charges without explicit owner authorization. The pre-existing affiliate Sandbox PRs and Issue #17 independent review loop are out of scope for this native Whop Option A implementation.
