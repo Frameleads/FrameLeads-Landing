@@ -3,6 +3,7 @@ import {
   liveConfig, previewAllowedEmail, readEmailConfirmationToken, registerVerifiedAffiliate, NativeWhopError,
 } from "../../../../affiliate-native.ts";
 import { queueAffiliateWelcomeEmail, AffiliateMailError } from "../../../../affiliate-native-email.ts";
+import { validAffiliatePublicOrigin } from "../../../../affiliate-native-turnstile.ts";
 
 export const runtime = "nodejs";
 const reply = (code: string, status: number) =>
@@ -18,6 +19,7 @@ export async function POST(request: Request) {
   if (Number(request.headers.get("content-length") ?? "0") > 1800) return reply("BODY_TOO_LARGE", 413);
   const config = liveConfig(process.env);
   if (!config) return reply("NOT_LIVE", 503);
+  if (config.mode === "live" && !validAffiliatePublicOrigin(request)) return reply("ORIGIN_REJECTED", 403);
   if (config.mode === "live" &&
       !["frameleads.io", "www.frameleads.io"].includes(new URL(request.url).hostname)) {
     return reply("HOST_REJECTED", 403);
