@@ -47,6 +47,12 @@ export default function TermsPage() {
       <p>You retain your rights in content you provide. You authorize us and our service providers to host, use, transmit, and process that content as needed to provide, secure, and support the service and as described in the <a className={termsLink} href="/privacy">Privacy Policy</a>. Do not copy, resell, distribute, reverse engineer, or create derivative works from the service except where applicable law permits or we authorize it in writing.</p>
     </LegalSection>
 
+    <LegalSection title="Affiliate partner program">
+      <p>Partners must provide accurate signup information, confirm an email address they control, and follow the current FrameLeads affiliate instructions displayed inside Whop. Whop is the system of record for affiliate links, eligible referrals, commissions, adjustments and payouts. The current offer advertises 30% on eligible initial and recurring Core and Enterprise subscription payments, subject to the applicable Whop reward terms and any payment reversals, discounts or refunds. Earnings are not guaranteed.</p>
+      <p>When you promote FrameLeads, disclose your affiliate relationship where required, respect anti-spam and advertising laws, and avoid fake testimonials, invented client results, guaranteed revenue claims or misleading descriptions of the product. Product screenshots provided for partner use may include illustrative demo prospect data and do not establish actual customer results. Do not represent FrameLeads as independently approving or sending consequential replies without human control.</p>
+      <p>If a buyer or affiliate has a question about their specific Whop transaction, tracking or payout, their Whop dashboard and applicable provider terms are the starting point. For FrameLeads partner-program questions contact <a className={termsLink} href="mailto:akram@frameleads.io">akram@frameleads.io</a>.</p>
+    </LegalSection>
+
     <LegalSection title="8. Third-party services">
       <p>FrameLeads may connect to or link to services operated by others. Those providers control their services and their own terms and privacy practices. Their availability, changes, or failures may affect a feature, and their terms also apply when you use them.</p>
     </LegalSection>
