@@ -97,7 +97,7 @@ jobs:
           mkdir -p .vercel
           printf '{"orgId":"%s","projectId":"%s"}\n' "$VERCEL_ORG_ID" "$VERCEL_PROJECT_ID" > .vercel/project.json
           deployment_url="$(cat /tmp/feedback-staged-url.txt)"
-          code="$(npm exec --yes --package=vercel@65.12.0 -- vercel curl /api/__feedback_attest --deployment "$deployment_url" -sS -o /tmp/feedback-ready.json -w '%{http_code}')"
+          code="$(npm exec --yes --package=vercel@65.12.0 -- vercel curl /api/__feedback_attest --deployment "$deployment_url" -- -sS -o /tmp/feedback-ready.json -w '%{http_code}')"
           if [ "$code" != "200" ] || ! node -e 'if (JSON.parse(require("node:fs").readFileSync("/tmp/feedback-ready.json","utf8")).ready !== true) process.exit(1)'; then
             echo "BLOCKED: protected staging readiness gate failed."; exit 1
           fi
@@ -111,7 +111,7 @@ jobs:
           set -euo pipefail
           test "$GITHUB_RUN_ATTEMPT" = "1" || { echo 'BLOCKED: reruns must not repeat the test write.'; exit 1; }
           deployment_url="$(cat /tmp/feedback-staged-url.txt)"
-          code="$(npm exec --yes --package=vercel@65.12.0 -- vercel curl /api/__feedback_attest --deployment "$deployment_url" \
+          code="$(npm exec --yes --package=vercel@65.12.0 -- vercel curl /api/__feedback_attest --deployment "$deployment_url" -- \
             -X POST -H "Content-Type: application/json" -H "Origin: $deployment_url" \
             --data '{"purpose":"approved-synthetic-vercel-test"}' \
             -sS -o /tmp/feedback-synthetic-result.json -w '%{http_code}')"
