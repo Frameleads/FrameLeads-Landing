@@ -3,6 +3,7 @@ import {
   affiliateMode, createEmailConfirmationToken, liveConfig, previewAllowedEmail, validateApplicant,
 } from "../../../../affiliate-native.ts";
 import { queueAffiliateVerificationEmail, AffiliateMailError } from "../../../../affiliate-native-email.ts";
+import { validAffiliatePublicOrigin, verifyAffiliateTurnstile } from "../../../../affiliate-native-turnstile.ts";
 
 export const runtime = "nodejs";
 const buckets = new Map<string, { startedAt: number; count: number }>();
@@ -41,6 +42,7 @@ export async function POST(request: Request) {
 
   const config = liveConfig(process.env);
   if (!config) return json("NOT_LIVE", 503);
+  if (config.mode === "live" && !validAffiliatePublicOrigin(request)) return json("ORIGIN_REJECTED", 403);
   if (config.mode === "preview_e2e") {
     const url = new URL(request.url);
     // Vercel Authentication protects non-production .vercel.app hosts.
@@ -69,21 +71,9 @@ export async function POST(request: Request) {
     buckets.set(rateKey, { startedAt: now, count: 1 });
   } else if (++bucket.count > (config.mode === "preview_e2e" ? 1 : 3)) return json("RATE_LIMITED", 429);
 
-  if (config.mode === "live") {
-    let verified = false;
-    try {
-      const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
-        method: "POST", cache: "no-store", redirect: "error", signal: AbortSignal.timeout(9000),
-        body: new URLSearchParams({ secret: config.turnstileSecret, response: String(input.turnstileToken) }),
-      });
-      const result: unknown = await response.json();
-      const outcome = result && typeof result === "object" && !Array.isArray(result)
-        ? result as Record<string, unknown> : {};
-      verified = response.ok && outcome.success === true &&
-        outcome.hostname === new URL(request.url).hostname &&
-        outcome.action === "affiliate_signup";
-    } catch { return json("VERIFICATION_UNAVAILABLE", 503); }
-    if (!verified) return json("VERIFICATION_FAILED", 403);
+  if (config.mode === "live" &&
+      !(await verifyAffiliateTurnstile(String(input.turnstileToken), config.turnstileSecret))) {
+    return json("VERIFICATION_FAILED", 403);
   }
   // Preview is protected by Vercel Authentication and a server-only email
   // allowlist. The live production route still requires Cloudflare Turnstile.
