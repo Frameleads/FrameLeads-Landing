@@ -1,0 +1,58 @@
+name: Revoke only FrameLeads newly created test automation bypass
+on:
+  push:
+    branches:
+      - test/feedback-vercel-credential-gate-20261115
+
+permissions:
+  contents: read
+
+jobs:
+  scoped-cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify and revoke ONLY newly created test bypass; never print secret
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          const token=process.env.VERCEL_TOKEN;
+          if (!token) throw Error("No Vercel token configured, cleanup not attempted.");
+          const project="prj_RZK6ci9krd8EQPzpFF2vNHI7S3tV";
+          const team="team_jX56ywj76j7NPQT2CaY19x6u";
+          const projectUrl=`https://api.vercel.com/v9/projects/${project}?teamId=${team}`;
+          const headers={Authorization:`Bearer ${token}`};
+          const read=async()=>{
+            const res=await fetch(projectUrl,{headers,cache:"no-store"});
+            if (!res.ok) throw Error(`Metadata lookup failed HTTP ${res.status}; no credential action taken.`);
+            return res.json();
+          };
+          const initial=await read();
+          const entries=Object.entries(initial.protectionBypass||{});
+          const since=Date.parse("2026-11-15T15:59:00.000Z");
+          const until=Date.parse("2026-11-15T16:10:00.000Z");
+          const matches=entries.filter(([key,data])=>
+            /^[A-Za-z0-9]{32}$/.test(key)
+            && data?.scope==="automation-bypass"
+            && Number.isFinite(data.createdAt)
+            && data.createdAt>=since
+            && data.createdAt<=until);
+          console.log("Automation bypasses found:",entries.filter(([,v])=>v?.scope==="automation-bypass").length);
+          console.log("New test-window candidates:",matches.length);
+          if (matches.length!==1) {
+            throw Error("Not exactly one verified test bypass. Stop; preserve all keys for manual inspection.");
+          }
+          const secret=matches[0][0];
+          const res=await fetch(`https://api.vercel.com/v1/projects/${project}/protection-bypass?teamId=${team}`,{
+            method:"PATCH",
+            headers:{...headers,"Content-Type":"application/json"},
+            body:JSON.stringify({revoke:{secret,regenerate:false}})
+          });
+          if (!res.ok) throw Error(`Bypass revocation API rejected request HTTP ${res.status}.`);
+          const after=await read();
+          if (Object.prototype.hasOwnProperty.call(after.protectionBypass||{},secret))
+            throw Error("Bypass still present on read-back.");
+          console.log("SUCCESS: revoked ONLY matching newly-created test automation bypass. Unrelated bypasses preserved.");
+          NODE
