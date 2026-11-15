@@ -92,16 +92,20 @@ async function queueAffiliateEmail(
   return { queued: true, providerMessageId: messageId };
 }
 
-function emailHtml(title: string, paragraphs: string[], cta?: { label: string; url: string }): string {
+function emailHtml(title: string, paragraphs: string[], cta?: { label: string; url: string }, resources: { label: string; url: string }[] = []): string {
   const link = cta ? '<p style="margin:26px 0"><a href="' + escapeHtml(cta.url) +
     '" style="background:#FF5A1F;color:#fff;font-weight:700;padding:13px 22px;border-radius:10px;text-decoration:none">' +
     escapeHtml(cta.label) + '</a></p>' : "";
+  const resourceLinks = resources.length === 0 ? "" :
+    '<div style="margin:24px 0;padding:16px;border:1px solid #eee;border-radius:12px"><p style="font-weight:700">Your affiliate resources</p>' +
+    resources.map(resource => '<p><a style="color:#CA4715;font-weight:700" href="' + escapeHtml(resource.url) + '">' + escapeHtml(resource.label) + '</a></p>').join("") +
+    '</div>';
   return '<!doctype html><html lang="en"><body style="background:#F6F6F6;margin:0;padding:30px 15px;font-family:Arial,sans-serif;color:#242424">' +
     '<div style="background:#fff;border:1px solid #ddd;border-radius:16px;max-width:580px;margin:auto;padding:32px">' +
     '<p style="color:#FF5A1F;font-weight:800;letter-spacing:2px">FRAMELEADS</p>' +
     '<h1 style="font-size:24px">' + escapeHtml(title) + '</h1>' +
     paragraphs.map(p => '<p style="line-height:1.65;overflow-wrap:anywhere">' + escapeHtml(p) + '</p>').join("") +
-    link + '<p style="color:#888;font-size:12px">FrameLeads · A BrandFlow Studio company</p></div></body></html>';
+    link + resourceLinks + '<p style="color:#888;font-size:12px">FrameLeads · A BrandFlow Studio company</p></div></body></html>';
 }
 
 export async function queueAffiliateVerificationEmail(
@@ -148,19 +152,24 @@ export async function queueAffiliateWelcomeEmail(
   if (!whopReferralUrl(links.core) || !whopReferralUrl(links.enterprise)) {
     throw new AffiliateMailError("AFFILIATE_LINKS_INVALID");
   }
+  const fullKitUrl = new URL("/resources/frameleads-affiliate-full-product-proof-23.zip", kit.origin).toString();
   const paragraphs = [
     "Hi " + applicant.firstName + ",",
     "Your FrameLeads affiliate registration is ready. Whop manages your referral tracking and commissions.",
     "Core ($149/month): 30% on eligible initial and recurring payments.\n" + links.core,
     "Enterprise ($499/month): 30% on eligible initial and recurring payments.\n" + links.enterprise,
-    "Product proof you can use: " + proofKitUrl + "\nStart with the four Inbox Triage examples, or download the complete set of 23 product screenshots from the partner resources section. Screens use illustrative demo prospects, not customer results.",
+    "Product proof you can use: " + proofKitUrl + "\nDownload the complete set of 23 product screenshots: " + fullKitUrl + "\nStart with Inbox Triage. Screens show illustrative demo prospects, not customer results.",
     "Short product recordings will be added to the same resource area when available.",
     "To view your referral dashboard, sign in to Whop and go to Affiliates → Refer buyers → View assets. Read the latest partner guidelines there before promoting.",
   ];
   return queueAffiliateEmail(
     applicant, config, "Your FrameLeads affiliate links",
     paragraphs.join("\n\n") + "\n\nFrameLeads",
-    emailHtml("Your affiliate links are ready", paragraphs, { label: "Open Whop", url: "https://whop.com" }),
+    emailHtml("Your affiliate links are ready", paragraphs, { label: "Open Whop", url: "https://whop.com" }, [
+      { label: "Core referral link", url: links.core },
+      { label: "Enterprise referral link", url: links.enterprise },
+      { label: "Download all 23 product screenshots", url: fullKitUrl },
+    ]),
     send,
     idempotencyKey,
   );
