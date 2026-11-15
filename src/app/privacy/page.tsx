@@ -13,7 +13,7 @@ const providerLink = "text-white underline decoration-white/25 underline-offset-
 export default function PrivacyPage() {
   return <LegalPageShell title="Privacy Policy" description="A clear summary of the information FrameLeads uses and the choices available to you." canonicalPath="/privacy" effectiveDateLabel="Draft revision — effective date pending approval and publication">
     <LegalSection title="1. About FrameLeads and contact">
-      <p>FrameLeads is a service offered under the BrandFlow Studio name. The seller for a particular purchase is identified during Whop checkout and on your receipt. For privacy questions or requests, contact us at <a className={providerLink} href="mailto:akram@frameleads.io">akram@frameleads.io</a>.</p>
+      <p>FrameLeads is currently an independent project operated by its founder in the United Arab Emirates; it is not a registered company. For the optional private feedback form, the person operating FrameLeads determines how submitted information is used and handles privacy requests. The seller for a particular purchase is identified during Whop checkout and on your receipt. For privacy questions or requests, contact us at <a className={providerLink} href="mailto:akram@frameleads.io">akram@frameleads.io</a>.</p>
     </LegalSection>
 
     <LegalSection title="2. Information we use">
