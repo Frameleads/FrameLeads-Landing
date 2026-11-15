@@ -16,11 +16,12 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
-          fetch-depth: 2
+          fetch-depth: 0
       - name: Verify exact owner-approved source
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD^)" = '7a28285e7257699e3f620691661fa820d12a32bf'
+          git cat-file -e 7a28285e7257699e3f620691661fa820d12a32bf^{commit}
+          git diff --quiet 7a28285e7257699e3f620691661fa820d12a32bf HEAD -- . ':(exclude).github/workflows/feedback-release-final-check.yml'
           test ! -e src/app/api/feedback-attest-test/route.ts
           test ! -e .github/workflows/feedback-protected-vercel-stage.yml
           grep -Fq 'effectiveDateLabel="Effective November 15, 2026"' src/app/privacy/page.tsx
