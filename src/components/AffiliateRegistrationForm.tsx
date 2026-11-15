@@ -12,6 +12,7 @@ declare global {
         callback: (token: string) => void;
         "expired-callback": () => void;
         "error-callback": () => void;
+        action?: string;
       }) => string;
       remove?: (widgetId: string) => void;
     };
@@ -39,6 +40,7 @@ export default function AffiliateRegistrationForm({ mode }: { mode: Registration
       if (active && widget.current && window.turnstile && !widgetId) {
         widgetId = window.turnstile.render(widget.current, {
           sitekey: siteKey,
+          action: "affiliate_signup",
           callback: value => setCaptcha(value),
           "expired-callback": () => setCaptcha(""),
           "error-callback": () => setCaptcha(""),
