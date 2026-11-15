@@ -81,7 +81,7 @@ jobs:
         run: |
           set -euo pipefail
           deployment_url="$(cat /tmp/feedback-staged-url.txt)"
-          unauthenticated_code="$(curl -sS --max-time 15 --output /dev/null --write-out '%{http_code}' "$deployment_url/api/__feedback_attest")"
+          unauthenticated_code="$(curl -sS --max-time 15 --output /dev/null --write-out '%{http_code}' "$deployment_url/api/feedback-attest-test")"
           case "$unauthenticated_code" in
             302|303|307|308|401|403) ;;
             *) echo "BLOCKED: protected deployment failed unauthenticated test (HTTP $unauthenticated_code)."; exit 1 ;;
@@ -97,7 +97,7 @@ jobs:
           mkdir -p .vercel
           printf '{"orgId":"%s","projectId":"%s"}\n' "$VERCEL_ORG_ID" "$VERCEL_PROJECT_ID" > .vercel/project.json
           deployment_url="$(cat /tmp/feedback-staged-url.txt)"
-          code="$(npm exec --yes --package=vercel@65.12.0 -- vercel curl /api/__feedback_attest --deployment "$deployment_url" -- -sS -o /tmp/feedback-ready.json -w '%{http_code}')"
+          code="$(npm exec --yes --package=vercel@65.12.0 -- vercel curl /api/feedback-attest-test --deployment "$deployment_url" -- -sS -o /tmp/feedback-ready.json -w '%{http_code}')"
           echo "Authenticated readiness response: HTTP $code"
           if [ "$code" != "200" ] || ! node -e 'if (JSON.parse(require("node:fs").readFileSync("/tmp/feedback-ready.json","utf8")).ready !== true) process.exit(1)'; then
             node -e 'const fs=require("node:fs");try {const v=JSON.parse(fs.readFileSync("/tmp/feedback-ready.json","utf8"));console.log("Safe diagnostic:",v.error||"response-not-ready")}catch{console.log("Safe diagnostic: non-JSON upstream response")}'
@@ -113,7 +113,7 @@ jobs:
           set -euo pipefail
           test "$GITHUB_RUN_ATTEMPT" = "1" || { echo 'BLOCKED: reruns must not repeat the test write.'; exit 1; }
           deployment_url="$(cat /tmp/feedback-staged-url.txt)"
-          code="$(npm exec --yes --package=vercel@65.12.0 -- vercel curl /api/__feedback_attest --deployment "$deployment_url" -- \
+          code="$(npm exec --yes --package=vercel@65.12.0 -- vercel curl /api/feedback-attest-test --deployment "$deployment_url" -- \
             -X POST -H "Content-Type: application/json" -H "Origin: $deployment_url" \
             --data '{"purpose":"approved-synthetic-vercel-test"}' \
             -sS -o /tmp/feedback-synthetic-result.json -w '%{http_code}')"
