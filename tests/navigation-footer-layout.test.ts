@@ -30,6 +30,10 @@ test("footer contains brand, product and company without redundant Workflow grou
   assert.ok(footer.includes("onClick={launchAudit}"));
   assert.ok(footer.includes("mailto:akram@frameleads.io"));
   assert.ok(footer.includes("https://app.frameleads.io/login"));
+  assert.ok(footer.includes('href="/affiliates"'), "Affiliate program link must be visible under the footer brand description");
+  assert.ok(footer.includes("Affiliate program · Earn 30%"));
+  assert.ok(footer.includes('aria-label="FrameLeads affiliate program'));
+  assert.ok(footer.includes('focus-visible:outline'));
 });
 
 test("new navigation is outside and below the original page-bottom gradient", () => {
@@ -42,7 +46,8 @@ test("new navigation is outside and below the original page-bottom gradient", ()
   assert.ok(finishMain < transition && transition < finishRoot);
   assert.ok(finishRoot < footer);
   assert.ok(page.includes('border-t border-white/[.08] bg-[#1A1A1A]'));
-  assert.ok(page.includes("© 2026 FrameLeads. A BrandFlow Studio Company."));
+  assert.ok(page.includes("© 2026 FrameLeads · by BrandFlow Studio"));
+  assert.ok(!page.includes("A BrandFlow Studio Company."));
 });
 
 test("approved scenario preview, pricing, audit and Micro-Pilot modal remain mounted", () => {
