@@ -15,6 +15,7 @@ declare global {
         action?: string;
       }) => string;
       remove?: (widgetId: string) => void;
+      reset?: (widgetId: string) => void;
     };
   }
 }
@@ -30,6 +31,7 @@ export default function AffiliateRegistrationForm({ mode }: { mode: Registration
   const [result, setResult] = useState<"preview" | "verification_sent" | null>(null);
   const [error, setError] = useState("");
   const widget = useRef<HTMLDivElement>(null);
+  const renderedWidget = useRef<string | null>(null);
   const siteKey = process.env.NEXT_PUBLIC_AFFILIATE_TURNSTILE_SITE_KEY;
 
   useEffect(() => {
@@ -45,6 +47,7 @@ export default function AffiliateRegistrationForm({ mode }: { mode: Registration
           "expired-callback": () => setCaptcha(""),
           "error-callback": () => setCaptcha(""),
         });
+        renderedWidget.current = widgetId;
       }
     };
     const script = document.createElement("script");
@@ -56,9 +59,18 @@ export default function AffiliateRegistrationForm({ mode }: { mode: Registration
     return () => {
       active = false;
       if (widgetId && window.turnstile?.remove) window.turnstile.remove(widgetId);
+      renderedWidget.current = null;
       script.remove();
     };
   }, [mode, siteKey]);
+
+  function refreshCaptcha() {
+    if (mode !== "live") return;
+    setCaptcha("");
+    if (renderedWidget.current && window.turnstile?.reset) {
+      window.turnstile.reset(renderedWidget.current);
+    }
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -76,6 +88,7 @@ export default function AffiliateRegistrationForm({ mode }: { mode: Registration
       const payload: unknown = await response.json();
       const data = payload && typeof payload === "object" ? payload as Record<string, unknown> : {};
       if (!response.ok || data.ok !== true) {
+        refreshCaptcha();
         setError(data.code === "RATE_LIMITED"
           ? "Too many attempts. Please try again later."
           : data.code === "VERIFICATION_FAILED" || data.code === "VERIFICATION_REQUIRED"
@@ -90,9 +103,11 @@ export default function AffiliateRegistrationForm({ mode }: { mode: Registration
       if (data.mode === "preview" || data.mode === "verification_sent") {
         setResult(data.mode);
       } else {
+        refreshCaptcha();
         setError("The confirmation could not be verified.");
       }
     } catch {
+      refreshCaptcha();
       setError("Could not connect to the registration service. Please try again.");
     } finally {
       setPending(false);

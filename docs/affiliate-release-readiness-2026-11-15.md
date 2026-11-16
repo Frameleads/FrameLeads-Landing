@@ -51,3 +51,8 @@ Do not create or change Whop plans, enable any public endpoint or switch Product
 - New route-level production gate tests cover both fail-closed switches and invalid hosts without making any provider calls. Run these in GitHub CI before accepting a merge.
 - Vercel Hobby rolling deployment limit is not the launch blocker. Commercial-hosting policy, owner legal-identity and processing disclosures, release signoff and Prod key validation are still open. **No paid upgrade or alternative-host migration has been authorized.**
 - Approval checklist and precise wording: `docs/affiliate-final-approval-packet-2026-11-16.md`. All previous historical 15 Nov 'missing Production credentials' statements above reflect their prior observation only; they are obsolete now.
+
+## 16 November follow-up: Cloudflare challenge recovery
+
+- The production registration form resets its Cloudflare Turnstile widget and clears the consumed token after a failed HTTP response, an unexpected response, or a network error. This lets legitimate applicants retry with a fresh challenge rather than reusing an expired/single-use token. It does not change any provider calls or Production launch switches.
+- Regression coverage checks retry/reset integration; this is a source-level contract, not a substitute for a real-device public Turnstile smoke test on a commercially permitted deployment.

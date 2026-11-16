@@ -52,3 +52,13 @@ test("arrow tips are anchored directly to their respective CTA or row copy icons
   assert.ok(walkthrough.includes('grid-cols-[minmax(0,1fr)_58px_80px]'), "reserve enough room for mobile arrow and target");
   assert.doesNotMatch(walkthrough, /-right-3 -top-8|side="right"/);
 });
+
+
+test("production Turnstile token is reset before retrying failed or interrupted submissions", () => {
+  assert.match(form, /reset\?: \(widgetId: string\) => void/);
+  assert.match(form, /renderedWidget\.current = widgetId/);
+  assert.match(form, /function refreshCaptcha\(\)/);
+  assert.match(form, /window\.turnstile\.reset\(renderedWidget\.current\)/);
+  assert.match(form, /if \(!response\.ok \|\| data\.ok !== true\) \{\s*refreshCaptcha\(\)/);
+  assert.match(form, /catch \{\s*refreshCaptcha\(\)/);
+});
