@@ -53,8 +53,19 @@ export function affiliateMode(env: Record<string, string | undefined>): Affiliat
         /^[0-9a-f]{64}$/i.test(env.AFFILIATE_PREVIEW_ALLOWED_EMAIL_SHA256 ?? "")) return "preview_e2e";
     return "preview";
   }
-  // Production remains separately gated by independent security approval.
-  if (env.VERCEL_ENV === "production" &&
+  // Netlify's CONTEXT and NETLIFY flags are build-only metadata, not
+  // guaranteed to be present in Next.js SSR/API functions at runtime.
+  // An explicit, production-context-only environment value plus Netlify's
+  // read-only main-site URL makes the alternate host fail closed by default.
+  // Preview and branch deploys MUST NOT receive "netlify-production".
+  if (env.VERCEL_ENV === undefined && env.AFFILIATE_HOSTING_ENV === "netlify-preview") {
+    return "preview"; // simulated only: never contact Whop or Resend
+  }
+  const vercelProduction = env.VERCEL_ENV === "production";
+  const netlifyProduction = env.VERCEL_ENV === undefined &&
+    env.AFFILIATE_HOSTING_ENV === "netlify-production" &&
+    env.URL === "https://frameleads.io";
+  if ((vercelProduction || netlifyProduction) &&
       env.AFFILIATE_NATIVE_REGISTRATION_ENABLED === "true" &&
       env.AFFILIATE_NATIVE_SECURITY_REVIEW_APPROVED === "true") return "live";
   return "disabled";

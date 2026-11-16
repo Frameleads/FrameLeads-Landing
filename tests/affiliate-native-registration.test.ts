@@ -46,6 +46,29 @@ test("Preview E2E is branch- and allowlist-gated; production still requires two 
   assert.equal(affiliateMode({ VERCEL_ENV: "development", AFFILIATE_NATIVE_REGISTRATION_ENABLED: "true", AFFILIATE_NATIVE_SECURITY_REVIEW_APPROVED: "true" }), "disabled");
 });
 
+test("Netlify commercial-host migration stays fail-closed without exact production-only settings", () => {
+  const base = {
+    AFFILIATE_HOSTING_ENV: "netlify-production",
+    URL: "https://frameleads.io",
+    AFFILIATE_NATIVE_REGISTRATION_ENABLED: "true",
+    AFFILIATE_NATIVE_SECURITY_REVIEW_APPROVED: "true",
+  };
+  assert.equal(affiliateMode(base), "live", "explicit Netlify production can run only after both approvals");
+  assert.equal(affiliateMode({ ...base, AFFILIATE_NATIVE_REGISTRATION_ENABLED: "false" }), "disabled");
+  assert.equal(affiliateMode({ ...base, AFFILIATE_NATIVE_SECURITY_REVIEW_APPROVED: "false" }), "disabled");
+  assert.equal(affiliateMode({ ...base, URL: "https://frameleads-test.netlify.app" }), "disabled");
+  assert.equal(affiliateMode({ ...base, URL: "https://malicious.example" }), "disabled");
+  assert.equal(affiliateMode({ ...base, URL: undefined }), "disabled");
+  assert.equal(affiliateMode({ ...base, AFFILIATE_HOSTING_ENV: undefined }), "disabled");
+  assert.equal(affiliateMode({ ...base, AFFILIATE_HOSTING_ENV: "netlify-preview" }), "preview");
+  assert.equal(affiliateMode({ ...base, VERCEL_ENV: "preview" }), "preview");
+  assert.equal(affiliateMode({ ...base, VERCEL_ENV: "development" }), "disabled");
+  assert.equal(affiliateMode({ ...base, VERCEL_ENV: "production" }), "live");
+  assert.equal(affiliateMode({ ...base, VERCEL_ENV: "preview",
+    AFFILIATE_PREVIEW_E2E_ENABLED: "true",
+    VERCEL_GIT_COMMIT_REF: "some-other-branch" }), "preview");
+});
+
 test("email token is authenticated, has short expiry, and hides the email from casual URL inspection", () => {
   const now = Date.now();
   const token = createEmailConfirmationToken(applicant, secret, now);

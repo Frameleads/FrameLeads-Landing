@@ -36,3 +36,7 @@
 **Not authorized by this packet:** checkout purchases, billing upgrades, registering an unapproved affiliate, publishing revised legal copy, Prod deployment, domain/DNS changes, WAF activation or public signup.
 
 Links: [Draft PR #43](https://github.com/Frameleads/FrameLeads-Landing/pull/43) · `docs/affiliate-release-readiness-2026-11-15.md`.
+
+## Alternative-host migration implementation (16 Nov 2026)
+
+To support the owner's no-subscription requirement, the affiliate deployment-mode helper now also accepts a **separately configured, production-only Netlify runtime context**. It requires `AFFILIATE_HOSTING_ENV=netlify-production`, Netlify read-only `URL=https://frameleads.io`, no `VERCEL_ENV`, and both original security/registration switches set to `true`. Netlify branch previews have no live provider access. On both platforms the API routes reject non-canonical hostnames. This is only preparatory source code, not evidence of a Netlify deployment or completion of legal/security review. See `docs/affiliate-netlify-free-migration-2026-11-16.md`.
