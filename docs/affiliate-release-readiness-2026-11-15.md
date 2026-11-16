@@ -42,3 +42,12 @@ Do not create or change Whop plans, enable any public endpoint or switch Product
 - The static 23-screen ZIP is stored in the repository (identical to the owner-approved Google Drive source). Its four featured previews now lead with Inbox Triage, Intent & Context and the Decision Packet, leaving outbound sandbox as optional context.
 - The Vercel Hobby restriction is a **commercial-hosting licensing issue**, not an implementation defect. No paid plan upgrade or billing action has been performed. An owner decision on compliant commercial hosting and associated costs must precede public launch.
 - The prepared firewall rule remains inactive and must be explicitly reviewed before activation. No independent external security approval is represented by the self-authored functional tests.
+
+## Updated checkpoint — 16 Nov 2026 (supersedes outdated 15 Nov credential checklist)
+
+- Vercel Production now contains Sensitive `AFFILIATE_WHOP_API_KEY`, `AFFILIATE_WHOP_COMPANY_ID`, `AFFILIATE_RESEND_API_KEY`, and `AFFILIATE_EMAIL_TOKEN_KEY`, plus exact Core/Enterprise IDs, `AFFILIATE_MAIL_FROM`, `WHOP_ENVIRONMENT=production` and both Cloudflare Turnstile keys. The provider keys are non-readable; **presence is verified but their new Production read/write permissions are not**.
+- Both Production activation variables exist with literal `false` values. Public signup remains disabled and no additional host deployment or WAF change was performed by the security review.
+- The protected Preview flow already passed the owner's real inbox/Whop demonstration; the full 23-screen ZIP is staged in PR #43.
+- New route-level production gate tests cover both fail-closed switches and invalid hosts without making any provider calls. Run these in GitHub CI before accepting a merge.
+- Vercel Hobby rolling deployment limit is not the launch blocker. Commercial-hosting policy, owner legal-identity and processing disclosures, release signoff and Prod key validation are still open. **No paid upgrade or alternative-host migration has been authorized.**
+- Approval checklist and precise wording: `docs/affiliate-final-approval-packet-2026-11-16.md`. All previous historical 15 Nov 'missing Production credentials' statements above reflect their prior observation only; they are obsolete now.
