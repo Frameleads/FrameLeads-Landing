@@ -7,13 +7,15 @@ import AffiliateProofKit from "../../components/AffiliateProofKit";
 import { affiliateMode, AFFILIATE_COMMISSION_PERCENT } from "../../affiliate-native.ts";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = {
+export function generateMetadata(): Metadata {
+  return {
   title: "FrameLeads Partner Program | Become an Affiliate",
   description: "Join the FrameLeads partner program. Refer founder-led B2B agencies to reply-decision intelligence and earn recurring commission on qualifying Core or Enterprise subscription payments.",
   alternates: { canonical: "https://frameleads.io/affiliates" },
-  robots: { index: false, follow: false },
+  robots: affiliateMode(process.env) === "live" ? { index: true, follow: true } : { index: false, follow: false },
   referrer: "no-referrer",
-};
+  };
+}
 
 export default function AffiliatePage() {
   const mode = affiliateMode(process.env);

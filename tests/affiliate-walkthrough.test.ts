@@ -62,3 +62,11 @@ test("production Turnstile token is reset before retrying failed or interrupted 
   assert.match(form, /if \(!response\.ok \|\| data\.ok !== true\) \{\s*refreshCaptcha\(\)/);
   assert.match(form, /catch \{\s*refreshCaptcha\(\)/);
 });
+
+test("affiliate page is indexable only when production enrollment is approved", () => {
+  const affiliatePage = fs.readFileSync("src/app/affiliates/page.tsx", "utf8");
+  assert.match(affiliatePage, /export function generateMetadata\(\): Metadata/);
+  assert.match(affiliatePage, /affiliateMode\(process\.env\) === "live"/);
+  assert.match(affiliatePage, /index: false, follow: false/);
+  assert.match(affiliatePage, /index: true, follow: true/);
+});

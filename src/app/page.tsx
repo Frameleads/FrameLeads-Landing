@@ -539,6 +539,12 @@ export default function Home() {
           <span className="font-heading text-xl font-bold tracking-wide text-white">FrameLeads</span>
         </Link>
         <p className="mt-4 max-w-xs text-sm leading-6 text-[#888888]">Decision intelligence for founder-led outbound teams.</p>
+        <Link href="/affiliates" aria-label="FrameLeads affiliate program — earn 30% on qualifying payments" className="mt-4 inline-flex min-h-11 items-center gap-4 rounded-xl border border-white/25 bg-white/[0.035] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:border-[#FF5A1F]/70 hover:bg-white/[0.07] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A1F]">
+          <span>Affiliate program · Earn 30%</span>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-4 w-4 shrink-0" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M7 17 17 7M8 7h9v9" />
+          </svg>
+        </Link>
       </div>
       <nav aria-label="Footer product navigation" className="flex flex-col items-start gap-3">
         <p className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#888888]">Product</p>
@@ -559,7 +565,7 @@ export default function Home() {
       </nav>
     </div>
     <div className="mx-auto mt-14 flex w-full max-w-6xl flex-col justify-between gap-4 border-t border-white/10 pt-6 text-xs text-[#888888] sm:flex-row sm:items-center">
-      <p>© 2026 FrameLeads. A BrandFlow Studio Company.</p>
+      <p>© 2026 FrameLeads · by BrandFlow Studio</p>
       <div className="flex items-center gap-6"><Link href="/privacy" className="transition-colors hover:text-[#FF5A1F]">Privacy</Link><Link href="/terms" className="transition-colors hover:text-[#FF5A1F]">Terms</Link></div>
     </div>
   </footer>
@@ -1053,7 +1059,7 @@ export function LegacyHome() {
           <div className="flex items-center gap-3">
             <Image src="/logo.png" alt="FrameLeads Logo" width={20} height={20} className="opacity-40 grayscale rounded-[4px]" />
             <span className="font-mono text-[10px] text-[#8A8A93] tracking-widest uppercase">
-              © 2026 FrameLeads. A BrandFlow Studio Company.
+              © 2026 FrameLeads · by BrandFlow Studio
             </span>
           </div>
 
