@@ -191,7 +191,8 @@ export function trackLeadCaptureIfSuccessful(success: boolean, properties: Marke
   if (currentWindow && getPrivacyConsent()?.advertising === true) {
     const provider = currentWindow.whop;
     if (provider && !provider.__frameleadsDisabled && typeof provider.track === "function") {
-      provider.track("lead");
+      // Provider failures must never break the captured lead's workflow map.
+      try { provider.track("lead"); } catch { /* Optional ad attribution only. */ }
     }
   }
   return true;
