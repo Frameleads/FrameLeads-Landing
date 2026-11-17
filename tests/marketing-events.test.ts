@@ -8,6 +8,7 @@ import {
   sanitizeMarketingEventProperties,
   trackLeadCaptureIfSuccessful,
   trackMarketingEvent,
+  trackWhopEvent,
   type MarketingEvent,
 } from "../src/marketing-events.ts";
 
@@ -123,6 +124,26 @@ test("Whop Lead fires only on consented confirmed Audit capture, with no persona
     assert.equal(trackLeadCaptureIfSuccessful(true, { source: "REPLY_WORKFLOW_AUDIT" }), true);
     assert.deepEqual(calls, [], "advertising consent is required");
     assert.equal(events.length, 1, "existing internal capture notification still fires");
+  }, false);
+});
+
+test("Whop Audit milestones are consent-gated and cannot masquerade as Lead", () => {
+  withBrowser((events) => {
+    const calls: unknown[][] = [];
+    window.whop = { track: (...args: unknown[]) => { calls.push(args); } };
+    assert.equal(trackWhopEvent("audit_started"), true);
+    trackMarketingEvent("AUDIT_COMPLETED", { source: "REPLY_WORKFLOW_AUDIT" });
+    assert.deepEqual(calls, [["audit_started"], ["audit_completed"]]);
+    assert.deepEqual(events.map(e => e.event), ["AUDIT_COMPLETED"]);
+    assert.equal(calls.some(([name]) => name === "lead"), false);
+  });
+  withBrowser((events) => {
+    const calls: unknown[][] = [];
+    window.whop = { track: (...args: unknown[]) => { calls.push(args); } };
+    assert.equal(trackWhopEvent("audit_started"), false);
+    trackMarketingEvent("AUDIT_COMPLETED", { source: "REPLY_WORKFLOW_AUDIT" });
+    assert.deepEqual(calls, []);
+    assert.deepEqual(events.map(e => e.event), ["AUDIT_COMPLETED"]);
   }, false);
 });
 
