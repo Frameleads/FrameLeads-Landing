@@ -153,12 +153,29 @@ export function initializeMarketingPixels(): void {
   initializeMeasurementPixels();
 }
 
+/** Optional Whop events, separate from Brand Brain's canonical Meta conversion pipeline. */
+export function trackWhopEvent(name: "lead" | "audit_started" | "audit_completed"): boolean {
+  const currentWindow = browserWindow();
+  if (!currentWindow || getPrivacyConsent()?.advertising !== true) return false;
+  const pixel = currentWindow.whop;
+  if (!pixel || pixel.__frameleadsDisabled || typeof pixel.track !== "function") return false;
+  try {
+    // Whop's browser pixel queues events until its transport is ready.
+    pixel.track(name);
+    return true;
+  } catch {
+    // Marketing transport never prevents delivery of a successful Audit result.
+    return false;
+  }
+}
+
 export function trackMarketingEvent(name: MarketingEventName, input: MarketingEventProperties = {}): void {
   const currentWindow = browserWindow();
   if (!currentWindow) return;
   const properties = pixelProperties(input as Record<string, unknown>);
   const event: MarketingEvent = { event: name, properties };
   currentWindow.dispatchEvent(new CustomEvent<MarketingEvent>("frameleads:marketing-event", { detail: event }));
+  if (name === "AUDIT_COMPLETED") trackWhopEvent("audit_completed");
 
   // Legacy UI notifications are not provider lifecycle authority. B7.1 emits
   // explicitly mapped observations and canonical server conversions separately.
@@ -184,16 +201,8 @@ export function trackLeadCaptureIfSuccessful(success: boolean, properties: Marke
   if (!success) return false;
   trackMarketingEvent("LEAD_CAPTURED", properties);
 
-  // Whop's Lead goal is separate from the existing canonical Meta Lead projector.
-  // The caller reaches this path only after /api/audit-lead confirms a real capture.
-  // Do not send raw contact details or Audit answers to Whop. Consent is mandatory.
-  const currentWindow = browserWindow();
-  if (currentWindow && getPrivacyConsent()?.advertising === true) {
-    const provider = currentWindow.whop;
-    if (provider && !provider.__frameleadsDisabled && typeof provider.track === "function") {
-      // Provider failures must never break the captured lead's workflow map.
-      try { provider.track("lead"); } catch { /* Optional ad attribution only. */ }
-    }
-  }
+  // Only a confirmed Audit capture maps to Whop's optimization event.
+  // No contact details or Audit answers are sent to this browser pixel.
+  trackWhopEvent("lead");
   return true;
 }
