@@ -11,7 +11,7 @@ import {
   type MarketingEvent,
 } from "../src/marketing-events.ts";
 
-function withBrowser<T>(run: (events: MarketingEvent[], storage: Map<string, string>, location: { search: string; pathname: string }) => T): T {
+function withBrowser<T>(run: (events: MarketingEvent[], storage: Map<string, string>, location: { search: string; pathname: string }) => T, advertisingConsent: boolean = true): T {
   const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
   const storage = new Map<string, string>();
   const events: MarketingEvent[] = [];
@@ -21,7 +21,7 @@ function withBrowser<T>(run: (events: MarketingEvent[], storage: Map<string, str
     document: { referrer: "" },
     localStorage: {
       getItem: (key: string) => key === "frameleads:privacy-consent:v1"
-        ? JSON.stringify({ analytics: true, advertising: true, savedAt: "2026-10-13T00:00:00.000Z" })
+        ? JSON.stringify({ analytics: true, advertising: advertisingConsent, savedAt: "2026-10-13T00:00:00.000Z" })
         : null,
     },
     sessionStorage: {
@@ -100,6 +100,30 @@ test("failed capture emits no local capture notification and successful capture 
     assert.deepEqual(events.map((event) => event.event), ["LEAD_CAPTURED"]);
     assert.equal(events[0].properties.diagnosis, "HIGH_CONSEQUENCE_DECISION_WORKFLOW");
   });
+});
+
+test("Whop Lead fires only on consented confirmed Audit capture, with no personal data", () => {
+  withBrowser((events) => {
+    const calls: unknown[][] = [];
+    window.whop = { track: (...args: unknown[]) => { calls.push(args); } };
+    assert.equal(trackLeadCaptureIfSuccessful(false, { source: "REPLY_WORKFLOW_AUDIT" }), false);
+    assert.deepEqual(calls, []);
+    assert.equal(trackLeadCaptureIfSuccessful(true, { source: "REPLY_WORKFLOW_AUDIT" }), true);
+    assert.deepEqual(calls, [["lead"]]);
+    assert.deepEqual(events.map((e) => e.event), ["LEAD_CAPTURED"]);
+    window.whop.__frameleadsDisabled = true;
+    assert.equal(trackLeadCaptureIfSuccessful(true, { source: "REPLY_WORKFLOW_AUDIT" }), true);
+    assert.deepEqual(calls, [["lead"]], "paused provider must not receive events");
+    window.whop = { track: () => { throw Error("provider blocked"); } };
+    assert.doesNotThrow(() => trackLeadCaptureIfSuccessful(true, { source: "REPLY_WORKFLOW_AUDIT" }), "provider failure must not block successful capture");
+  });
+  withBrowser((events) => {
+    const calls: unknown[][] = [];
+    window.whop = { track: (...args: unknown[]) => { calls.push(args); } };
+    assert.equal(trackLeadCaptureIfSuccessful(true, { source: "REPLY_WORKFLOW_AUDIT" }), true);
+    assert.deepEqual(calls, [], "advertising consent is required");
+    assert.equal(events.length, 1, "existing internal capture notification still fires");
+  }, false);
 });
 
 test("checkout click events are distinct from purchase and lead lifecycle events", () => {

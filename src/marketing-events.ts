@@ -183,5 +183,17 @@ export function trackMarketingEventOncePerSession(name: MarketingEventName, prop
 export function trackLeadCaptureIfSuccessful(success: boolean, properties: MarketingEventProperties = {}): boolean {
   if (!success) return false;
   trackMarketingEvent("LEAD_CAPTURED", properties);
+
+  // Whop's Lead goal is separate from the existing canonical Meta Lead projector.
+  // The caller reaches this path only after /api/audit-lead confirms a real capture.
+  // Do not send raw contact details or Audit answers to Whop. Consent is mandatory.
+  const currentWindow = browserWindow();
+  if (currentWindow && getPrivacyConsent()?.advertising === true) {
+    const provider = currentWindow.whop;
+    if (provider && !provider.__frameleadsDisabled && typeof provider.track === "function") {
+      // Provider failures must never break the captured lead's workflow map.
+      try { provider.track("lead"); } catch { /* Optional ad attribution only. */ }
+    }
+  }
   return true;
 }
