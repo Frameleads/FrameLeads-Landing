@@ -114,6 +114,8 @@ test("Whop Lead fires only on consented confirmed Audit capture, with no persona
     window.whop.__frameleadsDisabled = true;
     assert.equal(trackLeadCaptureIfSuccessful(true, { source: "REPLY_WORKFLOW_AUDIT" }), true);
     assert.deepEqual(calls, [["lead"]], "paused provider must not receive events");
+    window.whop = { track: () => { throw Error("provider blocked"); } };
+    assert.doesNotThrow(() => trackLeadCaptureIfSuccessful(true, { source: "REPLY_WORKFLOW_AUDIT" }), "provider failure must not block successful capture");
   });
   withBrowser((events) => {
     const calls: unknown[][] = [];
