@@ -5,7 +5,7 @@ import { suggestAuditEmailCorrection } from "../email-domain-hint";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { auditOptions, diagnosisCopy, diagnoseReplyWorkflow, emailPattern, normalizeCompanyWebsite, type AuditAnswers, type AuditResult } from "../audit";
-import { getMarketingAttribution, trackLeadCaptureIfSuccessful, trackMarketingEvent } from "../marketing-events";
+import { getMarketingAttribution, trackLeadCaptureIfSuccessful, trackMarketingEvent, trackWhopEvent } from "../marketing-events";
 import {getMeasurementAttribution,observeMeasurement} from '../measurement';
 import {hasAdvertisingConsent} from '../privacy-consent';
 
@@ -33,7 +33,7 @@ export default function PipelineAudit({ onAuditComplete, onClose, standalone = f
   const active = questions[index];
   const choose = (value: string) => {
     if (result || completionTracked.current || advanceTimer.current) return;
-    if(!startTracked.current){startTracked.current=true;observeMeasurement('AUDIT_STARTED');}
+    if(!startTracked.current){startTracked.current=true;observeMeasurement('AUDIT_STARTED');trackWhopEvent('audit_started');}
     const next = { ...answers, [active.key]: value };
     setAnswers(next);
     if (index < questions.length - 1) {
