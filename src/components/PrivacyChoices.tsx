@@ -105,6 +105,9 @@ function WhopAnalytics({ enabled }: { enabled: boolean }) {
         delete window.whop.__frameleadsPausedSetScope;
       }
       window.whop.__frameleadsDisabled = false;
+      // Other Whop integrations may have initialized the global earlier. Always
+      // reassert this Ads business scope before a page view or later Lead event.
+      window.whop.setScope?.("biz_RSQW7xARXYAQke");
       window.whop.track?.("page");
       return;
     }
